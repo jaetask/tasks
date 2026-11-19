@@ -1,0 +1,42 @@
+{
+  "name": "tasks",
+  "version": "0.1.0",
+  "description": "Task management for AI agents: agents find work, claim tickets, report progress and hand work on; a person watches the board and joins in.",
+  "author": "jaetask",
+  "license": "MIT",
+  "private": true,
+  "homepage": "https://github.com/jaetask/tasks#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jaetask/tasks.git"
+  },
+  "bugs": "https://github.com/jaetask/tasks/issues",
+  "type": "module",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test src/*.test.ts",
+    "expect": "tsx expect/snap.ts",
+    "lint": "biome lint . && npm run check:docs",
+    "format": "biome format --write .",
+    "format:check": "biome format .",
+    "prepare": "git config core.hooksPath .agents/guardrails/hooks || true",
+    "check:docs": "node scripts/check-docs.mjs"
+  },
+  "dependencies": {
+    "@jaetask/open-agent-kit": "0.1.0",
+    "@modelcontextprotocol/client": "2.4.0",
+    "@modelcontextprotocol/server": "2.4.0",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.6.5",
+    "@jaetask/snap": "0.1.0",
+    "@types/node": "22.18.0",
+    "tsx": "4.20.5",
+    "typescript": "5.9.2"
+  }
+}

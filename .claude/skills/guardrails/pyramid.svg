@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 342" width="100%" style="max-width:600px;height:auto" role="img" aria-label="Lauren Tan&#x27;s pyramid: invest most in the codebase, then static analysis, verification and prose, with human review as the narrow last layer."><style>
+svg { --paper:#fff; --ink:#0a0a0a; --muted:#525252; --accent:#0000ff; --tint:rgba(0,0,255,.05); --fill:rgba(10,10,10,.05); --line:rgba(10,10,10,.3);
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif }
+@media (prefers-color-scheme: dark) { svg { --paper:#0d0d10; --ink:#f2f2f2; --muted:#a3a3a3; --accent:#8894ff; --tint:rgba(136,148,255,.12); --fill:rgba(255,255,255,.06); --line:rgba(255,255,255,.3) } }
+.bg { fill: var(--paper) }
+.n { fill: var(--paper); stroke: var(--ink) } .s { fill: var(--fill); stroke: var(--line) }
+.f { fill: var(--tint); stroke: var(--accent); stroke-width: 1.2 } .o { fill: var(--paper); stroke: var(--ink); stroke-dasharray: 5 4 }
+.t { fill: var(--ink) } .m { fill: var(--muted) } .a { fill: var(--accent) }
+.e { stroke: var(--ink); stroke-width: 1.2; fill: none } .ea { stroke: var(--accent); stroke-width: 1.4; fill: none }
+.hm { fill: var(--ink) } .ham { fill: var(--accent) }
+</style><defs>
+<marker id="h" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="hm"/></marker>
+<marker id="ha" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="ham"/></marker>
+</defs><rect class="bg" x="0" y="0" width="600" height="342"/><rect x="20.0" y="20" width="560" height="54" rx="6" class="n"/><text x="300" y="45" class="t" font-size="15" font-weight="700" text-anchor="middle">codebase</text><text x="300" y="63" class="m" font-size="11" font-weight="400" text-anchor="middle">(good API design, architecture, refactoring)</text><rect x="75.0" y="82" width="450" height="54" rx="6" class="n"/><text x="300" y="107" class="t" font-size="15" font-weight="700" text-anchor="middle">static analysis</text><text x="300" y="125" class="m" font-size="11" font-weight="400" text-anchor="middle">(lints, types, compilers, tests, CI)</text><rect x="130.0" y="144" width="340" height="54" rx="6" class="n"/><text x="300" y="169" class="t" font-size="15" font-weight="700" text-anchor="middle">verification</text><text x="300" y="187" class="m" font-size="11" font-weight="400" text-anchor="middle">(formal, empirical)</text><rect x="185.0" y="206" width="230" height="54" rx="6" class="n"/><text x="300" y="231" class="t" font-size="15" font-weight="700" text-anchor="middle">prose</text><text x="300" y="249" class="m" font-size="11" font-weight="400" text-anchor="middle">(rules, skills, AGENTS.md)</text><rect x="240.0" y="268" width="120" height="54" rx="6" class="n"/><text x="300" y="300" class="t" font-size="15" font-weight="700" text-anchor="middle">human review</text></svg>

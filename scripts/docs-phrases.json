@@ -1,0 +1,74 @@
+[
+  {
+    "pattern": "\\bcarries it\\b",
+    "why": "slogan",
+    "say_instead": "say what it does: \"From a single idea\""
+  },
+  {
+    "pattern": "\\bearns its place\\b",
+    "why": "slogan",
+    "say_instead": "delete it, or state the benefit"
+  },
+  { "pattern": "\\brefuses to own\\b", "why": "dramatic", "say_instead": "\"does not handle\"" },
+  { "pattern": "\\bdelv(e|es|ing)\\b", "why": "filler", "say_instead": "\"look at\", \"cover\"" },
+  { "pattern": "\\bseamless(ly)?\\b", "why": "hype", "say_instead": "say what works, and how" },
+  { "pattern": "\\bgame[- ]chang", "why": "hype", "say_instead": "state the change" },
+  { "pattern": "\\bsupercharg", "why": "hype", "say_instead": "state what gets faster or easier" },
+  { "pattern": "\\bunlock the power\\b", "why": "hype", "say_instead": "say what it lets you do" },
+  { "pattern": "\\bunleash", "why": "hype", "say_instead": "\"use\", \"run\"" },
+  { "pattern": "\\brevolutioni[sz]", "why": "hype", "say_instead": "state the change" },
+  {
+    "pattern": "\\bcutting[- ]edge\\b",
+    "why": "hype",
+    "say_instead": "name the version or technique"
+  },
+  {
+    "pattern": "\\bstate[- ]of[- ]the[- ]art\\b",
+    "why": "hype",
+    "say_instead": "name the version or technique"
+  },
+  {
+    "pattern": "\\bbest[- ]in[- ]class\\b",
+    "why": "hype",
+    "say_instead": "give a measurement, or delete it"
+  },
+  {
+    "pattern": "\\bworld[- ]class\\b",
+    "why": "hype",
+    "say_instead": "give a measurement, or delete it"
+  },
+  { "pattern": "\\bblazing(ly)? fast\\b", "why": "hype", "say_instead": "give a measurement" },
+  {
+    "pattern": "\\beffortless(ly)?\\b",
+    "why": "hype",
+    "say_instead": "say how many steps it takes"
+  },
+  { "pattern": "\\bin today['’]s\\b", "why": "filler", "say_instead": "delete it" },
+  { "pattern": "\\bever[- ]evolving\\b", "why": "filler", "say_instead": "delete it" },
+  {
+    "pattern": "\\b(it['’]s|it is) worth noting\\b",
+    "why": "filler",
+    "say_instead": "state the fact"
+  },
+  { "pattern": "\\bat its core\\b", "why": "filler", "say_instead": "delete it" },
+  { "pattern": "\\btapestry\\b", "why": "filler", "say_instead": "say what the parts are" },
+  { "pattern": "\\btestament to\\b", "why": "filler", "say_instead": "state the evidence" },
+  { "pattern": "\\belevate your\\b", "why": "hype", "say_instead": "say what improves" },
+  {
+    "pattern": "\\bnot just\\b[^.]*?,\\s*(it['’]s|it is|but)\\b",
+    "why": "rhetorical \"not just X, but Y\"",
+    "say_instead": "state Y"
+  },
+  {
+    "pattern": "\\bisn['’]t just\\b",
+    "why": "rhetorical \"isn't just\"",
+    "say_instead": "state what it is"
+  },
+  { "pattern": "\\bmore than just a\\b", "why": "rhetorical", "say_instead": "state what it is" },
+  {
+    "pattern": ", not \\w",
+    "why": "slogan heading \"X, not Y\"",
+    "say_instead": "a plain label for X",
+    "headings": true
+  }
+]

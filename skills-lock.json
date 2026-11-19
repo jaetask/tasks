@@ -1,0 +1,33 @@
+{
+  "version": 2,
+  "skills": {
+    "guardrails": {
+      "source": "jaetask/skills",
+      "commit": "b6c4633f2e1515a9493d7a88347e08d6cc10e127",
+      "sourceType": "github",
+      "skillPath": "skills/guardrails/SKILL.md",
+      "computedHash": "e93abc1bcda3f27cacc8c5dee98d3e13b64094e780d61f2f5187dcf200eff4cf"
+    },
+    "pave": {
+      "source": "jaetask/skills",
+      "commit": "b6c4633f2e1515a9493d7a88347e08d6cc10e127",
+      "sourceType": "github",
+      "skillPath": "skills/pave/SKILL.md",
+      "computedHash": "9b3a4a88da0a1f5eba940e1c9b81271cc324ca90d6f7a6c32c336aa4ba70cd80"
+    },
+    "trail": {
+      "source": "jaetask/skills",
+      "commit": "b6c4633f2e1515a9493d7a88347e08d6cc10e127",
+      "sourceType": "github",
+      "skillPath": "skills/trail/SKILL.md",
+      "computedHash": "fe35170895c8e17b15055395a01f14f006f75d781e03f64e42d6b6726be32a45"
+    },
+    "visualize": {
+      "source": "jaetask/skills",
+      "commit": "b6c4633f2e1515a9493d7a88347e08d6cc10e127",
+      "sourceType": "github",
+      "skillPath": "skills/visualize/SKILL.md",
+      "computedHash": "58a2cb62d521ae6930cd622d6714e62947d733deefc281b128981854afa720d8"
+    }
+  }
+}

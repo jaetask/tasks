@@ -1,0 +1,786 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Tasks · User guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a long guide. Sticky section rail on top, one column of prose,
+   interactive "bench" panels for the moving parts. */
+:root{
+  --bg:#f4f6f6; --panel:#ffffff; --sunk:#e9eeee; --ink:#13201f; --muted:#56676a; --line:#d3dcdc;
+  --pi:#0d7a6f; --pi-soft:#d6efeb; --an:#8a3f78; --an-soft:#f3e2ef;
+  --ok:#2f7d32; --ok-soft:#e1f1e1; --warn:#a86400; --warn-soft:#fbecd5; --bad:#b3261e; --bad-soft:#f9e0de;
+  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  color-scheme: light;
+}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.6}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--panel)}
+a{color:var(--pi)}
+code,.mono{font-family:var(--mono);font-size:.88em}
+:not(pre)>code{background:var(--sunk);padding:.08em .35em;border-radius:4px}
+.wrap{max-width:1080px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.prose{max-width:68ch}
+h1,h2,h3{font-family:var(--display);line-height:1.15;text-wrap:balance;margin:0}
+h1{font-size:clamp(2rem,5vw,3.1rem);font-weight:700;letter-spacing:-.01em}
+h2{font-size:clamp(1.5rem,3vw,2rem);font-weight:700}
+h3{font-size:1.15rem;font-weight:700}
+p{margin:0}
+.eyebrow{font-family:var(--mono);font-size:.74rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.stack{display:flex;flex-direction:column;gap:14px}
+section{padding-block:56px;border-top:1px solid var(--line)}
+section:first-of-type{border-top:0}
+
+/* nav */
+nav.rail{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--panel);border-bottom:1px solid var(--line)}
+nav.rail .wrap{display:flex;gap:4px;overflow-x:auto;padding-block:8px;scrollbar-width:thin}
+nav.rail a{flex:none;font-size:.86rem;font-weight:500;color:var(--muted);text-decoration:none;padding:6px 10px;border-radius:6px;white-space:nowrap}
+nav.rail a:hover,nav.rail a:focus-visible{color:var(--ink);background:var(--sunk);outline:none}
+nav.rail a.on{color:var(--pi);background:var(--pi-soft)}
+
+/* hero */
+header.hero{padding-block:48px 40px}
+.hero .stack{gap:18px}
+.lede{font-size:1.15rem;color:var(--muted);max-width:62ch}
+.tags{display:flex;flex-wrap:wrap;gap:8px}
+.tag{font-family:var(--mono);font-size:.76rem;padding:3px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted);background:var(--panel)}
+.tag.pi{border-color:var(--pi);color:var(--pi)}
+.tag.an{border-color:var(--an);color:var(--an)}
+.answer{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-top:8px}
+.answer > div{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;min-width:0}
+.answer > div > b:first-child{display:block;font-family:var(--display);font-size:1.05rem;margin-bottom:4px}
+
+/* bench panels */
+.bench{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;margin-top:22px}
+.bench-head{display:flex;flex-wrap:wrap;gap:10px;align-items:baseline;justify-content:space-between;margin-bottom:14px}
+.btn{font:inherit;font-size:.88rem;font-weight:500;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:6px 12px;border-radius:7px;cursor:pointer}
+.btn:hover{border-color:var(--pi)}
+.btn:focus-visible{outline:2px solid var(--pi);outline-offset:2px}
+.btn.primary{background:var(--pi);border-color:var(--pi);color:var(--panel)}
+.btn.danger{border-color:var(--bad);color:var(--bad)}
+.btn[aria-pressed="true"]{background:var(--pi-soft);border-color:var(--pi);color:var(--pi)}
+.btn:disabled{opacity:.45;cursor:default}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+
+/* actor map */
+.layers{display:flex;flex-direction:column;gap:10px}
+.layer{display:grid;grid-template-columns:130px 1fr;gap:10px;align-items:start}
+.layer-name{font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding-top:9px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.actor{font:inherit;font-size:.9rem;font-weight:500;background:var(--sunk);border:1px solid transparent;color:var(--ink);padding:7px 11px;border-radius:8px;cursor:pointer;text-align:left}
+.actor:hover{border-color:var(--pi)}
+.actor:focus-visible{outline:2px solid var(--pi);outline-offset:2px}
+.actor.on{background:var(--pi-soft);border-color:var(--pi);color:var(--pi)}
+.actor.rel{border-color:var(--pi);border-style:dashed}
+.detail{margin-top:16px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;border-top:1px solid var(--line);padding-top:16px}
+.detail h3{margin-bottom:6px}
+.detail .rels{font-size:.88rem;color:var(--muted)}
+pre{margin:0;background:var(--sunk);border-radius:8px;padding:12px 14px;overflow-x:auto;font-family:var(--mono);font-size:.8rem;line-height:1.55;min-width:0}
+pre .c{color:var(--muted)}
+pre .k{color:var(--pi)}
+.caption{font-size:.82rem;color:var(--muted)}
+
+/* run stepper */
+.run-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) minmax(0,1fr);gap:14px}
+.col{background:var(--sunk);border-radius:9px;padding:12px;min-width:0}
+.col h4{margin:0 0 8px;font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.entry,.task{font-family:var(--mono);font-size:.78rem;padding:6px 8px;border-radius:6px;background:var(--panel);border:1px solid var(--line);margin-bottom:6px;overflow-wrap:anywhere}
+.entry.new,.task.new{border-color:var(--pi);box-shadow:0 0 0 2px var(--pi-soft)}
+.task .st{float:right;font-size:.7rem;padding:0 6px;border-radius:999px;background:var(--sunk);color:var(--muted)}
+.task .st.running{background:var(--pi-soft);color:var(--pi)}
+.task .st.waiting{background:var(--warn-soft);color:var(--warn)}
+.task .st.done{background:var(--ok-soft);color:var(--ok)}
+.task.child{margin-left:16px}
+.stepinfo{margin-top:14px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+.box{border-radius:9px;padding:12px 14px;font-size:.92rem}
+.box.say{background:var(--pi-soft)}
+.box.crash{background:var(--bad-soft)}
+.box.crash b{color:var(--bad)}
+.box.say b{color:var(--pi)}
+.progress{display:flex;gap:4px}
+.progress span{width:22px;height:5px;border-radius:3px;background:var(--line)}
+.progress span.on{background:var(--pi)}
+.empty{font-size:.8rem;color:var(--muted);font-style:italic}
+
+/* tool lab */
+.lab{display:grid;grid-template-columns:minmax(0,260px) minmax(0,1fr);gap:18px}
+.picker{display:flex;flex-direction:column;gap:8px}
+.picker .btn{text-align:left}
+.picker .btn small{display:block;color:var(--muted);font-size:.76rem;font-weight:400}
+.timeline{list-style:none;margin:0;padding:0;border-left:2px solid var(--line)}
+.timeline li{position:relative;padding:0 0 12px 16px}
+.timeline li::before{content:"";position:absolute;left:-7px;top:6px;width:12px;height:12px;border-radius:50%;background:var(--panel);border:2px solid var(--pi)}
+.timeline li.bad::before{border-color:var(--bad);background:var(--bad-soft)}
+.timeline li.wait::before{border-color:var(--warn);background:var(--warn-soft)}
+.timeline li.ok::before{border-color:var(--ok);background:var(--ok-soft)}
+.timeline b{display:block;font-size:.92rem}
+.timeline span{font-size:.86rem;color:var(--muted)}
+.vs{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;margin-top:6px}
+.vs > div{border-radius:9px;padding:12px 14px;min-width:0}
+.vs .pi-side{background:var(--pi-soft)}
+.vs .an-side{background:var(--an-soft)}
+.vs h4{margin:0 0 8px;font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;font-weight:500}
+.vs .pi-side h4{color:var(--pi)}
+.vs .an-side h4{color:var(--an)}
+.vs .an-side p{font-size:.9rem}
+
+/* cards */
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;margin-top:20px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;min-width:0;display:flex;flex-direction:column;gap:8px}
+.card h3{font-size:1.02rem}
+.card p{font-size:.92rem;color:var(--muted)}
+
+/* mapping table */
+.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+.filters input{font:inherit;font-size:.9rem;padding:6px 10px;border:1px solid var(--line);border-radius:7px;background:var(--panel);color:var(--ink);min-width:0;flex:1 1 200px}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;min-width:760px;font-size:.88rem}
+th,td{text-align:left;vertical-align:top;padding:9px 12px;border-bottom:1px solid var(--line)}
+th{font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:500;background:var(--sunk);position:sticky;top:0}
+tr:last-child td{border-bottom:0}
+td.an-col code{background:var(--an-soft)}
+td.pi-col code{background:var(--pi-soft)}
+.fit{display:inline-block;font-family:var(--mono);font-size:.72rem;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.fit.better{background:var(--ok-soft);color:var(--ok)}
+.fit.direct{background:var(--pi-soft);color:var(--pi)}
+.fit.adapter{background:var(--warn-soft);color:var(--warn)}
+.fit.gap{background:var(--bad-soft);color:var(--bad)}
+.tally{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 4px}
+.tally .fit{font-size:.8rem;padding:4px 10px}
+
+/* paths */
+.paths{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-top:20px}
+.path{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.path.rec{border-color:var(--pi);box-shadow:0 0 0 1px var(--pi)}
+.path .verdict{font-family:var(--mono);font-size:.74rem;text-transform:uppercase;letter-spacing:.06em}
+.path.rec .verdict{color:var(--pi)}
+.path ul{margin:0;padding-left:18px;font-size:.9rem;color:var(--muted)}
+.diagram{display:flex;flex-direction:column;gap:6px;font-family:var(--mono);font-size:.74rem}
+.diagram div{padding:6px 8px;border-radius:6px;text-align:center}
+.d-an{background:var(--an-soft);color:var(--an)}
+.d-pi{background:var(--pi-soft);color:var(--pi)}
+.d-x{background:var(--sunk);color:var(--muted)}
+.d-arrow{color:var(--muted);padding:0!important}
+
+/* verdict */
+.verdict-box{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--pi);border-radius:10px;padding:20px;margin-top:18px}
+.checklist{list-style:none;padding:0;margin:16px 0 0;display:flex;flex-direction:column;gap:8px}
+.checklist label{display:flex;gap:10px;align-items:flex-start;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px;cursor:pointer}
+.checklist input{margin-top:5px;accent-color:var(--pi)}
+.checklist b{display:block;font-size:.95rem}
+.checklist span{font-size:.86rem;color:var(--muted)}
+footer{padding-block:40px;color:var(--muted);font-size:.85rem;border-top:1px solid var(--line)}
+
+/* figures (inline SVG diagrams) */
+figure.fig{margin:22px 0 0;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px}
+.fig-scroll{overflow-x:auto}
+figure.fig svg{display:block;width:100%;height:auto;color:var(--ink)}
+figure.fig figcaption{font-size:.86rem;color:var(--muted);margin-top:10px;max-width:80ch}
+.s-box{fill:var(--panel);stroke:var(--line);stroke-width:1.2}
+.s-sunk{fill:var(--sunk);stroke:var(--line);stroke-width:1}
+.s-pi{fill:var(--pi-soft);stroke:var(--pi);stroke-width:1.4}
+.s-an{fill:var(--an-soft);stroke:var(--an);stroke-width:1.4}
+.s-warn{fill:var(--warn-soft);stroke:var(--warn);stroke-width:1.4}
+.s-bad{fill:var(--bad-soft);stroke:var(--bad);stroke-width:1.4}
+.s-ok{fill:var(--ok-soft);stroke:var(--ok);stroke-width:1.4}
+.s-dash{fill:none;stroke:var(--muted);stroke-width:1.2;stroke-dasharray:5 4}
+.ln{stroke:currentColor;stroke-width:1.4;fill:none}
+.ln-pi{stroke:var(--pi);stroke-width:1.6;fill:none}
+.ln-an{stroke:var(--an);stroke-width:1.6;fill:none}
+.ln-bad{stroke:var(--bad);stroke-width:1.5;fill:none;stroke-dasharray:6 4}
+.ln-mut{stroke:var(--muted);stroke-width:1.2;fill:none}
+.t{font-family:var(--body);font-size:13px;fill:currentColor}
+.tb{font-family:var(--body);font-size:13px;font-weight:600;fill:currentColor}
+.th{font-family:var(--display);font-size:15px;font-weight:700;fill:currentColor}
+.ts{font-family:var(--body);font-size:11px;fill:var(--muted)}
+.tm{font-family:var(--mono);font-size:11.5px;fill:currentColor}
+.c-pi{fill:var(--pi)} .c-an{fill:var(--an)} .c-bad{fill:var(--bad)} .c-warn{fill:var(--warn)} .c-ok{fill:var(--ok)} .c-mut{fill:var(--muted)}
+.mk{fill:currentColor} .mk-pi{fill:var(--pi)} .mk-an{fill:var(--an)} .mk-bad{fill:var(--bad)} .mk-mut{fill:var(--muted)}
+.plugin-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin-top:18px}
+
+@media (max-width:820px){
+  .run-grid{grid-template-columns:minmax(0,1fr)}
+  .stepinfo,.detail,.vs,.lab{grid-template-columns:minmax(0,1fr)}
+  .layer{grid-template-columns:minmax(0,1fr)}
+  .layer-name{padding-top:0}
+}
+@media (prefers-reduced-motion:no-preference){
+  .entry.new,.task.new{animation:pop .35s ease-out}
+  @keyframes pop{from{transform:translateY(-3px);opacity:.6}to{transform:none;opacity:1}}
+}
+</style>
+<style>
+/* glossary, details and rules */
+.gloss{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;margin-top:14px}
+.term{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:12px 14px;min-width:0}
+.term b{font-family:var(--display);font-size:1rem}
+.term p{font-size:.88rem;color:var(--muted);margin-top:4px}
+.term .avoid{font-size:.78rem;font-style:italic;margin-top:6px}
+.term .ddd{font-family:var(--mono);font-size:.7rem;color:var(--an);float:right;margin-left:8px}
+details.prob{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:0;margin-top:10px}
+details.prob summary{cursor:pointer;padding:13px 16px;font-weight:600;display:flex;gap:10px;align-items:baseline;list-style:none}
+details.prob summary::-webkit-details-marker{display:none}
+details.prob summary::before{content:"+";font-family:var(--mono);color:var(--pi);width:1ch;flex:none}
+details.prob[open] summary::before{content:"–"}
+details.prob summary:focus-visible{outline:2px solid var(--pi);outline-offset:2px;border-radius:10px}
+details.prob .body{padding:0 16px 14px 36px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;font-size:.92rem}
+details.prob .body div b{display:block;font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;margin-bottom:3px}
+details.prob .attack b{color:var(--bad)} details.prob .answer2 b{color:var(--ok)}
+.node rect{fill:var(--panel);stroke:var(--line);stroke-width:1.3}
+.node.end rect{fill:var(--sunk)}
+.node.on rect{fill:var(--pi-soft);stroke:var(--pi);stroke-width:2.2}
+.node.on text{fill:var(--pi)}
+.simlog{font-family:var(--mono);font-size:.78rem;background:var(--sunk);border-radius:8px;padding:10px 12px;min-height:44px;overflow-wrap:anywhere}
+.phase{display:grid;grid-template-columns:54px minmax(0,1fr);gap:14px;padding:14px 0;border-top:1px solid var(--line)}
+.phase:first-child{border-top:0}
+.phase .n{font-family:var(--display);font-size:1.6rem;font-weight:700;color:var(--pi);line-height:1}
+.phase h3{margin-bottom:4px}
+.phase p{font-size:.92rem;color:var(--muted)}
+.phase .proof{font-size:.84rem;margin-top:6px;color:var(--ink)}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,400px),1fr));gap:14px;margin-top:18px}
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin-top:18px}
+@media (max-width:820px){details.prob .body{grid-template-columns:minmax(0,1fr);padding-left:16px}}
+</style>
+<style>
+/* board, ticket and inbox panels */
+.fx{display:inline-block;font-family:var(--mono);font-size:.74rem;font-weight:500;padding:1px 8px;border-radius:999px}
+.fx.read{background:var(--ok-soft);color:var(--ok)} .fx.write{background:var(--pi-soft);color:var(--pi)} .fx.danger{background:var(--bad-soft);color:var(--bad)}
+.mock table{min-width:0} .card .fx{width:max-content;justify-self:start;align-self:start}
+.toggles{display:flex;flex-wrap:wrap;gap:8px}
+.kind{display:inline-block;font-family:var(--mono);font-size:.72rem;font-weight:500;padding:1px 8px;border-radius:999px;width:max-content}
+.kind.todo{background:var(--panel);color:var(--muted);box-shadow:inset 0 0 0 1px var(--line)} .kind.doing{background:var(--pi-soft);color:var(--pi)} .kind.waiting{background:var(--an-soft);color:var(--an)} .kind.done{background:var(--ok-soft);color:var(--ok)}
+.colrows{display:grid;gap:8px;margin:12px 0}
+.colrow{display:grid;grid-template-columns:minmax(0,1fr) 120px auto auto;gap:8px;align-items:center}
+.colrow input,.colrow select{font:inherit;font-size:.88rem;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink);min-width:0}
+.miniboard{display:flex;gap:8px;overflow-x:auto;margin:14px 0;padding-bottom:4px}
+.mcol{flex:0 0 130px;min-height:110px;background:var(--sunk);border-radius:8px;padding:8px;display:flex;flex-direction:column;gap:6px;font-size:.84rem}
+.mticket{background:var(--panel);border:1px solid var(--pi);border-radius:6px;padding:6px 8px;font-size:.8rem;color:var(--ink)}
+.mticket.blocked{border-color:var(--bad)} .mticket small{display:block;color:var(--bad);font-size:.72rem}
+@media (max-width:560px){.colrow{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+.tkwrap{display:grid;grid-template-columns:minmax(0,240px) minmax(0,1fr);gap:22px;align-items:start}
+.tcard{all:unset;cursor:pointer;display:flex;flex-direction:column;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;box-shadow:0 1px 2px rgba(0,0,0,.05);font-size:.9rem;color:var(--ink)}
+.tcard:focus-visible{outline:2px solid var(--pi)}
+.tcard .lbls{gap:4px} .bar{width:36px;height:6px;border-radius:3px} .bar.pi{background:var(--pi)} .bar.an{background:var(--an)} .bar.bad{background:var(--bad)}
+.tmeta{display:flex;gap:10px;align-items:center;color:var(--muted);font-size:.8rem} .tmeta .av{margin-left:auto}
+.av{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;font-size:.74rem;font-weight:600;flex:none} .av.pi{background:var(--pi-soft);color:var(--pi)} .av.an{background:var(--an-soft);color:var(--an)}
+.tk{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.tktitle{font-size:1.25rem;margin:0} .tkdesc{margin:0;color:var(--ink)}
+.lbls{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.lbl{font-size:.76rem;font-weight:500;padding:2px 10px;border-radius:999px} .lbl.pi{background:var(--pi-soft);color:var(--pi)} .lbl.an{background:var(--an-soft);color:var(--an)} .lbl.bad{background:var(--bad-soft);color:var(--bad)}
+.lbls .btn{padding:2px 10px;font-size:.76rem}
+.thumbs{display:flex;gap:8px} .thumbs svg{width:120px;height:80px}
+.thread{display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--line);padding-top:12px}
+.cmt{display:flex;flex-direction:column;gap:4px} .cmt p{margin:0 0 0 32px;font-size:.92rem;color:var(--ink)}
+.cmt.reply{margin:8px 0 0 32px;padding-left:12px;border-left:2px solid var(--line)}
+.chead{display:flex;gap:8px;align-items:center;font-size:.88rem}
+.reacts{display:flex;flex-wrap:wrap;gap:6px;margin-left:32px}
+.react{font:inherit;font-size:.78rem;padding:1px 8px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--muted);cursor:pointer}
+.react.on{background:var(--pi-soft);border-color:var(--pi);color:var(--pi)} .react.add{border-style:dashed}
+.act{font-size:.8rem;color:var(--muted);font-family:var(--mono);padding-left:32px}
+.cform{display:flex;gap:8px} .cform input{flex:1;min-width:0;font:inherit;font-size:.9rem;padding:7px 10px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink)}
+@media (max-width:720px){.tkwrap{grid-template-columns:minmax(0,1fr)}}
+.itemcard{font-family:var(--mono);font-size:.8rem;background:var(--sunk);border-radius:8px;padding:10px 12px;overflow-wrap:anywhere;white-space:pre-wrap}
+</style>
+</head>
+<body>
+<nav class="rail" id="rail" aria-label="Sections">
+  <div class="wrap">
+    <a href="#goal">Tasks</a><a href="#words">Words</a><a href="#basics">The basics</a><a href="#board">Your board</a><a href="#ticket">A ticket</a><a href="#agents">Your agents</a><a href="#inbox">The inbox</a><a href="#cards">Cards</a><a href="#run">Running it</a><a href="#faq">Questions</a>
+  </div>
+</nav>
+
+<header class="hero" id="goal">
+  <div class="wrap stack">
+    <span class="eyebrow">User guide · Tasks · built on open-agent-kit</span>
+    <h1>Task management for your AI agents</h1>
+    <p class="lede">Tasks is where your AI agents find work, claim tickets, report progress and hand work to each other. You watch it happen on the board and join in when you want to: comment, move a ticket, or undo something an agent did.</p>
+    <div class="answer">
+      <div><b>Built for agents</b>Agents use Tasks through its own tools: find work, claim a ticket, comment, move it on. Every change shows which agent made it.</div>
+      <div><b>You see everything</b>The board updates as agents work. Open any ticket to read what they did and reply.</div>
+      <div><b>Everything can be undone</b>Agents can archive and cancel tickets, and you can restore them. Deleting forever is only on the page, for you.</div>
+    </div>
+  </div>
+  <div class="wrap">
+    <figure class="fig">
+      <div class="fig-scroll">
+      <svg viewBox="0 0 900 170" style="min-width:620px" role="img" aria-label="Your coding agents and your assistant work on the board in Tasks. You watch and join in from the page.">
+        <defs><marker id="h1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="mk-mut"/></marker></defs>
+        <rect x="20" y="20" width="200" height="38" rx="8" class="s-an"/><text x="120" y="44" text-anchor="middle" class="t">Your coding agents</text>
+        <rect x="20" y="66" width="200" height="38" rx="8" class="s-an"/><text x="120" y="90" text-anchor="middle" class="t">Your assistant</text>
+        <rect x="20" y="112" width="200" height="38" rx="8" class="s-sunk"/><text x="120" y="136" text-anchor="middle" class="t">You, watching and joining in</text>
+        <path d="M220 39 H280 M220 85 H280 M220 131 H280 M280 39 V131" class="ln-mut"/><path d="M280 85 H336" class="ln-mut" marker-end="url(#h1)"/>
+        <rect x="340" y="20" width="540" height="130" rx="12" class="s-box"/>
+        <text x="360" y="46" class="th">Tasks</text>
+        <rect x="360" y="60" width="120" height="74" rx="8" class="s-sunk"/><text x="420" y="80" text-anchor="middle" class="ts">todo</text><rect x="372" y="90" width="96" height="16" rx="4" class="s-box"/><rect x="372" y="110" width="96" height="16" rx="4" class="s-box"/>
+        <rect x="490" y="60" width="120" height="74" rx="8" class="s-sunk"/><text x="550" y="80" text-anchor="middle" class="ts">doing</text><rect x="502" y="90" width="96" height="16" rx="4" class="s-pi"/>
+        <rect x="620" y="60" width="120" height="74" rx="8" class="s-sunk"/><text x="680" y="80" text-anchor="middle" class="ts">review</text><rect x="632" y="90" width="96" height="16" rx="4" class="s-box"/>
+        <rect x="750" y="60" width="110" height="74" rx="8" class="s-sunk"/><text x="805" y="80" text-anchor="middle" class="ts">done</text><rect x="762" y="90" width="86" height="16" rx="4" class="s-ok"/>
+      </svg>
+      </div>
+      <figcaption>Agents do the work on the board. You see each change as it happens and can join in at any point. Agents connect with your approval, and you decide what each one may do.</figcaption>
+    </figure>
+  </div>
+</header>
+
+<!-- WORDS -->
+<section id="words">
+  <div class="wrap">
+    <div class="stack prose">
+      <span class="eyebrow">1 · Words</span>
+      <h2>The words Tasks uses</h2>
+      <p>Tasks uses a handful of words with one meaning each. They appear on the page, in the agents' answers and in this guide.</p>
+    </div>
+    <div class="bench">
+      <div class="filters"><input id="glossSearch" type="search" placeholder="Filter the words, for example ticket or inbox" aria-label="Filter the words"></div>
+      <div class="gloss" id="gloss"></div>
+    </div>
+  </div>
+</section>
+
+<!-- BASICS -->
+<section id="basics">
+  <div class="wrap">
+    <div class="stack prose">
+      <span class="eyebrow">2 · The basics</span>
+      <h2>Projects hold tickets</h2>
+      <p>A <b>project</b> is a body of work, such as an app. A <b>ticket</b> is one piece of work inside a project, small enough for one agent to finish.</p>
+      <p>A new ticket starts in the first to-do column of its project's <b>board</b>. On the board, a ticket moves through the columns as it gets worked on.</p>
+    </div>
+    <figure class="fig">
+      <div class="fig-scroll">
+      <svg viewBox="0 0 900 90" style="min-width:600px" role="img" aria-label="A project contains tickets. Each ticket has an id such as TLK-529.">
+        <defs><marker id="b1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="mk-pi"/></marker></defs>
+        <rect x="20" y="22" width="300" height="46" rx="8" class="s-pi"/><text x="170" y="44" text-anchor="middle" class="tb">Project</text><text x="170" y="60" text-anchor="middle" class="ts">Talk · prefix TLK</text>
+        <path d="M320 45 H416" class="ln-pi" marker-end="url(#b1)"/>
+        <rect x="420" y="22" width="460" height="46" rx="8" class="s-box"/><text x="650" y="44" text-anchor="middle" class="tb">Ticket TLK-529</text><text x="650" y="60" text-anchor="middle" class="ts">title, description, labels, images, comments</text>
+      </svg>
+      </div>
+    </figure>
+  </div>
+</section>
+
+<!-- BOARD -->
+<section id="board">
+  <div class="wrap">
+    <div class="stack prose">
+      <span class="eyebrow">3 · Your board</span>
+      <h2>Each project sets its own columns</h2>
+      <p>A new project's board starts with four columns: <b>To do</b>, <b>Doing</b>, <b>Review</b> and <b>Done</b>. You can rename them, reorder them, add more or remove them. Each project has its own columns, so one project can stay simple while another has a dozen steps.</p>
+      <p>Each column has a <b>kind</b>, one of four. The kind tells Tasks and your agents what the column means, whatever you call it. A ticket can move from any column to any other, including back.</p>
+    </div>
+    <div class="rules" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">
+      <div class="card"><span class="kind todo">to do</span><h3>Not started</h3><p>Agents looking for work find tickets here.</p></div>
+      <div class="card"><span class="kind doing">doing</span><h3>Being worked on</h3><p>Claiming a ticket moves it to the first doing column.</p></div>
+      <div class="card"><span class="kind waiting">waiting</span><h3>Waiting on someone</h3><p>A review or a sign-off. Asking for review moves it to the first waiting column.</p></div>
+      <div class="card"><span class="kind done">done</span><h3>Finished</h3><p>Counts as finished. Agents looking for work skip it.</p></div>
+    </div>
+    <div class="bench">
+      <div class="bench-head"><h3>Set up a board, then move a ticket</h3><span class="caption">Start from a preset, then rename, add or remove columns.</span></div>
+      <div class="row" id="presets"></div>
+      <div class="colrows" id="colRows"></div>
+      <div class="row"><button class="btn" type="button" id="addCol">Add a column</button><span class="caption" id="colWarn"></span></div>
+      <div class="miniboard" id="miniBoard"></div>
+      <div class="row" id="moveRow"></div>
+      <div class="box say" id="boardSay"></div>
+      <div class="simlog" id="boardLog"></div>
+    </div>
+    <details class="prob"><summary>Blocked, canceled and archived tickets</summary><div class="body" style="grid-template-columns:minmax(0,1fr)"><ol class="timeline" style="padding-left:0">
+      <li class="wait"><b>Blocked</b><span>A state on the ticket, not a column. A ticket can be blocked in any column, with a note saying why. Agents skip blocked tickets when they look for work.</span></li>
+      <li class="bad"><b>Canceled</b><span>An action, not a column. Canceled tickets are in the Archive, under a filter, and can be restored.</span></li>
+      <li class="bad"><b>Archived</b><span>An action, not a column. The ticket keeps its column, so restoring puts it back where it was.</span></li>
+    </ol></div></details>
+  </div>
+</section>
+
+<!-- TICKET -->
+<section id="ticket">
+  <div class="wrap">
+    <div class="stack prose">
+      <span class="eyebrow">4 · A ticket</span>
+      <h2>A ticket is a title, a description and a conversation</h2>
+      <p>When you open a ticket, you see its title, a description, its labels, any images, and the comments. Comments have replies and reactions, so a question and its answers stay together. Moves and other changes show as short lines between the comments.</p>
+      <p>Most of a ticket's conversation comes from agents: what they did, what they found, screenshots of the result. You read along and reply when you want to, and agents read your replies too. What each agent may do is set once, when you approve its connection.</p>
+    </div>
+    <div class="bench">
+      <div class="bench-head"><h3>Open a ticket</h3><span class="caption">React, reply, add a label or write a comment.</span></div>
+      <div class="tkwrap">
+        <div class="stack" style="gap:10px">
+          <span class="caption">On the board</span>
+          <button class="tcard" type="button" id="tcard" aria-pressed="true">
+            <span class="lbls" id="cardLabels"></span>
+            <b>Voice notes on the phone</b>
+            <span class="tmeta"><span id="cardCount"></span><span>🖼 2</span><span class="av an" title="Coder">C</span></span>
+          </button>
+          <span class="caption">On the board a ticket shows its title, labels, comment and image counts, and who it is assigned to.</span>
+        </div>
+        <article class="tk" aria-label="Ticket TLK-529">
+          <span class="caption mono">TLK-529 · in <b>Review</b> · assigned to Coder</span>
+          <h3 class="tktitle">Voice notes on the phone</h3>
+          <div class="lbls" id="tkLabels"></div>
+          <p class="tkdesc">Record a voice note from the phone and attach it to a chat. It should work with the screen locked.</p>
+          <div class="thumbs">
+            <svg viewBox="0 0 120 80" role="img" aria-label="Screenshot: the record button"><rect width="120" height="80" rx="6" class="s-sunk"/><rect x="10" y="10" width="100" height="12" rx="3" class="s-box"/><circle cx="60" cy="50" r="16" class="s-bad"/></svg>
+            <svg viewBox="0 0 120 80" role="img" aria-label="Screenshot: the lock screen"><rect width="120" height="80" rx="6" class="s-sunk"/><rect x="40" y="8" width="40" height="64" rx="6" class="s-box"/><rect x="48" y="52" width="24" height="10" rx="5" class="s-pi"/></svg>
+          </div>
+          <div class="thread" id="thread"></div>
+          <form class="cform" id="cform"><input id="ctext" placeholder="Write a comment" aria-label="Write a comment"><button class="btn primary" type="submit">Send</button></form>
+        </article>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- AGENTS -->
+<section id="agents">
+  <div class="wrap">
+    <div class="stack prose">
+      <span class="eyebrow">5 · Your agents</span>
+      <h2>Each agent connects once, with your OK</h2>
+      <p>An agent, such as a coding agent or your assistant, has to connect to Tasks before it can do anything. It asks once, and you approve it on the <b>Connections</b> screen. When you approve, you choose what it may do and which actor it is, so its work shows up under the right name.</p>
+      <p>You can revoke a connection at any time. The agent is cut off at once, and everything it did stays visible.</p>
+    </div>
+    <figure class="fig">
+      <div class="fig-scroll">
+      <svg viewBox="0 0 900 140" style="min-width:620px" role="img" aria-label="An agent asks to connect. You approve it and choose what it may do. From then on its work shows its name.">
+        <defs><marker id="c1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="mk-mut"/></marker></defs>
+        <rect x="20" y="40" width="180" height="56" rx="10" class="s-an"/><text x="110" y="64" text-anchor="middle" class="tb">Agent asks</text><text x="110" y="82" text-anchor="middle" class="ts">"may I connect?"</text>
+        <path d="M200 68 H246" class="ln-mut" marker-end="url(#c1)"/>
+        <rect x="250" y="20" width="300" height="96" rx="10" class="s-box"/><text x="400" y="44" text-anchor="middle" class="tb">You approve, and choose</text>
+        <rect x="305" y="58" width="80" height="26" rx="13" class="s-ok"/><text x="345" y="76" text-anchor="middle" class="t">read</text>
+        <rect x="415" y="58" width="80" height="26" rx="13" class="s-pi"/><text x="455" y="76" text-anchor="middle" class="t">change</text>
+        <text x="400" y="104" text-anchor="middle" class="ts">and which actor it is</text>
+        <path d="M550 68 H596" class="ln-mut" marker-end="url(#c1)"/>
+        <rect x="600" y="40" width="280" height="56" rx="10" class="s-pi"/><text x="740" y="64" text-anchor="middle" class="tb">Its work shows its name</text><text x="740" y="82" text-anchor="middle" class="ts">revoke it any time</text>
+      </svg>
+      </div>
+    </figure>
+    <div class="rules">
+      <div class="card"><span class="fx read">read</span><h3>Look</h3><p>Find tickets, read a ticket, list projects. Runs straight away.</p></div>
+      <div class="card"><span class="fx write">change</span><h3>Change</h3><p>Create a ticket, move it, comment, add a label. Runs straight away.</p></div>
+    </div>
+    <details class="prob"><summary>Connecting an agent, step by step</summary><div class="body" style="grid-template-columns:minmax(0,1fr)"><ol class="timeline" style="padding-left:0">
+      <li><b>The agent asks to connect</b><span>Tasks shows the request on your Connections screen, with the name it gave.</span></li>
+      <li><b>You approve it</b><span>You choose whether it may only look, or also change things, and pick the actor it is, or create one.</span></li>
+      <li><b>The agent collects its key</b><span>Tasks shows the key only once and keeps nothing but a fingerprint of it.</span></li>
+      <li class="ok"><b>Its work shows its name</b><span>Checked by Tasks, never taken on trust.</span></li>
+      <li class="bad"><b>You revoke it</b><span>It is cut off at once. Requests you never approve expire after 10 minutes.</span></li>
+    </ol></div></details>
+  </div>
+</section>
+
+<!-- INBOX -->
+<section id="inbox">
+  <div class="wrap">
+    <div class="stack prose">
+      <span class="eyebrow">6 · The inbox</span>
+      <h2>New ideas arrive in your inbox, sorted for you</h2>
+      <p>The inbox collects new ideas and requests before they become tickets. You can capture them yourself, or have other tools send them in.</p>
+      <p>You can add <b>steps</b> that look at each new item as it arrives. Steps run one after another, and each one sees what the earlier ones did. A step can add tags, pull out details, tidy the text, sort items into categories, reject spam, or turn an item straight into a ticket. Whatever is left lands in your inbox.</p>
+    </div>
+    <figure class="fig">
+      <div class="fig-scroll">
+      <svg viewBox="0 0 900 190" style="min-width:680px" role="img" aria-label="A new item passes through your steps in order. It lands in your inbox, unless a step rejects it or turns it into a ticket.">
+        <defs>
+          <marker id="i1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="mk-pi"/></marker>
+          <marker id="i2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="mk-bad"/></marker>
+        </defs>
+        <rect x="20" y="40" width="120" height="50" rx="8" class="s-sunk"/><text x="80" y="70" text-anchor="middle" class="tb">New item</text>
+        <path d="M140 65 H176" class="ln-pi" marker-end="url(#i1)"/>
+        <rect x="180" y="34" width="150" height="62" rx="10" class="s-pi"/><text x="255" y="60" text-anchor="middle" class="tb">Spam check</text><text x="255" y="80" text-anchor="middle" class="ts">step 1</text>
+        <path d="M330 65 H366" class="ln-pi" marker-end="url(#i1)"/>
+        <rect x="370" y="34" width="150" height="62" rx="10" class="s-pi"/><text x="445" y="60" text-anchor="middle" class="tb">Pull out details</text><text x="445" y="80" text-anchor="middle" class="ts">step 2</text>
+        <path d="M520 65 H556" class="ln-pi" marker-end="url(#i1)"/>
+        <rect x="560" y="34" width="150" height="62" rx="10" class="s-pi"/><text x="635" y="60" text-anchor="middle" class="tb">Sort it</text><text x="635" y="80" text-anchor="middle" class="ts">step 3</text>
+        <path d="M710 65 H746" class="ln-pi" marker-end="url(#i1)"/>
+        <rect x="750" y="40" width="130" height="50" rx="8" class="s-ok"/><text x="815" y="70" text-anchor="middle" class="tb c-ok">Your inbox</text>
+        <path d="M255 96 V136" class="ln-bad" marker-end="url(#i2)"/><rect x="195" y="140" width="120" height="34" rx="8" class="s-bad"/><text x="255" y="162" text-anchor="middle" class="t c-bad">rejected</text>
+        <path d="M635 96 V136" class="ln-bad" marker-end="url(#i2)"/><rect x="565" y="140" width="140" height="34" rx="8" class="s-an"/><text x="635" y="162" text-anchor="middle" class="t c-an">became a ticket</text>
+      </svg>
+      </div>
+      <figcaption>You add, remove and reorder steps in Settings. A step that rejects an item or turns it into a ticket ends the chain for that item.</figcaption>
+    </figure>
+    <div class="bench">
+      <div class="bench-head"><h3>Send an item through your steps</h3><span class="caption">Pick an item, switch steps on or off, and watch what each one does.</span></div>
+      <div class="lab">
+        <div class="picker" id="labItems"></div>
+        <div class="stack" style="gap:12px">
+          <div class="toggles" id="labSteps"></div>
+          <div class="itemcard" id="labIn"></div>
+          <ol class="timeline" id="labLine" style="padding-left:0"></ol>
+          <div class="box say" id="labOut"></div>
+        </div>
+      </div>
+    </div>
+    <div class="rules">
+      <div class="card"><h3>Any kind of step</h3><p>A classifier, a local model, a hosted model, a script you write, or another app. Each gets the item and answers with what to do.</p></div>
+      <div class="card"><h3>Only what you allow</h3><p>Each step only gets the actions you give it. A tagging step cannot reject anything.</p></div>
+      <div class="card"><h3>Every run recorded</h3><p>You can always see which steps ran and what each one did, and run an item again after changing your steps.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- CARDS -->
+<section id="cards">
+  <div class="wrap">
+    <div class="stack prose">
+      <span class="eyebrow">7 · Cards</span>
+      <h2>Results show as cards</h2>
+      <p>When you or an agent does something, the result appears as a small card: a list of tickets, one ticket's details, or a summary of what changed. Cards look the same on Tasks' page and in your assistant. Your board also updates on its own as changes happen, without reloading.</p>
+    </div>
+    <div class="two">
+      <div class="card mock"><span class="caption mono">list</span><h3>Doing</h3><table><thead><tr><th>Id</th><th>Title</th><th>Assigned</th></tr></thead><tbody><tr><td>TLK-529</td><td>Voice notes</td><td>Agent A</td></tr><tr><td>TSK-88</td><td>Inbox steps</td><td>you</td></tr></tbody></table></div>
+      <div class="card"><span class="caption mono">change</span><h3>Ticket changed</h3><p><b style="color:var(--ink)">moved</b> TLK-529 to review<br><b style="color:var(--ink)">by</b> Agent A</p><span class="caption mono" style="margin-top:8px">record</span><h3>TSK-88</h3><p>Inbox steps · Doing · 3 comments</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- RUN -->
+<section id="run">
+  <div class="wrap">
+    <div class="stack prose">
+      <span class="eyebrow">8 · Running it</span>
+      <h2>One container, one data folder</h2>
+      <p>Tasks runs as a single container. All its data lives in one folder, so backing up Tasks means copying that folder.</p>
+      <p>The first time it starts, Tasks prints a setup secret in its log. Open the page, enter the secret, and you are signed in. That printed secret works once; to sign in again later, set your own with <code>KIT_SETUP_SECRET</code>.</p>
+    </div>
+    <div class="two">
+<pre><span class="c"># docker-compose.yml</span>
+services:
+  tasks:
+    image: ghcr.io/…/tasks
+    ports: ["8081:8081"]
+    volumes: [tasks-data:/data]   <span class="c"># all your data</span>
+    environment:
+      KIT_MODEL: local/llama3.1    <span class="c"># optional</span>
+volumes:
+  tasks-data:</pre>
+      <div class="tablewrap"><table style="min-width:0">
+        <thead><tr><th>Setting</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td><code>PORT</code></td><td>Where the page and other apps reach Tasks</td></tr>
+          <tr><td><code>DATA_DIR</code></td><td>Where all the data lives</td></tr>
+          <tr><td><code>KIT_SETUP_SECRET</code></td><td>Your own sign-in secret</td></tr>
+          <tr><td><code>KIT_MODEL</code></td><td>The model for the built-in assistant</td></tr>
+          <tr><td><code>KIT_CONNECT</code></td><td>Other apps to connect to at start</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq">
+  <div class="wrap">
+    <div class="stack prose">
+      <span class="eyebrow">9 · Questions</span>
+      <h2>Questions people ask</h2>
+      <p>The answers to what people ask most. Open any of them.</p>
+    </div>
+    <div id="faqs"></div>
+  </div>
+</section>
+
+<footer><div class="wrap">Tasks is built on open-agent-kit.</div></footer>
+
+<script>
+(function () {
+"use strict";
+const $ = (s) => document.querySelector(s);
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; };
+
+/* words */
+const WORDS = [
+  ["Project", "A body of work, such as an app. Holds tickets, and gives them their prefix, like TLK."],
+  ["Ticket", "One piece of work: a title, a description, labels, images and comments. Has an id like TLK-529."],
+  ["Label", "A coloured tag on a ticket, such as bug or voice. You make your own."],
+  ["Board", "Where a project's tickets move through its columns."],
+  ["Column", "One step on a project's board, such as Review. Each project sets its own; new ones start with To do, Doing, Review and Done."],
+  ["Kind", "What a column means: to do, doing, waiting or done. Tasks and agents go by the kind, not the name."],
+  ["Blocked", "A state on a ticket, in any column, with a note saying why. Agents skip blocked tickets."],
+  ["Actor", "Who did something: one of your agents, or you. Every change shows its actor."],
+  ["Connection", "An agent or app you approved, with what it may do. You can revoke it any time."],
+  ["Inbox", "Where new ideas and requests arrive before they become tickets."],
+  ["Step", "Something you add to the inbox that looks at each new item: tag, tidy, sort, reject or promote."],
+  ["Card", "How a result is shown: a list, one ticket, or what changed."],
+];
+function renderWords(q) {
+  const host = $("#gloss"); host.replaceChildren();
+  WORDS.filter((w) => !q || w.join(" ").toLowerCase().includes(q)).forEach(([t, d]) => {
+    const c = el("div", "term"); c.append(el("b", "", t), el("p", "", d)); host.append(c);
+  });
+  if (!host.children.length) host.append(el("p", "empty", "No word matches. Clear the filter to see all of them."));
+}
+$("#glossSearch").addEventListener("input", (e) => renderWords(e.target.value.trim().toLowerCase())); renderWords("");
+
+/* your board */
+const KINDS = { todo: "to do", doing: "doing", waiting: "waiting", done: "done" };
+const KIND_SAY = { todo: "Not started. Agents looking for work can find it.", doing: "Someone is working on it.", waiting: "Waiting for someone else, such as a reviewer.", done: "Finished. Agents looking for work skip it." };
+const PRESETS = {
+  "Default": [["To do", "todo"], ["Doing", "doing"], ["Review", "waiting"], ["Done", "done"]],
+  "Simple": [["To do", "todo"], ["Doing", "doing"], ["Done", "done"]],
+  "Wide Kanban": [["Triage", "todo"], ["Three amigos", "todo"], ["Ready", "todo"], ["To do", "todo"], ["Doing", "doing"], ["Dev done", "waiting"], ["Review", "waiting"], ["PM sign-off", "waiting"], ["Done", "done"]],
+};
+let cols = [], at = 0, blocked = false, rounds = 0, blog = [], preset = "Default";
+function loadPreset(name) { preset = name; cols = PRESETS[name].map(([n, k]) => ({ name: n, kind: k })); at = 0; blocked = false; rounds = 0; blog = ["TLK-529 in " + cols[0].name]; renderBoard(); }
+function moveTo(i) {
+  if (i === at) return;
+  at = i; if (cols[i].kind === "waiting") rounds++;
+  blog.push("→ " + cols[i].name); renderBoard();
+}
+function renderBoard() {
+  const pr = $("#presets"); pr.replaceChildren();
+  for (const n of Object.keys(PRESETS)) { const b = el("button", "btn", n); b.type = "button"; b.setAttribute("aria-pressed", String(n === preset)); b.addEventListener("click", () => loadPreset(n)); pr.append(b); }
+  const rows = $("#colRows"); rows.replaceChildren();
+  cols.forEach((c, i) => {
+    const r = el("div", "colrow");
+    const name = el("input"); name.value = c.name; name.setAttribute("aria-label", "Column name"); name.addEventListener("change", () => { c.name = name.value.trim() || "Untitled"; renderBoard(); });
+    const kind = el("select"); kind.setAttribute("aria-label", "Column kind");
+    for (const [k, label] of Object.entries(KINDS)) { const o = el("option", "", label); o.value = k; o.selected = k === c.kind; kind.append(o); }
+    kind.addEventListener("change", () => { c.kind = kind.value; renderBoard(); });
+    const left = el("button", "btn", "←"); left.type = "button"; left.disabled = i === 0; left.setAttribute("aria-label", "Move column left");
+    left.addEventListener("click", () => { [cols[i - 1], cols[i]] = [cols[i], cols[i - 1]]; if (at === i) at--; else if (at === i - 1) at++; renderBoard(); });
+    const del = el("button", "btn danger", "Remove"); del.type = "button"; del.disabled = cols.length === 1;
+    del.addEventListener("click", () => {
+      const gone = cols.splice(i, 1)[0];
+      if (at === i) { at = Math.max(0, i - 1); blog.push(gone.name + " removed; TLK-529 moved to " + cols[at].name); } else if (at > i) at--;
+      renderBoard();
+    });
+    r.append(name, kind, left, del); rows.append(r);
+  });
+  const missing = Object.keys(KINDS).filter((k) => !cols.some((c) => c.kind === k));
+  const warn = { todo: "no to-do column, so new tickets have nowhere to start", doing: "no doing column, so agents cannot claim tickets", waiting: "no waiting column, so asking for review moves nothing", done: "no done column, so nothing counts as finished" };
+  $("#colWarn").textContent = missing.length ? "This board has " + missing.map((k) => warn[k]).join("; ") + "." : "";
+  const mb = $("#miniBoard"); mb.replaceChildren();
+  cols.forEach((c, i) => {
+    const col = el("div", "mcol"); col.append(el("b", "", c.name), el("span", "kind " + c.kind, KINDS[c.kind]));
+    if (i === at) { const t = el("div", "mticket" + (blocked ? " blocked" : ""), "TLK-529 Voice notes"); if (blocked) t.append(el("small", "", "blocked: waiting on the API key")); col.append(t); }
+    mb.append(col);
+  });
+  const mv = $("#moveRow"); mv.replaceChildren();
+  cols.forEach((c, i) => { if (i === at) return; const b = el("button", "btn", "Move to " + c.name); b.type = "button"; b.addEventListener("click", () => moveTo(i)); mv.append(b); });
+  const bl = el("button", "btn" + (blocked ? " primary" : ""), blocked ? "Unblock" : "Mark blocked"); bl.type = "button";
+  bl.addEventListener("click", () => { blocked = !blocked; blog.push(blocked ? "marked blocked" : "unblocked"); renderBoard(); }); mv.append(bl);
+  const c = cols[at];
+  $("#boardSay").replaceChildren(el("b", "", c.name + (c.name.toLowerCase() === KINDS[c.kind] ? "" : " (" + KINDS[c.kind] + ")") + ". "), document.createTextNode(KIND_SAY[c.kind] + (blocked ? " It is blocked, so agents skip it, but it stays in this column." : "") + (rounds ? " Times it has waited for someone: " + rounds + "." : "")));
+  $("#boardLog").textContent = blog.join("   ");
+}
+$("#addCol").addEventListener("click", () => { const d = cols.findIndex((c) => c.kind === "done"); const i = d < 0 ? cols.length : d; cols.splice(i, 0, { name: "New column", kind: "waiting" }); if (at >= i) at++; preset = ""; renderBoard(); });
+loadPreset("Default");
+
+/* a ticket */
+const LABELS = [["voice", "pi"], ["mobile", "an"], ["bug", "bad"]];
+let labels = ["voice", "mobile"];
+const THREAD = [
+  { act: "Coder claimed this and moved it to Doing" },
+  { who: "Coder", agent: true, av: "C", text: "Recording works in the app. Next: recording with the screen locked.", r: { "👍": [1, true] }, replies: [
+    { who: "You", av: "Y", text: "Nice. Keep the record button big on the lock screen.", r: { "👀": [1, false] } } ] },
+  { act: "Coder moved this from Doing to Review" },
+  { who: "Coder", agent: true, av: "C", text: "Ready for review. Works on the lock screen with a large button; screenshots attached above. The change is in pull request 42.", r: {}, replies: [] },
+];
+let replyTo = null;
+function chip(name) { const c = (LABELS.find((l) => l[0] === name) || [name, "pi"])[1]; return el("span", "lbl " + c, name); }
+function renderLabels() {
+  $("#cardLabels").replaceChildren(...labels.map((l) => el("span", "bar " + (LABELS.find((x) => x[0] === l) || [, "pi"])[1])));
+  const host = $("#tkLabels"); host.replaceChildren(...labels.map(chip));
+  const free = LABELS.map((l) => l[0]).filter((l) => !labels.includes(l));
+  if (free.length) { const b = el("button", "btn", "+ " + free[0]); b.type = "button"; b.addEventListener("click", () => { labels.push(free[0]); renderLabels(); }); host.append(b); }
+  else { const b = el("button", "btn", "Remove bug"); b.type = "button"; b.addEventListener("click", () => { labels = labels.filter((l) => l !== "bug"); renderLabels(); }); host.append(b); }
+}
+function comment(c, isReply) {
+  const box = el("div", "cmt" + (isReply ? " reply" : ""));
+  const head = el("div", "chead"); head.append(el("span", "av " + (c.agent ? "an" : "pi"), c.av), el("b", "", c.who)); if (c.agent) head.append(el("span", "fx write", "agent"));
+  box.append(head, el("p", "", c.text));
+  const row = el("div", "reacts");
+  for (const [emo, v] of Object.entries(c.r)) { const b = el("button", "react" + (v[1] ? " on" : ""), emo + " " + v[0]); b.type = "button"; b.setAttribute("aria-pressed", String(v[1])); b.addEventListener("click", () => { v[1] = !v[1]; v[0] += v[1] ? 1 : -1; if (!v[0]) delete c.r[emo]; renderThread(); }); row.append(b); }
+  for (const emo of ["👍", "👀"].filter((e) => !c.r[e])) { const b = el("button", "react add", "+" + emo); b.type = "button"; b.setAttribute("aria-label", "React with " + emo); b.addEventListener("click", () => { c.r[emo] = [1, true]; renderThread(); }); row.append(b); }
+  if (!isReply) { const rb = el("button", "react", replyTo === c ? "Replying…" : "Reply"); rb.type = "button"; rb.addEventListener("click", () => { replyTo = replyTo === c ? null : c; renderThread(); $("#ctext").focus(); }); row.append(rb); }
+  box.append(row);
+  if (!isReply) for (const r of c.replies) box.append(comment(r, true));
+  return box;
+}
+function renderThread() {
+  $("#thread").replaceChildren(...THREAD.map((c) => (c.act ? el("div", "act", c.act) : comment(c, false))));
+  $("#ctext").placeholder = replyTo ? "Reply to " + replyTo.who : "Write a comment";
+  const n = THREAD.reduce((s, c) => s + (c.act ? 0 : 1 + c.replies.length), 0);
+  $("#cardCount").textContent = "💬 " + n;
+}
+$("#cform").addEventListener("submit", (e) => {
+  e.preventDefault(); const text = $("#ctext").value.trim(); if (!text) return; $("#ctext").value = "";
+  const c = { who: "You", av: "Y", text, r: {}, replies: [] };
+  if (replyTo) replyTo.replies.push(c); else THREAD.push(c);
+  replyTo = null; renderThread();
+});
+$("#tcard").addEventListener("click", () => document.querySelector(".tk").scrollIntoView({ behavior: "smooth", block: "nearest" }));
+renderLabels(); renderThread();
+
+/* inbox lab */
+const ITEMS = [
+  { name: "A feature request", text: "Need export to CSV for the money app pls!!", spam: false, kind: "request", app: "money", format: "csv", tidy: "Export to CSV in Money", category: "feature" },
+  { name: "A bug report", text: "the board crashes when I drag a ticket to review", spam: false, kind: "bug", tidy: "Board crashes when dragging to review", category: "bug" },
+  { name: "Spam", text: "CHEAP WATCHES click here now", spam: true },
+];
+const STEPS = [["spam", "Spam check"], ["details", "Pull out details"], ["sort", "Sort it (requests only)"]];
+let item = 0; const on = { spam: true, details: true, sort: true };
+function runLab() {
+  const it = ITEMS[item];
+  const pick = $("#labItems"); pick.replaceChildren();
+  ITEMS.forEach((x, i) => { const b = el("button", "btn", x.name); b.type = "button"; b.setAttribute("aria-pressed", String(i === item)); b.addEventListener("click", () => { item = i; runLab(); }); pick.append(b); });
+  const tg = $("#labSteps"); tg.replaceChildren();
+  STEPS.forEach(([k, label]) => { const b = el("button", "btn", label); b.type = "button"; b.setAttribute("aria-pressed", String(on[k])); b.addEventListener("click", () => { on[k] = !on[k]; runLab(); }); tg.append(b); });
+  $("#labIn").textContent = "new item   \"" + it.text + "\"";
+  const line = []; const tags = []; const fields = {}; let title = it.text; let category = ""; let end = "";
+  if (on.spam) {
+    if (it.spam) { line.push(["bad", "Spam check", "Looks like spam: rejected. The chain stops here."]); end = "Rejected. You will find it under the rejected tab, with the reason."; }
+    else { tags.push(it.kind); line.push(["ok", "Spam check", "Not spam. Tagged " + it.kind + "."]); }
+  }
+  if (!end && on.details) {
+    if (it.tidy) { title = it.tidy; if (it.app) { fields.app = it.app; fields.format = it.format; } line.push(["ok", "Pull out details", "Title tidied to \"" + title + "\"" + (it.app ? "; found app: " + it.app + ", format: " + it.format : "") + ". The original text is kept."]); }
+    else line.push(["", "Pull out details", "Nothing to pull out."]);
+  }
+  if (!end && on.sort) {
+    if (tags.includes("request")) { category = it.category; line.push(["ok", "Sort it", "Category: " + category + "."]); }
+    else line.push(["", "Sort it", tags.length ? "Skipped: only runs on items tagged request." : "Skipped: the item has no request tag."]);
+  }
+  if (!line.length) line.push(["", "No steps on", "The item goes straight to your inbox as it was."]);
+  const ol = $("#labLine"); ol.replaceChildren();
+  for (const [k, b, s] of line) { const li = el("li", k); li.append(el("b", "", b), el("span", "", s)); ol.append(li); }
+  if (!end) {
+    const extra = [...tags, category, ...Object.entries(fields).map(([a, v]) => a + ": " + v)].filter(Boolean).join(" · ");
+    end = "In your inbox: \"" + title + "\"" + (extra ? "  ·  " + extra : "");
+  }
+  $("#labOut").textContent = end;
+}
+runLab();
+
+/* questions */
+const FAQ = [
+  ["Is Tasks a to-do list for people?", "Tasks is built for AI agents to manage their work: find it, claim it, report on it and hand it on. You use the page to see what they are doing and to join in: reply on a ticket, move it, or undo something an agent did."],
+  ["Can an agent delete my tickets?", "No. Agents can archive and cancel tickets, and you can restore both from the Archive. Deleting forever is only on the page, for you."],
+  ["What happens if Tasks crashes in the middle of a change?", "Nothing half-done. A change and its record are saved together, so either both are there or neither is."],
+  ["An agent sent the same thing twice. Did it happen twice?", "No. Each request carries its own id, and Tasks returns the result it already has when it sees the same id again."],
+  ["Can I change the columns?", "Yes. Each project has its own columns. Rename, reorder, add or remove them in the project's settings. New projects start with To do, Doing, Review and Done."],
+  ["Why does each column have a kind?", "So Tasks and your agents know what a column means, whatever you call it. An agent looking for work checks to-do columns; claiming a ticket moves it to the first doing column."],
+  ["I lost the setup secret.", "Set your own with KIT_SETUP_SECRET and restart Tasks, then sign in with it."],
+  ["How do I stop an agent?", "Revoke its connection on the Connections screen. It is cut off at once, and its past work stays visible under its name."],
+  ["Can my inbox steps use my own model?", "Yes. A step can be a local model, a hosted model, a classifier, a script you write, or another app."],
+  ["Where is my data, and how do I back it up?", "In one folder, the data folder. Copy it to back up Tasks."],
+];
+const host = $("#faqs");
+FAQ.forEach(([q, a], i) => { const d = el("details", "prob"); if (i === 0) d.open = true; const s = el("summary", "", q); const b = el("div", "body"); b.style.gridTemplateColumns = "minmax(0,1fr)"; b.append(el("div", "answer2", a)); d.append(s, b); host.append(d); });
+
+/* nav */
+const links = [...document.querySelectorAll("#rail a")];
+const secs = links.map((a) => document.querySelector(a.getAttribute("href"))).filter(Boolean);
+function onScroll() { let c = secs[0]; const y = window.scrollY + 120; secs.forEach((s) => { if (s.offsetTop <= y) c = s; }); links.forEach((a) => a.classList.toggle("on", a.getAttribute("href") === "#" + c.id)); }
+window.addEventListener("scroll", onScroll, { passive: true }); onScroll();
+})();
+</script>
+</body>
+</html>

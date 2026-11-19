@@ -1,0 +1,21 @@
+# Guardrails. on runs a check; off skips it. Re-run the guardrails skill to check again.
+commands:
+  typecheck: "npm run typecheck"
+  lint: "npm run lint" # biome, then check:docs (no open questions in public docs)
+  format: "npm run format:check"
+  test: "npm run test"
+  verify: "npm run expect"
+checks:
+  gitignore: on
+  no-secrets: on
+  lockfile: on
+  pre-commit: on
+  tests-before-merge: on
+  strict-types: on
+  lint: on
+  format: on
+  ast-grep: off # no bans yet; pave adds the first rule and turns this on
+  yaml: on
+  verify: on
+  agents-md: on
+dismissed: []
