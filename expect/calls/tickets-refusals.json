@@ -1,0 +1,23 @@
+{
+  "steps": [
+    { "call": "catalog.actor-create", "input": { "name": "Coder" } },
+    { "call": "catalog.project-create", "input": { "name": "Talk", "prefix": "TLK" } },
+    { "call": "tickets.ticket-create", "input": { "project": "TLK", "title": "One" } },
+    { "as": "ghost", "call": "tickets.ticket-claim", "input": { "ticket": "TLK-1" } },
+    { "call": "catalog.actor-archive", "input": { "actor": "a1" } },
+    { "as": "a1", "call": "tickets.ticket-claim", "input": { "ticket": "TLK-1" } },
+    { "call": "tickets.ticket-assign", "input": { "ticket": "TLK-1", "actor": "a1" } },
+    { "call": "tickets.ticket-assign", "input": { "ticket": "TLK-1", "actor": "a9" } },
+    { "call": "tickets.ticket-move", "input": { "ticket": "TLK-9", "column": "c1" } },
+    { "call": "tickets.ticket-create", "input": { "project": "TLK", "title": "" } },
+    {
+      "call": "tickets.ticket-create",
+      "input": { "project": "TLK", "title": "Bad label", "labels": ["l9"] }
+    },
+    { "call": "tickets.ticket-create", "input": { "project": "NOPE", "title": "x" } },
+    { "call": "tickets.ticket-label-add", "input": { "ticket": "TLK-1", "label": "l9" } },
+    { "call": "tickets.ticket-block", "input": { "ticket": "TLK-1", "note": "" } },
+    { "call": "catalog.project-archive", "input": { "project": "TLK" } },
+    { "call": "tickets.ticket-create", "input": { "project": "TLK", "title": "Late" } }
+  ]
+}

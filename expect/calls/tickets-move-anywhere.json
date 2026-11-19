@@ -1,0 +1,26 @@
+{
+  "steps": [
+    { "call": "catalog.project-create", "input": { "name": "Talk", "prefix": "TLK" } },
+    { "call": "catalog.actor-create", "input": { "name": "Coder" } },
+    { "call": "catalog.project-create", "input": { "name": "Money", "prefix": "MNY" } },
+    { "call": "tickets.ticket-create", "input": { "project": "TLK", "title": "One" } },
+    {
+      "call": "tickets.ticket-create",
+      "input": { "project": "TLK", "title": "Two", "column": "c3" }
+    },
+    { "as": "a1", "call": "tickets.ticket-move", "input": { "ticket": "TLK-1", "column": "c4" } },
+    { "as": "a1", "call": "tickets.ticket-move", "input": { "ticket": "TLK-1", "column": "c1" } },
+    { "as": "a1", "call": "tickets.ticket-move", "input": { "ticket": "TLK-1", "column": "c3" } },
+    { "as": "a1", "call": "tickets.ticket-move", "input": { "ticket": "TLK-1", "column": "c2" } },
+    { "as": "a1", "call": "tickets.ticket-move", "input": { "ticket": "TLK-1", "column": "c5" } },
+    { "as": "a1", "call": "tickets.ticket-move", "input": { "ticket": "TLK-1", "column": "c99" } },
+    { "call": "catalog.column-remove", "input": { "column": "c3" } },
+    { "call": "tickets.board-read", "input": { "project": "TLK" } },
+    { "call": "history.change-undo", "input": { "change": "h10" } },
+    { "call": "tickets.board-read", "input": { "project": "TLK" } },
+    { "call": "catalog.column-remove", "input": { "column": "c2" } },
+    { "as": "a1", "call": "tickets.ticket-claim", "input": { "ticket": "TLK-1" } },
+    { "call": "catalog.column-remove", "input": { "column": "c3" } },
+    { "as": "a1", "call": "tickets.ticket-review-request", "input": { "ticket": "TLK-2" } }
+  ]
+}

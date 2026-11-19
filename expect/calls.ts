@@ -8,6 +8,7 @@ import { table } from "@jaetask/snap";
 import { sqliteCatalog } from "../src/catalog/catalog.js";
 import { domains } from "../src/domains.js";
 import { openJournal } from "../src/journal.js";
+import { sqliteTickets } from "../src/tickets/tickets.js";
 
 type Step = {
   /** The actor id the Call acts as. Defaults to the owner. */
@@ -38,7 +39,12 @@ function said(outcome: Outcome, read: boolean): string {
 /** The data after the script, one section per part of Tasks. */
 export function renderData(db: DatabaseSync): string[] {
   const journal = openJournal(db, () => START);
-  const catalog = sqliteCatalog(db, journal.rows).read();
+  const repository = sqliteCatalog(db, journal.rows);
+  const catalog = repository.read();
+  const tickets = sqliteTickets(db, journal.rows, repository);
+  const all = (["open", "archived", "canceled"] as const).flatMap((state) =>
+    tickets.find({ state }),
+  );
   return [
     "### Actors",
     table(
@@ -62,6 +68,21 @@ export function renderData(db: DatabaseSync): string[] {
       ? table(
           ["id", "name", "colour"],
           catalog.labels.map((l) => [l.id, l.name, l.colour]),
+        )
+      : "None.",
+    "### Tickets",
+    all.length
+      ? table(
+          ["id", "title", "column", "assigned", "labels", "blocked", "state"],
+          all.map((t) => [
+            t.id,
+            t.title,
+            t.column.name,
+            t.assigneeName,
+            t.labels.map((l) => l.name).join(", "),
+            t.blocked ?? "",
+            t.state,
+          ]),
         )
       : "None.",
     "### Changes",

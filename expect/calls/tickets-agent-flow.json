@@ -1,0 +1,44 @@
+{
+  "steps": [
+    { "call": "catalog.actor-rename", "input": { "actor": "owner", "name": "Sam" } },
+    { "call": "catalog.actor-create", "input": { "name": "Coder" } },
+    { "call": "catalog.actor-create", "input": { "name": "Reviewer" } },
+    { "call": "catalog.project-create", "input": { "name": "Talk", "prefix": "TLK" } },
+    { "call": "catalog.label-create", "input": { "name": "voice", "colour": "teal" } },
+    { "call": "catalog.label-create", "input": { "name": "bug", "colour": "red" } },
+    {
+      "call": "tickets.ticket-create",
+      "input": {
+        "project": "TLK",
+        "title": "Voice notes on the phone",
+        "description": "Record a voice note and attach it to a chat.",
+        "labels": ["l1"]
+      }
+    },
+    {
+      "call": "tickets.ticket-create",
+      "input": {
+        "project": "TLK",
+        "title": "Fix the crash on send",
+        "labels": ["l2"],
+        "assignee": "a2"
+      }
+    },
+    { "as": "a1", "call": "tickets.work-find" },
+    { "as": "a1", "call": "tickets.ticket-claim", "input": { "ticket": "TLK-1" } },
+    { "as": "a1", "call": "tickets.work-find" },
+    {
+      "as": "a1",
+      "call": "tickets.ticket-block",
+      "input": { "ticket": "TLK-1", "note": "waiting on the API key" }
+    },
+    { "as": "a1", "call": "tickets.ticket-unblock", "input": { "ticket": "TLK-1" } },
+    { "as": "a1", "call": "tickets.ticket-review-request", "input": { "ticket": "TLK-1" } },
+    { "as": "a1", "call": "tickets.ticket-assign", "input": { "ticket": "TLK-1", "actor": "a2" } },
+    { "as": "a2", "call": "tickets.ticket-read", "input": { "ticket": "TLK-1" } },
+    { "as": "a2", "call": "tickets.ticket-finish", "input": { "ticket": "TLK-1" } },
+    { "as": "a2", "call": "tickets.ticket-claim", "id": "retry-1", "input": { "ticket": "TLK-2" } },
+    { "as": "a2", "call": "tickets.ticket-claim", "id": "retry-1", "input": { "ticket": "TLK-2" } },
+    { "call": "history.change-list", "input": { "ticket": "TLK-1" } }
+  ]
+}

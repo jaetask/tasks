@@ -1,0 +1,33 @@
+{
+  "steps": [
+    { "call": "catalog.actor-create", "input": { "name": "Coder" } },
+    { "call": "catalog.project-create", "input": { "name": "Talk", "prefix": "TLK" } },
+    { "call": "catalog.label-create", "input": { "name": "voice", "colour": "teal" } },
+    {
+      "call": "tickets.ticket-create",
+      "input": { "project": "TLK", "title": "Voice notes", "labels": ["l1"] }
+    },
+    { "as": "a1", "call": "tickets.ticket-move", "input": { "ticket": "TLK-1", "column": "c4" } },
+    { "as": "a1", "call": "tickets.ticket-assign", "input": { "ticket": "TLK-1", "actor": "a1" } },
+    {
+      "as": "a1",
+      "call": "tickets.ticket-edit",
+      "input": { "ticket": "TLK-1", "title": "Voice memos", "description": "Shorter." }
+    },
+    {
+      "as": "a1",
+      "call": "tickets.ticket-label-remove",
+      "input": { "ticket": "TLK-1", "label": "l1" }
+    },
+    { "as": "a1", "call": "tickets.ticket-archive", "input": { "ticket": "TLK-1" } },
+    { "as": "a1", "call": "history.change-undo", "input": { "change": "h9" } },
+    { "call": "history.change-undo", "input": { "change": "h9" } },
+    { "call": "history.change-undo", "input": { "change": "h5" } },
+    { "call": "history.change-undo", "input": { "change": "h8" } },
+    { "call": "history.change-undo", "input": { "change": "h7" } },
+    { "call": "history.change-undo", "input": { "change": "h4" } },
+    { "call": "tickets.ticket-create", "input": { "project": "TLK", "title": "A mistake" } },
+    { "call": "history.change-undo", "input": { "change": "h14" } },
+    { "call": "tickets.ticket-read", "input": { "ticket": "TLK-1" } }
+  ]
+}

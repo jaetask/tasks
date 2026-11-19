@@ -103,6 +103,10 @@
 | --- | --- | --- |
 | l1 | bug | red |
 
+### Tickets
+
+None.
+
 ### Changes
 
 | id | at | actor | action | summary | ticket | undone by |

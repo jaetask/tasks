@@ -7,6 +7,8 @@ import { catalogDomain } from "./catalog/domain.js";
 import { historyDomain } from "./history/domain.js";
 import { migrateIds } from "./ids.js";
 import { migrateJournal, openJournal } from "./journal.js";
+import { ticketsDomain } from "./tickets/domain.js";
+import { migrateTickets, sqliteTickets } from "./tickets/tickets.js";
 
 const migrated = new WeakSet<DatabaseSync>();
 
@@ -17,6 +19,7 @@ export function migrate(db: DatabaseSync): void {
   migrateIds(db);
   migrateJournal(db);
   migrateCatalog(db);
+  migrateTickets(db);
   migrated.add(db);
 }
 
@@ -33,12 +36,17 @@ function open(db: DatabaseSync, now: () => number) {
       return found && !found.archived ? found.name : undefined;
     },
   };
-  return { ...base, catalog };
+  const tickets = sqliteTickets(db, journal.rows, catalog);
+  return { ...base, catalog, tickets, now };
 }
 
 export function domains(now: () => number = Date.now): Provided<DatabaseSync>[] {
   return [
-    provide(catalogDomain, (db: DatabaseSync) => ({ ...open(db, now), vacate: () => {} })),
+    provide(catalogDomain, (db: DatabaseSync) => {
+      const deps = open(db, now);
+      return { ...deps, vacate: (from, to) => deps.tickets.vacate(from, to.id) };
+    }),
+    provide(ticketsDomain, (db: DatabaseSync) => ({ ...open(db, now), purge: () => {} })),
     provide(historyDomain, (db: DatabaseSync) => open(db, now)),
   ];
 }

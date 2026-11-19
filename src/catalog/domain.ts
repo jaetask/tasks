@@ -18,7 +18,7 @@ import {
 export type CatalogDeps = Base & {
   catalog: Catalog;
   /** Moves every ticket in a column to another column of the same board. */
-  vacate(from: string, to: Column, actor: string): void;
+  vacate(from: string, to: Column): void;
 };
 
 const name = z.string().trim().min(1).max(60);
@@ -222,9 +222,9 @@ const columnRemove = write({
     "Remove a column. Its tickets move to the column before it, or after it for the first column.",
   input: z.object({ column: z.string() }),
   output: Project,
-  run: ({ column: id }, { catalog, vacate, principal, log }) => {
+  run: ({ column: id }, { catalog, vacate, log }) => {
     const was = catalog.column(id);
-    const { next } = catalog.removeColumn(id, (from, to) => vacate(from, to, principal.id));
+    const { next } = catalog.removeColumn(id, vacate);
     log(`removed column ${was.name} from ${was.project}; its tickets moved to ${next.name}`, {
       kind: "deleted",
       subject: "column",

@@ -1,0 +1,43 @@
+{
+  "steps": [
+    { "call": "catalog.actor-rename", "input": { "actor": "owner", "name": "Sam" } },
+    { "call": "catalog.actor-create", "input": { "name": "Coder" } },
+    { "call": "catalog.actor-create", "input": { "name": "Reviewer" } },
+    { "call": "catalog.project-create", "input": { "name": "Talk", "prefix": "TLK" } },
+    { "call": "catalog.label-create", "input": { "name": "voice", "colour": "teal" } },
+    { "call": "catalog.label-create", "input": { "name": "bug", "colour": "red" } },
+    { "call": "catalog.project-create", "input": { "name": "Money", "prefix": "MNY" } },
+    {
+      "call": "tickets.ticket-create",
+      "input": { "project": "TLK", "title": "Voice notes", "labels": ["l1"] }
+    },
+    {
+      "call": "tickets.ticket-create",
+      "input": {
+        "project": "TLK",
+        "title": "Crash on send",
+        "description": "The app crashes when a voice note is sent.",
+        "labels": ["l1", "l2"],
+        "assignee": "a1"
+      }
+    },
+    {
+      "call": "tickets.ticket-create",
+      "input": { "project": "MNY", "title": "Export to CSV", "assignee": "a2" }
+    },
+    { "as": "a1", "call": "tickets.ticket-claim", "input": { "ticket": "TLK-2" } },
+    {
+      "as": "a2",
+      "call": "tickets.ticket-block",
+      "input": { "ticket": "MNY-1", "note": "needs a sample file" }
+    },
+    { "as": "a1", "call": "tickets.ticket-find", "input": { "text": "voice note" } },
+    { "as": "a1", "call": "tickets.ticket-find", "input": { "kind": "doing" } },
+    { "as": "a1", "call": "tickets.ticket-find", "input": { "label": "l2" } },
+    { "as": "a1", "call": "tickets.ticket-find", "input": { "assignee": null } },
+    { "as": "a1", "call": "tickets.ticket-find", "input": { "blocked": true } },
+    { "as": "a1", "call": "tickets.ticket-find", "input": { "project": "MNY", "assignee": "a2" } },
+    { "as": "a2", "call": "tickets.work-find" },
+    { "as": "a1", "call": "tickets.ticket-find", "input": { "project": "NOPE" } }
+  ]
+}

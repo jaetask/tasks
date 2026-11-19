@@ -1,0 +1,29 @@
+{
+  "steps": [
+    { "call": "catalog.actor-create", "input": { "name": "Coder" } },
+    { "call": "catalog.project-create", "input": { "name": "Talk", "prefix": "TLK" } },
+    { "call": "tickets.ticket-create", "input": { "project": "TLK", "title": "Keep" } },
+    { "call": "tickets.ticket-create", "input": { "project": "TLK", "title": "Drop" } },
+    { "call": "tickets.ticket-create", "input": { "project": "TLK", "title": "Gone for good" } },
+    { "as": "a1", "call": "tickets.ticket-move", "input": { "ticket": "TLK-1", "column": "c3" } },
+    { "as": "a1", "call": "tickets.ticket-archive", "input": { "ticket": "TLK-1" } },
+    { "as": "a1", "call": "tickets.ticket-cancel", "input": { "ticket": "TLK-2" } },
+    { "as": "a1", "call": "tickets.ticket-cancel", "input": { "ticket": "TLK-1" } },
+    {
+      "as": "a1",
+      "call": "tickets.ticket-edit",
+      "input": { "ticket": "TLK-1", "title": "Changed" }
+    },
+    { "as": "a1", "call": "tickets.ticket-restore", "input": { "ticket": "TLK-1" } },
+    { "as": "a1", "call": "tickets.ticket-delete", "input": { "ticket": "TLK-3" } },
+    { "as": "a1", "call": "tickets.ticket-find", "input": { "state": "archived" } },
+    { "call": "tickets.ticket-restore", "input": { "ticket": "TLK-1" } },
+    { "call": "tickets.ticket-restore", "input": { "ticket": "TLK-1" } },
+    { "call": "history.change-undo", "input": { "change": "h8" } },
+    { "call": "tickets.ticket-delete", "input": { "ticket": "TLK-3" } },
+    { "call": "history.change-undo", "input": { "change": "h11" } },
+    { "call": "history.change-undo", "input": { "change": "h5" } },
+    { "call": "tickets.ticket-read", "input": { "ticket": "TLK-3" } },
+    { "call": "tickets.ticket-create", "input": { "project": "TLK", "title": "Number four" } }
+  ]
+}
