@@ -1,0 +1,73 @@
+{
+  "steps": [
+    { "call": "catalog.actor-rename", "input": { "actor": "owner", "name": "Sam" } },
+    { "call": "catalog.actor-create", "input": { "name": "Coder" } },
+    { "call": "catalog.actor-create", "input": { "name": "Reviewer" } },
+    { "call": "catalog.project-create", "input": { "name": "Talk", "prefix": "TLK" } },
+    {
+      "call": "tickets.ticket-create",
+      "input": { "project": "TLK", "title": "Voice notes on the phone" }
+    },
+    {
+      "as": "a1",
+      "call": "images.image-add",
+      "input": {
+        "ticket": "TLK-1",
+        "name": "record-button.png",
+        "type": "image/png",
+        "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+      }
+    },
+    {
+      "as": "a1",
+      "call": "images.image-add",
+      "input": {
+        "ticket": "TLK-1",
+        "name": "lock-screen.png",
+        "type": "image/png",
+        "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+      }
+    },
+    { "as": "a2", "call": "images.image-list", "input": { "ticket": "TLK-1" } },
+    { "as": "a2", "call": "images.image-read", "input": { "image": "i1" } },
+    { "as": "a2", "call": "images.image-remove", "input": { "image": "i1" } },
+    { "as": "a1", "call": "images.image-remove", "input": { "image": "i1" } },
+    { "as": "a2", "call": "images.image-read", "input": { "image": "i1" } },
+    { "call": "history.change-undo", "input": { "change": "h8" } },
+    { "call": "images.image-remove", "input": { "image": "i2" } },
+    {
+      "as": "a1",
+      "call": "images.image-add",
+      "input": { "ticket": "TLK-1", "name": "notes.txt", "type": "text/plain", "data": "aGVsbG8=" }
+    },
+    {
+      "as": "a1",
+      "call": "images.image-add",
+      "input": { "ticket": "TLK-1", "name": "bad.png", "type": "image/png", "data": "not base64!" }
+    },
+    {
+      "as": "a1",
+      "call": "images.image-add",
+      "input": {
+        "ticket": "TLK-9",
+        "name": "x.png",
+        "type": "image/png",
+        "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+      }
+    },
+    { "call": "comments.conversation-read", "input": { "ticket": "TLK-1" } },
+    { "call": "tickets.ticket-create", "input": { "project": "TLK", "title": "Second" } },
+    {
+      "as": "a2",
+      "call": "images.image-add",
+      "input": {
+        "ticket": "TLK-2",
+        "name": "kept.png",
+        "type": "image/png",
+        "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+      }
+    },
+    { "call": "tickets.ticket-delete", "input": { "ticket": "TLK-1" } },
+    { "call": "images.image-read", "input": { "image": "i1" } }
+  ]
+}

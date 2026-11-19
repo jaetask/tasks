@@ -7,6 +7,8 @@ import { sqliteStore } from "@jaetask/open-agent-kit/sqlite";
 import { table } from "@jaetask/snap";
 import { sqliteCatalog } from "../src/catalog/catalog.js";
 import { domains } from "../src/domains.js";
+import { sqliteComments } from "../src/comments/comments.js";
+import { sqliteImages } from "../src/images/images.js";
 import { openJournal } from "../src/journal.js";
 import { sqliteTickets } from "../src/tickets/tickets.js";
 
@@ -45,6 +47,13 @@ export function renderData(db: DatabaseSync): string[] {
   const all = (["open", "archived", "canceled"] as const).flatMap((state) =>
     tickets.find({ state }),
   );
+  const nameOf = (id: string) => catalog.actors.find((a) => a.id === id)?.name || id;
+  const comments = all.flatMap((t) =>
+    sqliteComments(db, journal.rows, nameOf)
+      .thread(t.id)
+      .flatMap((c) => [c, ...c.replies]),
+  );
+  const images = all.flatMap((t) => sqliteImages(db, journal.rows).list(t.id));
   return [
     "### Actors",
     table(
@@ -83,6 +92,27 @@ export function renderData(db: DatabaseSync): string[] {
             t.blocked ?? "",
             t.state,
           ]),
+        )
+      : "None.",
+    "### Comments",
+    comments.length
+      ? table(
+          ["id", "ticket", "reply to", "author", "text", "reactions"],
+          comments.map((c) => [
+            c.id,
+            c.ticket,
+            c.replyTo ?? "",
+            c.authorName,
+            c.removed ? "(removed)" : c.text + (c.editedAt ? " (edited)" : ""),
+            c.reactions.map((r) => `${r.emoji} ${r.actors.join(" ")}`).join(", "),
+          ]),
+        )
+      : "None.",
+    "### Images",
+    images.length
+      ? table(
+          ["id", "ticket", "name", "type", "bytes", "by"],
+          images.map((i) => [i.id, i.ticket, i.name, i.type, i.size, i.by]),
         )
       : "None.",
     "### Changes",

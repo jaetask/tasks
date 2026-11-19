@@ -79,6 +79,14 @@ None.
 | TLK-2 | Drop | To do |  |  |  | open |
 | TLK-4 | Number four | To do |  |  |  | open |
 
+### Comments
+
+None.
+
+### Images
+
+None.
+
 ### Changes
 
 | id | at | actor | action | summary | ticket | undone by |

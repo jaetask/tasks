@@ -1,0 +1,61 @@
+{
+  "steps": [
+    { "call": "catalog.actor-rename", "input": { "actor": "owner", "name": "Sam" } },
+    { "call": "catalog.actor-create", "input": { "name": "Coder" } },
+    { "call": "catalog.actor-create", "input": { "name": "Reviewer" } },
+    { "call": "catalog.project-create", "input": { "name": "Talk", "prefix": "TLK" } },
+    {
+      "call": "tickets.ticket-create",
+      "input": { "project": "TLK", "title": "Voice notes on the phone" }
+    },
+    { "call": "tickets.ticket-create", "input": { "project": "TLK", "title": "Second" } },
+    {
+      "as": "a1",
+      "call": "comments.comment-add",
+      "input": { "ticket": "TLK-1", "text": "First thought." }
+    },
+    {
+      "as": "a2",
+      "call": "comments.comment-add",
+      "input": { "ticket": "TLK-1", "text": "A reply.", "reply_to": "m1" }
+    },
+    {
+      "as": "a2",
+      "call": "comments.comment-edit",
+      "input": { "comment": "m1", "text": "Not mine." }
+    },
+    { "as": "a2", "call": "comments.comment-remove", "input": { "comment": "m1" } },
+    { "call": "comments.comment-remove", "input": { "comment": "m1" } },
+    {
+      "as": "a1",
+      "call": "comments.comment-edit",
+      "input": { "comment": "m1", "text": "Too late." }
+    },
+    { "as": "a1", "call": "comments.reaction-add", "input": { "comment": "m1", "emoji": "👍" } },
+    { "call": "history.change-undo", "input": { "change": "h9" } },
+    {
+      "as": "a1",
+      "call": "comments.comment-add",
+      "input": { "ticket": "TLK-2", "text": "Wrong thread.", "reply_to": "m1" }
+    },
+    {
+      "as": "a1",
+      "call": "comments.comment-add",
+      "input": { "ticket": "TLK-9", "text": "No such ticket." }
+    },
+    { "as": "a1", "call": "comments.comment-add", "input": { "ticket": "TLK-1", "text": "  " } },
+    { "as": "a1", "call": "tickets.ticket-archive", "input": { "ticket": "TLK-1" } },
+    {
+      "as": "a1",
+      "call": "comments.comment-add",
+      "input": { "ticket": "TLK-1", "text": "Archived: the work moved to TLK-2." }
+    },
+    { "call": "tickets.ticket-delete", "input": { "ticket": "TLK-1" } },
+    { "call": "comments.conversation-read", "input": { "ticket": "TLK-1" } },
+    {
+      "as": "a1",
+      "call": "comments.comment-add",
+      "input": { "ticket": "TLK-2", "text": "Picking this up next." }
+    }
+  ]
+}

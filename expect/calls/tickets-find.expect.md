@@ -296,6 +296,14 @@
 | TLK-2 | Crash on send | Doing | Coder | voice, bug |  | open |
 | MNY-1 | Export to CSV | To do | Reviewer |  | needs a sample file | open |
 
+### Comments
+
+None.
+
+### Images
+
+None.
+
 ### Changes
 
 | id | at | actor | action | summary | ticket | undone by |

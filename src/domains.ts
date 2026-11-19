@@ -4,7 +4,11 @@ import { type Provided, provide } from "@jaetask/open-agent-kit";
 import type { Base } from "./actions.js";
 import { migrateCatalog, sqliteCatalog } from "./catalog/catalog.js";
 import { catalogDomain } from "./catalog/domain.js";
+import { migrateComments, sqliteComments } from "./comments/comments.js";
+import { commentsDomain } from "./comments/domain.js";
 import { historyDomain } from "./history/domain.js";
+import { imagesDomain } from "./images/domain.js";
+import { migrateImages, sqliteImages } from "./images/images.js";
 import { migrateIds } from "./ids.js";
 import { migrateJournal, openJournal } from "./journal.js";
 import { ticketsDomain } from "./tickets/domain.js";
@@ -20,6 +24,8 @@ export function migrate(db: DatabaseSync): void {
   migrateJournal(db);
   migrateCatalog(db);
   migrateTickets(db);
+  migrateComments(db);
+  migrateImages(db);
   migrated.add(db);
 }
 
@@ -37,7 +43,10 @@ function open(db: DatabaseSync, now: () => number) {
     },
   };
   const tickets = sqliteTickets(db, journal.rows, catalog);
-  return { ...base, catalog, tickets, now };
+  const nameOf = (id: string) => catalog.read().actors.find((a) => a.id === id)?.name || id;
+  const comments = sqliteComments(db, journal.rows, nameOf);
+  const images = sqliteImages(db, journal.rows);
+  return { ...base, catalog, tickets, comments, images, nameOf, now };
 }
 
 export function domains(now: () => number = Date.now): Provided<DatabaseSync>[] {
@@ -46,7 +55,16 @@ export function domains(now: () => number = Date.now): Provided<DatabaseSync>[] 
       const deps = open(db, now);
       return { ...deps, vacate: (from, to) => deps.tickets.vacate(from, to.id) };
     }),
-    provide(ticketsDomain, (db: DatabaseSync) => ({ ...open(db, now), purge: () => {} })),
+    provide(ticketsDomain, (db: DatabaseSync) => {
+      const deps = open(db, now);
+      const purge = (ticket: string) => {
+        deps.comments.purge(ticket);
+        deps.images.purge(ticket);
+      };
+      return { ...deps, purge };
+    }),
+    provide(commentsDomain, (db: DatabaseSync) => open(db, now)),
+    provide(imagesDomain, (db: DatabaseSync) => open(db, now)),
     provide(historyDomain, (db: DatabaseSync) => open(db, now)),
   ];
 }

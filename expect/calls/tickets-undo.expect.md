@@ -80,6 +80,14 @@
 | --- | --- | --- | --- | --- | --- | --- |
 | TLK-1 | Voice notes | To do | Coder | voice |  | open |
 
+### Comments
+
+None.
+
+### Images
+
+None.
+
 ### Changes
 
 | id | at | actor | action | summary | ticket | undone by |

@@ -194,6 +194,14 @@ None.
 | TLK-1 | One | To do |  |  |  | open |
 | TLK-2 | Two | To do |  |  |  | open |
 
+### Comments
+
+None.
+
+### Images
+
+None.
+
 ### Changes
 
 | id | at | actor | action | summary | ticket | undone by |

@@ -203,6 +203,14 @@
 | TLK-1 | Voice notes on the phone | Done | Reviewer | voice |  | open |
 | TLK-2 | Fix the crash on send | Doing | Reviewer | bug |  | open |
 
+### Comments
+
+None.
+
+### Images
+
+None.
+
 ### Changes
 
 | id | at | actor | action | summary | ticket | undone by |

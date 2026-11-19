@@ -59,6 +59,8 @@ export function writeAction<Input extends z.ZodType, Output extends z.ZodType, D
         return run(input, {
           ...context,
           log: (summary, change, ticket) => {
+            // A write that changed nothing, such as the same reaction twice, is not a change.
+            if (context.journal.pending() === 0) return;
             context.journal.record({
               actor,
               action: `${domain}.${definition.name}`,

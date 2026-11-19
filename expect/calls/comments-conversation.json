@@ -1,0 +1,52 @@
+{
+  "steps": [
+    { "call": "catalog.actor-rename", "input": { "actor": "owner", "name": "Sam" } },
+    { "call": "catalog.actor-create", "input": { "name": "Coder" } },
+    { "call": "catalog.actor-create", "input": { "name": "Reviewer" } },
+    { "call": "catalog.project-create", "input": { "name": "Talk", "prefix": "TLK" } },
+    {
+      "call": "tickets.ticket-create",
+      "input": { "project": "TLK", "title": "Voice notes on the phone" }
+    },
+    { "as": "a1", "call": "tickets.ticket-claim", "input": { "ticket": "TLK-1" } },
+    {
+      "as": "a1",
+      "call": "comments.comment-add",
+      "input": {
+        "ticket": "TLK-1",
+        "text": "Recording works in the app. Next: recording with the screen locked."
+      }
+    },
+    { "call": "comments.reaction-add", "input": { "comment": "m1", "emoji": "👍" } },
+    {
+      "call": "comments.comment-add",
+      "input": {
+        "ticket": "TLK-1",
+        "text": "Nice. Keep the record button big on the lock screen.",
+        "reply_to": "m1"
+      }
+    },
+    { "as": "a1", "call": "comments.reaction-add", "input": { "comment": "m2", "emoji": "👀" } },
+    {
+      "as": "a1",
+      "call": "comments.comment-add",
+      "input": { "ticket": "TLK-1", "text": "Will do.", "reply_to": "m2" }
+    },
+    { "as": "a1", "call": "tickets.ticket-review-request", "input": { "ticket": "TLK-1" } },
+    {
+      "as": "a1",
+      "call": "comments.comment-add",
+      "input": { "ticket": "TLK-1", "text": "Ready for review. Works on the lock screan." }
+    },
+    {
+      "as": "a1",
+      "call": "comments.comment-edit",
+      "input": { "comment": "m4", "text": "Ready for review. Works on the lock screen." }
+    },
+    { "as": "a2", "call": "comments.reaction-add", "input": { "comment": "m4", "emoji": "👍" } },
+    { "as": "a2", "call": "comments.reaction-add", "input": { "comment": "m4", "emoji": "👍" } },
+    { "call": "comments.reaction-add", "input": { "comment": "m4", "emoji": "👍" } },
+    { "call": "comments.reaction-remove", "input": { "comment": "m1", "emoji": "👍" } },
+    { "as": "a2", "call": "comments.conversation-read", "input": { "ticket": "TLK-1" } }
+  ]
+}

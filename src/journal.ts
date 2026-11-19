@@ -36,6 +36,8 @@ export type Rows = {
 
 export type Journal = {
   rows: Rows;
+  /** How many row writes are waiting to be recorded. */
+  pending(): number;
   /** Stores everything written through `rows` since the last record as one change. */
   record(change: {
     actor: string;
@@ -160,6 +162,7 @@ export function openJournal(db: DatabaseSync, now: () => number): Journal {
 
   return {
     rows,
+    pending: () => touched.length,
     record,
     list: (filter = {}) => {
       const found = (
