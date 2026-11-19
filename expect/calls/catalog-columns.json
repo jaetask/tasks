@@ -1,0 +1,28 @@
+{
+  "steps": [
+    { "call": "catalog.project-create", "input": { "name": "Talk", "prefix": "TLK" } },
+    {
+      "call": "catalog.column-add",
+      "input": { "project": "TLK", "name": "Triage", "kind": "todo", "before": "c1" }
+    },
+    {
+      "call": "catalog.column-add",
+      "input": { "project": "TLK", "name": "Sign-off", "kind": "waiting" }
+    },
+    { "call": "catalog.column-rename", "input": { "column": "c3", "name": "Code review" } },
+    { "call": "catalog.column-kind-set", "input": { "column": "c6", "kind": "done" } },
+    { "call": "catalog.column-move", "input": { "column": "c6", "before": "c4" } },
+    { "call": "catalog.column-remove", "input": { "column": "c5" } },
+    {
+      "call": "catalog.column-add",
+      "input": { "project": "TLK", "name": "doing", "kind": "doing" }
+    },
+    { "call": "catalog.column-move", "input": { "column": "c1", "before": "c99" } },
+    { "call": "catalog.column-remove", "input": { "column": "c99" } },
+    { "call": "catalog.project-create", "input": { "name": "Money", "prefix": "MNY" } },
+    { "call": "catalog.column-remove", "input": { "column": "c7" } },
+    { "call": "catalog.column-remove", "input": { "column": "c8" } },
+    { "call": "catalog.column-remove", "input": { "column": "c9" } },
+    { "call": "catalog.column-remove", "input": { "column": "c10" } }
+  ]
+}

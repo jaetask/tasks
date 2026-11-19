@@ -3,5 +3,5 @@
   "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
   "files": { "includes": ["**", "!docs", "!.claude", "!**/*.expect.md"] },
   "formatter": { "indentStyle": "space", "lineWidth": 100 },
-  "linter": { "rules": { "recommended": true } }
+  "linter": { "enabled": true }
 }

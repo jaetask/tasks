@@ -1,0 +1,315 @@
+// The catalog repository: the actors, the projects with their columns, and
+// the labels. All of it is data the owner creates; only the owner actor
+// exists in a new install.
+import type { DatabaseSync } from "node:sqlite";
+import { z } from "zod";
+import { nextId } from "../ids.js";
+import type { Rows } from "../journal.js";
+import { Refusal } from "../refusal.js";
+
+/** The owner's actor id. The one actor a new install has. */
+export const OWNER = "owner";
+
+export const KINDS = ["todo", "doing", "waiting", "done"] as const;
+export const Kind = z.enum(KINDS).describe("What a column means: todo, doing, waiting or done.");
+export type Kind = z.infer<typeof Kind>;
+
+export const COLOURS = ["teal", "plum", "red", "amber", "green", "grey"] as const;
+export const Colour = z.enum(COLOURS);
+export type Colour = z.infer<typeof Colour>;
+
+export const Actor = z.object({ id: z.string(), name: z.string(), archived: z.boolean() });
+export type Actor = z.infer<typeof Actor>;
+
+export const Column = z.object({ id: z.string(), name: z.string(), kind: Kind });
+export type Column = z.infer<typeof Column>;
+
+export const Project = z.object({
+  id: z.string(),
+  name: z.string(),
+  archived: z.boolean(),
+  columns: z.array(Column),
+});
+export type Project = z.infer<typeof Project>;
+
+export const Label = z.object({ id: z.string(), name: z.string(), colour: Colour });
+export type Label = z.infer<typeof Label>;
+
+export const CatalogView = z.object({
+  actors: z.array(Actor),
+  projects: z.array(Project),
+  labels: z.array(Label),
+});
+export type CatalogView = z.infer<typeof CatalogView>;
+
+/** The columns a new project starts with. */
+export const FIRST_COLUMNS: readonly (readonly [string, Kind])[] = [
+  ["To do", "todo"],
+  ["Doing", "doing"],
+  ["Review", "waiting"],
+  ["Done", "done"],
+];
+
+export type Catalog = {
+  read(): CatalogView;
+  actor(id: string): Actor;
+  project(id: string): Project;
+  /** A column, with the project it belongs to. */
+  column(id: string): Column & { project: string };
+  label(id: string): Label;
+  /** The first column of this kind on a project's board, or undefined. */
+  firstColumn(project: string, kind: Kind): Column | undefined;
+  createActor(name: string): Actor;
+  renameActor(id: string, name: string): Actor;
+  archiveActor(id: string, archived: boolean): Actor;
+  createProject(name: string, prefix: string): Project;
+  renameProject(id: string, name: string): Project;
+  archiveProject(id: string, archived: boolean): Project;
+  /** Adds a column before `before`, or at the end. */
+  addColumn(project: string, name: string, kind: Kind, before?: string): Column;
+  renameColumn(id: string, name: string): Column;
+  setColumnKind(id: string, kind: Kind): Column;
+  /** Moves a column to sit before `before`, or to the end. */
+  moveColumn(id: string, before?: string): Project;
+  /**
+   * Removes a column. `vacate` is called first, to move its tickets to the
+   * column before it (or after it, for the first column).
+   */
+  removeColumn(
+    id: string,
+    vacate: (from: string, to: Column) => void,
+  ): { removed: Column; next: Column };
+  createLabel(name: string, colour: Colour): Label;
+  renameLabel(id: string, name: string): Label;
+  setLabelColour(id: string, colour: Colour): Label;
+  removeLabel(id: string): Label;
+};
+
+export function migrateCatalog(db: DatabaseSync): void {
+  db.exec(
+    "CREATE TABLE IF NOT EXISTS actors (id TEXT PRIMARY KEY, name TEXT NOT NULL, archived INTEGER NOT NULL DEFAULT 0)",
+  );
+  db.exec(
+    "CREATE TABLE IF NOT EXISTS projects (id TEXT PRIMARY KEY, name TEXT NOT NULL, position INTEGER NOT NULL, archived INTEGER NOT NULL DEFAULT 0)",
+  );
+  db.exec(
+    "CREATE TABLE IF NOT EXISTS columns (id TEXT PRIMARY KEY, project TEXT NOT NULL REFERENCES projects (id), name TEXT NOT NULL, kind TEXT NOT NULL, position INTEGER NOT NULL)",
+  );
+  db.exec(
+    "CREATE TABLE IF NOT EXISTS labels (id TEXT PRIMARY KEY, name TEXT NOT NULL, colour TEXT NOT NULL, removed INTEGER NOT NULL DEFAULT 0)",
+  );
+  db.prepare("INSERT OR IGNORE INTO actors (id, name) VALUES (?, '')").run(OWNER);
+}
+
+type ActorRow = { id: string; name: string; archived: number };
+type ProjectRow = { id: string; name: string; position: number; archived: number };
+type ColumnRow = { id: string; project: string; name: string; kind: Kind; position: number };
+type LabelRow = { id: string; name: string; colour: Colour; removed: number };
+
+const same = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
+
+export function sqliteCatalog(db: DatabaseSync, rows: Rows): Catalog {
+  const actorRows = () => db.prepare("SELECT * FROM actors ORDER BY rowid").all() as ActorRow[];
+  const projectRows = () =>
+    db.prepare("SELECT * FROM projects ORDER BY position").all() as ProjectRow[];
+  const columnRows = (project: string) =>
+    db
+      .prepare("SELECT * FROM columns WHERE project = ? ORDER BY position")
+      .all(project) as ColumnRow[];
+  const labelRows = () =>
+    db.prepare("SELECT * FROM labels WHERE removed = 0 ORDER BY rowid").all() as LabelRow[];
+
+  const toActor = (r: ActorRow): Actor => ({ id: r.id, name: r.name, archived: r.archived === 1 });
+  const toColumn = (r: ColumnRow): Column => ({ id: r.id, name: r.name, kind: r.kind });
+  const toProject = (r: ProjectRow): Project => ({
+    id: r.id,
+    name: r.name,
+    archived: r.archived === 1,
+    columns: columnRows(r.id).map(toColumn),
+  });
+  const toLabel = (r: LabelRow): Label => ({ id: r.id, name: r.name, colour: r.colour });
+
+  const actor = (id: string) => {
+    const found = actorRows().find((a) => a.id === id);
+    if (!found) throw new Refusal("unknown-actor", `No actor has id ${id}.`);
+    return toActor(found);
+  };
+  const project = (id: string) => {
+    const found = projectRows().find((p) => p.id === id);
+    if (!found) throw new Refusal("unknown-project", `No project has id ${id}.`);
+    return toProject(found);
+  };
+  const columnRow = (id: string) => {
+    const found = db.prepare("SELECT * FROM columns WHERE id = ?").get(id) as ColumnRow | undefined;
+    if (!found) throw new Refusal("unknown-column", `No column has id ${id}.`);
+    return found;
+  };
+  const label = (id: string) => {
+    const found = labelRows().find((l) => l.id === id);
+    if (!found) throw new Refusal("unknown-label", `No label has id ${id}.`);
+    return toLabel(found);
+  };
+
+  const freeActorName = (name: string, except?: string) => {
+    if (actorRows().some((a) => a.id !== except && same(a.name, name))) {
+      throw new Refusal("name-taken", `An actor is already named ${name}.`);
+    }
+  };
+  const freeColumnName = (projectId: string, name: string, except?: string) => {
+    if (columnRows(projectId).some((c) => c.id !== except && same(c.name, name))) {
+      throw new Refusal("name-taken", `This board already has a column named ${name}.`);
+    }
+  };
+  const freeLabelName = (name: string, except?: string) => {
+    if (labelRows().some((l) => l.id !== except && same(l.name, name))) {
+      throw new Refusal("name-taken", `A label is already named ${name}.`);
+    }
+  };
+
+  // Writes the order of a project's columns as positions 1, 2, 3.
+  const order = (ids: string[]) => {
+    for (const [i, id] of ids.entries()) rows.update("columns", id, { position: i + 1 });
+  };
+  // `ids` with `id` placed before `before`, or at the end.
+  const placed = (ids: string[], id: string, before?: string) => {
+    const rest = ids.filter((x) => x !== id);
+    if (before === undefined) return [...rest, id];
+    const at = rest.indexOf(before);
+    if (at < 0) throw new Refusal("unknown-column", `No column ${before} is on this board.`);
+    return [...rest.slice(0, at), id, ...rest.slice(at)];
+  };
+
+  return {
+    read: () => ({
+      actors: actorRows().map(toActor),
+      projects: projectRows().map(toProject),
+      labels: labelRows().map(toLabel),
+    }),
+    actor,
+    project,
+    column: (id) => {
+      const row = columnRow(id);
+      return { ...toColumn(row), project: row.project };
+    },
+    label,
+    firstColumn: (projectId, kind) => project(projectId).columns.find((c) => c.kind === kind),
+
+    createActor: (name) => {
+      freeActorName(name);
+      const id = nextId(db, "a");
+      rows.insert("actors", { id, name, archived: 0 });
+      return actor(id);
+    },
+    renameActor: (id, name) => {
+      actor(id);
+      freeActorName(name, id);
+      rows.update("actors", id, { name });
+      return actor(id);
+    },
+    archiveActor: (id, archived) => {
+      actor(id);
+      if (id === OWNER) throw new Refusal("owner", "The owner cannot be archived.");
+      rows.update("actors", id, { archived: archived ? 1 : 0 });
+      return actor(id);
+    },
+
+    createProject: (name, prefix) => {
+      if (projectRows().some((p) => p.id === prefix)) {
+        throw new Refusal("prefix-taken", `A project already has the prefix ${prefix}.`);
+      }
+      rows.insert("projects", {
+        id: prefix,
+        name,
+        position: projectRows().length + 1,
+        archived: 0,
+      });
+      for (const [i, [columnName, kind]] of FIRST_COLUMNS.entries()) {
+        rows.insert("columns", {
+          id: nextId(db, "c"),
+          project: prefix,
+          name: columnName,
+          kind,
+          position: i + 1,
+        });
+      }
+      return project(prefix);
+    },
+    renameProject: (id, name) => {
+      project(id);
+      rows.update("projects", id, { name });
+      return project(id);
+    },
+    archiveProject: (id, archived) => {
+      project(id);
+      rows.update("projects", id, { archived: archived ? 1 : 0 });
+      return project(id);
+    },
+
+    addColumn: (projectId, name, kind, before) => {
+      const ids = project(projectId).columns.map((c) => c.id);
+      freeColumnName(projectId, name);
+      const id = nextId(db, "c");
+      const next = placed(ids, id, before);
+      rows.insert("columns", { id, project: projectId, name, kind, position: ids.length + 1 });
+      order(next);
+      return toColumn(columnRow(id));
+    },
+    renameColumn: (id, name) => {
+      freeColumnName(columnRow(id).project, name, id);
+      rows.update("columns", id, { name });
+      return toColumn(columnRow(id));
+    },
+    setColumnKind: (id, kind) => {
+      columnRow(id);
+      rows.update("columns", id, { kind });
+      return toColumn(columnRow(id));
+    },
+    moveColumn: (id, before) => {
+      const row = columnRow(id);
+      order(
+        placed(
+          columnRows(row.project).map((c) => c.id),
+          id,
+          before,
+        ),
+      );
+      return project(row.project);
+    },
+    removeColumn: (id, vacate) => {
+      const row = columnRow(id);
+      const all = columnRows(row.project);
+      if (all.length === 1) {
+        throw new Refusal("last-column", "A board needs at least one column.");
+      }
+      const at = all.findIndex((c) => c.id === id);
+      const next = (all[at - 1] ?? all[at + 1]) as ColumnRow;
+      vacate(id, toColumn(next));
+      rows.remove("columns", id);
+      order(all.filter((c) => c.id !== id).map((c) => c.id));
+      return { removed: toColumn(row), next: toColumn(next) };
+    },
+
+    createLabel: (name, colour) => {
+      freeLabelName(name);
+      const id = nextId(db, "l");
+      rows.insert("labels", { id, name, colour, removed: 0 });
+      return label(id);
+    },
+    renameLabel: (id, name) => {
+      label(id);
+      freeLabelName(name, id);
+      rows.update("labels", id, { name });
+      return label(id);
+    },
+    setLabelColour: (id, colour) => {
+      label(id);
+      rows.update("labels", id, { colour });
+      return label(id);
+    },
+    removeLabel: (id) => {
+      const found = label(id);
+      rows.update("labels", id, { removed: 1 });
+      return found;
+    },
+  };
+}

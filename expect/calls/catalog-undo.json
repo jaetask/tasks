@@ -1,0 +1,20 @@
+{
+  "steps": [
+    { "call": "catalog.project-create", "input": { "name": "Talk", "prefix": "TLK" } },
+    { "call": "catalog.project-rename", "input": { "project": "TLK", "name": "Talk app" } },
+    { "call": "catalog.column-remove", "input": { "column": "c3" } },
+    { "call": "catalog.label-create", "input": { "name": "bug", "colour": "red" } },
+    { "call": "catalog.label-remove", "input": { "label": "l1" } },
+    { "call": "history.change-undo", "input": { "change": "h5" } },
+    { "call": "history.change-undo", "input": { "change": "h3" } },
+    { "call": "history.change-undo", "input": { "change": "h3" } },
+    { "call": "history.change-undo", "input": { "change": "h2" } },
+    { "call": "history.change-undo", "input": { "change": "h8" } },
+    { "call": "catalog.column-rename", "input": { "column": "c2", "name": "In progress" } },
+    { "call": "catalog.column-rename", "input": { "column": "c2", "name": "Working" } },
+    { "call": "history.change-undo", "input": { "change": "h10" } },
+    { "call": "history.change-undo", "input": { "change": "h1" } },
+    { "call": "history.change-undo", "input": { "change": "h404" } },
+    { "call": "history.change-list", "input": { "limit": 3 } }
+  ]
+}

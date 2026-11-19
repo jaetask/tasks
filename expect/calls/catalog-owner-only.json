@@ -1,0 +1,10 @@
+{
+  "steps": [
+    { "call": "catalog.actor-create", "input": { "name": "Coder" } },
+    { "as": "a1", "call": "catalog.catalog-read" },
+    { "as": "a1", "call": "catalog.project-create", "input": { "name": "Mine", "prefix": "MIN" } },
+    { "as": "a1", "call": "catalog.actor-rename", "input": { "actor": "a1", "name": "Boss" } },
+    { "as": "a1", "call": "history.change-undo", "input": { "change": "h1" } },
+    { "as": "a1", "call": "history.change-list" }
+  ]
+}
