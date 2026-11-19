@@ -1,0 +1,161 @@
+{
+  "steps": [
+    { "page": { "call": "catalog.catalog-read" } },
+    { "sign_in": "wrong" },
+    { "sign_in": "expect-setup-secret" },
+    { "page": { "call": "catalog.actor-rename", "input": { "actor": "owner", "name": "Sam" } } },
+    { "page": { "call": "catalog.actor-create", "input": { "name": "Coder" } } },
+    { "page": { "call": "catalog.actor-create", "input": { "name": "Watcher" } } },
+    { "page": { "call": "catalog.project-create", "input": { "name": "Talk", "prefix": "TLK" } } },
+    {
+      "page": {
+        "call": "tickets.ticket-create",
+        "input": { "project": "TLK", "title": "Voice notes on the phone" }
+      }
+    },
+    { "pair": { "name": "Coding agent", "effects": ["read", "write", "danger"] } },
+    { "pair": { "name": "Dashboard", "effects": ["read"] } },
+    { "claim": "Coding agent" },
+    { "mcp": { "as": "Coding agent", "tool": "tickets__work-find" } },
+    { "page": { "call": "connections.connection-list" } },
+    {
+      "raw": { "method": "POST", "path": "/api/connections/$Coding agent/approve", "session": true }
+    },
+    {
+      "page": {
+        "call": "connections.connection-approve",
+        "input": { "connection": "$Coding agent", "actor": "owner", "change": true }
+      }
+    },
+    {
+      "page": {
+        "call": "connections.connection-approve",
+        "input": { "connection": "$Coding agent", "actor": "a9", "change": true }
+      }
+    },
+    {
+      "page": {
+        "call": "connections.connection-approve",
+        "input": { "connection": "$Coding agent", "actor": "a1", "change": true }
+      }
+    },
+    {
+      "page": {
+        "call": "connections.connection-approve",
+        "input": { "connection": "$Coding agent", "actor": "a2", "change": true }
+      }
+    },
+    {
+      "page": {
+        "call": "connections.connection-approve",
+        "input": { "connection": "$Dashboard", "actor": "a2", "change": false }
+      }
+    },
+    { "claim": "Coding agent" },
+    { "claim": "Coding agent" },
+    { "claim": "Dashboard" },
+    {
+      "mcp": {
+        "as": "Coding agent",
+        "tool": "tickets__ticket-claim",
+        "arguments": { "ticket": "TLK-1" },
+        "id": "claim-1"
+      }
+    },
+    {
+      "mcp": {
+        "as": "Coding agent",
+        "tool": "tickets__ticket-claim",
+        "arguments": { "ticket": "TLK-1" },
+        "id": "claim-1"
+      }
+    },
+    {
+      "mcp": {
+        "as": "Coding agent",
+        "tool": "comments__comment-add",
+        "arguments": { "ticket": "TLK-1", "text": "Recording works in the app." }
+      }
+    },
+    {
+      "mcp": {
+        "as": "Coding agent",
+        "tool": "tickets__ticket-archive",
+        "arguments": { "ticket": "TLK-1" }
+      }
+    },
+    {
+      "mcp": {
+        "as": "Coding agent",
+        "tool": "tickets__ticket-restore",
+        "arguments": { "ticket": "TLK-1" }
+      }
+    },
+    {
+      "mcp": {
+        "as": "Coding agent",
+        "tool": "tickets__ticket-delete",
+        "arguments": { "ticket": "TLK-1" }
+      }
+    },
+    {
+      "mcp": {
+        "as": "Coding agent",
+        "tool": "history__change-undo",
+        "arguments": { "change": "h5" }
+      }
+    },
+    {
+      "mcp": {
+        "as": "Coding agent",
+        "tool": "catalog__project-create",
+        "arguments": { "name": "Mine", "prefix": "MIN" }
+      }
+    },
+    { "mcp": { "as": "Coding agent", "tool": "connections__connection-list" } },
+    {
+      "mcp": {
+        "as": "Dashboard",
+        "tool": "tickets__ticket-find",
+        "arguments": { "state": "archived" }
+      }
+    },
+    {
+      "mcp": {
+        "as": "Dashboard",
+        "tool": "comments__comment-add",
+        "arguments": { "ticket": "TLK-1", "text": "Hello." }
+      }
+    },
+    { "page": { "call": "tickets.ticket-restore", "input": { "ticket": "TLK-1" } } },
+    { "restart": true },
+    {
+      "mcp": {
+        "as": "Coding agent",
+        "tool": "tickets__ticket-review-request",
+        "arguments": { "ticket": "TLK-1" }
+      }
+    },
+    {
+      "page": {
+        "call": "connections.connection-revoke",
+        "input": { "connection": "$Coding agent" }
+      }
+    },
+    {
+      "mcp": {
+        "as": "Coding agent",
+        "tool": "tickets__ticket-finish",
+        "arguments": { "ticket": "TLK-1" }
+      }
+    },
+    {
+      "page": {
+        "call": "connections.connection-revoke",
+        "input": { "connection": "$Coding agent" }
+      }
+    },
+    { "page": { "call": "connections.connection-list" } },
+    { "page": { "call": "history.change-list", "input": { "ticket": "TLK-1" } } }
+  ]
+}

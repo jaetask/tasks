@@ -1,0 +1,15 @@
+# Tasks in one container:
+#   docker compose up --build
+# The setup secret is printed once in the log at first start:
+#   docker compose logs tasks
+services:
+  tasks:
+    build: .
+    ports: ["8081:8081"]
+    volumes: [tasks-data:/data] # all your data
+    environment:
+      KIT_SETUP_SECRET: ${KIT_SETUP_SECRET:-}
+      KIT_CONNECT: ${KIT_CONNECT:-}
+    restart: unless-stopped
+volumes:
+  tasks-data:

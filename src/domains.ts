@@ -1,11 +1,13 @@
 // Tasks' Domains, each paired with its dependencies on the App database.
 import type { DatabaseSync } from "node:sqlite";
 import { type Provided, provide } from "@jaetask/open-agent-kit";
+import { sqliteConnections } from "@jaetask/open-agent-kit/sqlite";
 import type { Base } from "./actions.js";
 import { migrateCatalog, sqliteCatalog } from "./catalog/catalog.js";
 import { catalogDomain } from "./catalog/domain.js";
 import { migrateComments, sqliteComments } from "./comments/comments.js";
 import { commentsDomain } from "./comments/domain.js";
+import { connectionsDomain } from "./connections/domain.js";
 import { historyDomain } from "./history/domain.js";
 import { imagesDomain } from "./images/domain.js";
 import { migrateImages, sqliteImages } from "./images/images.js";
@@ -65,6 +67,17 @@ export function domains(now: () => number = Date.now): Provided<DatabaseSync>[] 
     }),
     provide(commentsDomain, (db: DatabaseSync) => open(db, now)),
     provide(imagesDomain, (db: DatabaseSync) => open(db, now)),
+    provide(connectionsDomain, (db: DatabaseSync) => ({
+      ...open(db, now),
+      connections: sqliteConnections(db, now),
+      // The Kit's approve() keeps the Principal and Effects the Connection asked
+      // with, so Tasks sets them on the Kit's record before approving.
+      scope: (connection, actor, effects) => {
+        db.prepare(
+          "UPDATE kit_connections SET record = json_set(record, '$.principal.id', ?, '$.effects', json(?)) WHERE id = ?",
+        ).run(actor, JSON.stringify(effects), connection);
+      },
+    })),
     provide(historyDomain, (db: DatabaseSync) => open(db, now)),
   ];
 }

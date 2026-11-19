@@ -551,14 +551,12 @@ details.prob .attack b{color:var(--bad)} details.prob .answer2 b{color:var(--ok)
       <p>The first time it starts, Tasks prints a setup secret in its log. Open the page, enter the secret, and you are signed in. That printed secret works once; to sign in again later, set your own with <code>KIT_SETUP_SECRET</code>.</p>
     </div>
     <div class="two">
-<pre><span class="c"># docker-compose.yml</span>
+<pre><span class="c"># compose.yaml</span>
 services:
   tasks:
-    image: ghcr.io/…/tasks
+    build: .
     ports: ["8081:8081"]
     volumes: [tasks-data:/data]   <span class="c"># all your data</span>
-    environment:
-      KIT_MODEL: local/llama3.1    <span class="c"># optional</span>
 volumes:
   tasks-data:</pre>
       <div class="tablewrap"><table style="min-width:0">
@@ -567,7 +565,6 @@ volumes:
           <tr><td><code>PORT</code></td><td>Where the page and other apps reach Tasks</td></tr>
           <tr><td><code>DATA_DIR</code></td><td>Where all the data lives</td></tr>
           <tr><td><code>KIT_SETUP_SECRET</code></td><td>Your own sign-in secret</td></tr>
-          <tr><td><code>KIT_MODEL</code></td><td>The model for the built-in assistant</td></tr>
           <tr><td><code>KIT_CONNECT</code></td><td>Other apps to connect to at start</td></tr>
         </tbody>
       </table></div>

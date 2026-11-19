@@ -24,7 +24,10 @@
     "format": "biome format --write .",
     "format:check": "biome format .",
     "prepare": "git config core.hooksPath .agents/guardrails/hooks || true",
-    "check:docs": "node scripts/check-docs.mjs"
+    "check:docs": "node scripts/check-docs.mjs",
+    "start": "node dist/main.js",
+    "dev": "tsx src/main.ts",
+    "connect": "tsx src/connect.ts"
   },
   "dependencies": {
     "@jaetask/open-agent-kit": "0.1.0",

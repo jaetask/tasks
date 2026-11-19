@@ -1,0 +1,16 @@
+{
+  "steps": [
+    { "sign_in": "expect-setup-secret" },
+    { "page": { "call": "catalog.actor-create", "input": { "name": "Coder" } } },
+    { "pair": { "name": "Coding agent", "effects": ["read", "write"] } },
+    {
+      "page": {
+        "call": "connections.connection-approve",
+        "input": { "connection": "$Coding agent", "actor": "a1", "change": true }
+      }
+    },
+    { "claim": "Coding agent" },
+    { "contracts": "Coding agent" },
+    { "tools": "Coding agent" }
+  ]
+}

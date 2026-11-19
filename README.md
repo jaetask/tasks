@@ -34,6 +34,20 @@ One layer at a time. A layer is done when its proof is committed and green:
 
 Proofs are expect tests: an input file per case with a human-approved `name.expect.md` beside it.
 
+## Run it
+
+```
+npm install
+npm run build
+npm start
+```
+
+Tasks runs at http://127.0.0.1:8081 and keeps its data in `data/`. At first start it prints a setup secret once: enter it on the page to sign in. Set `PORT`, `HOST`, `DATA_DIR` and `KIT_SETUP_SECRET` to change the defaults.
+
+With Docker: `docker compose up --build`.
+
+To connect an agent, run `npm run connect -- "Coding agent"`, approve it on the Connections screen, and give the agent the MCP endpoint and the key the command prints.
+
 ## Develop
 
 ```

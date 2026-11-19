@@ -24,7 +24,7 @@ type Step = {
 const START = Date.parse("2026-01-01T09:00:00Z");
 const json = (value: unknown) => `\`\`\`json\n${JSON.stringify(value, null, 2)}\n\`\`\``;
 
-function said(outcome: Outcome, read: boolean): string {
+export function said(outcome: Outcome, read: boolean): string {
   if (outcome.state === "held") return "held";
   if (outcome.state !== "succeeded") {
     return `${outcome.state}: ${outcome.reason.code}: ${outcome.reason.message}`;
