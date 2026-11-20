@@ -119,6 +119,7 @@
   "labels": [],
   "type": "task",
   "priority": "none",
+  "reactions": [],
   "links": [],
   "location": null,
   "locationName": "",

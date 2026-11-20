@@ -382,7 +382,7 @@ export function Lanes({ label, children }: { label: string; children: ReactNode 
 
 function TicketTitle({ id }: { id: string }) {
   const ticket = useRead<Ticket>("tickets.ticket-read", { ticket: id });
-  return <DialogTitle className="pr-8 text-lg font-semibold">{ticket?.title ?? id}</DialogTitle>;
+  return <DialogTitle className="sr-only">{ticket?.title ?? id}</DialogTitle>;
 }
 
 /** The ticket named after ?ticket= in the address, opened over the page it was opened from. */

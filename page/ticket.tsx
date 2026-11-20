@@ -38,8 +38,8 @@ import {
   IconUserOff,
   IconX,
 } from "@tabler/icons-react";
-import { useEffect, useState } from "react";
-import { Activity } from "./activity.js";
+import { useEffect, useRef, useState } from "react";
+import { Activity, ReactionRow } from "./activity.js";
 import {
   type Comment,
   type Conversation,
@@ -56,6 +56,7 @@ import {
   when,
 } from "./api.js";
 import { useApp, useRead } from "./app.js";
+import { Editor } from "./editor.js";
 import { DeleteForGood, Face, Nothing } from "./local.js";
 import { RequestCard } from "./pages.js";
 import {
@@ -101,7 +102,7 @@ const _KIND_DOT: Record<Kind, string> = {
 export function TicketPage({ id }: { id: string }) {
   const ticket = useRead<Ticket>("tickets.ticket-read", { ticket: id });
   return (
-    <PageBody title={ticket?.title ?? id} line={ticket ? undefined : "This ticket is not here."}>
+    <PageBody title={id} line={ticket ? undefined : "This ticket is not here."}>
       <TicketView id={id} />
     </PageBody>
   );
@@ -291,6 +292,9 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
   const [_tab, _setTab] = useState<"comments" | "activity">("comments");
   const [handoff, setHandoff] = useState("");
   const [link, setLink] = useState("");
+  const [title, setTitle] = useState<string | null>(null);
+  // What the description editor holds, until it is saved on leaving it.
+  const draft = useRef<string | null>(null);
   const [blocked, setBlocked] = useState<string | null>(null);
   if (!ticket) return <Nothing text={`No ticket has the id ${id}.`} />;
   const open = ticket.state === "open";
@@ -324,15 +328,57 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
         </p>
 
         <section id="ticket" className="grid gap-3">
-          <div
-            className={`body min-w-0 break-words rounded-lg bg-muted/40 p-4 ${ticket.description ? "" : "text-muted-foreground"}`}
-          >
-            {ticket.description ? (
-              <InlineMarkdown content={ticket.description} renderLists />
-            ) : (
-              "No description."
-            )}
-          </div>
+          <Input
+            aria-label="Title"
+            className="h-auto border-transparent px-0 text-lg font-semibold shadow-none hover:border-input focus-visible:border-input md:text-lg"
+            disabled={!open}
+            value={title ?? ticket.title}
+            maxLength={200}
+            onChange={(e) => setTitle(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") e.currentTarget.blur();
+            }}
+            onBlur={() => {
+              const wanted = (title ?? "").trim();
+              setTitle(null);
+              if (wanted && wanted !== ticket.title) {
+                void act("tickets.ticket-edit", { ticket: id, title: wanted });
+              }
+            }}
+          />
+          {open ? (
+            <div className="description min-w-0 break-words">
+              <Editor
+                key={ticket.description}
+                label="Description"
+                placeholder="Add a description..."
+                value={ticket.description}
+                onChange={(markdown) => {
+                  draft.current = markdown;
+                }}
+                onBlur={() => {
+                  const wanted = draft.current;
+                  if (wanted !== null && wanted.trim() !== ticket.description.trim()) {
+                    void act("tickets.ticket-edit", { ticket: id, description: wanted });
+                  }
+                }}
+                className="text-sm outline-none"
+              />
+            </div>
+          ) : (
+            <div className="body min-w-0 break-words">
+              <InlineMarkdown content={ticket.description || "No description."} renderLists />
+            </div>
+          )}
+          <ReactionRow
+            reactions={ticket.reactions}
+            onToggle={(emoji, active) =>
+              void act(active ? "tickets.ticket-reaction-add" : "tickets.ticket-reaction-remove", {
+                ticket: id,
+                emoji,
+              })
+            }
+          />
         </section>
 
         {(ticket.links.length > 0 || open) && (

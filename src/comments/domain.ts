@@ -93,7 +93,8 @@ const conversationRead = readAction({
       .map((comment) => ({ type: "comment" as const, at: comment.at, comment }));
     const done = journal
       .list({ ticket, limit: 500 })
-      .filter((c) => !c.action.startsWith("comments."))
+      // Comments are shown as themselves, and a reaction is not an event.
+      .filter((c) => !c.action.startsWith("comments.") && !c.action.includes("reaction"))
       .map(({ id, at, actor, summary, undoable }) => ({
         type: "change" as const,
         at,

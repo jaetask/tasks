@@ -304,7 +304,7 @@ try {
     await thread
       .locator('[aria-label="Leave a reply"]')
       .fill("Good. Ask for review when the lock screen works.");
-    await thread.locator('[aria-label="Leave a reply"]').press("Enter");
+    await thread.locator('[aria-label="Leave a reply"]').press("Control+Enter");
     await thread.locator(".comment").nth(1).waitFor();
     // Resolving a thread folds it to one line; Show opens it again.
     await thread.getByRole("button", { name: "Comment actions" }).first().click();

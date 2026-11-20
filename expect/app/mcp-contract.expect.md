@@ -54,6 +54,8 @@
 | tickets__ticket-priority-set |  | Set a ticket's priority: none, urgent, high, medium or low. |
 | tickets__ticket-link-add |  | Add a link to a ticket: a web address that belongs to it, such as a pull request. |
 | tickets__ticket-link-remove |  | Remove a link from a ticket. |
+| tickets__ticket-reaction-add |  | React to a ticket with an emoji. An actor can add several different emoji to one ticket, each one once. |
+| tickets__ticket-reaction-remove |  | Take back your reaction to a ticket. |
 | tickets__ticket-label-add |  | Add a label to a ticket. |
 | tickets__ticket-label-remove |  | Remove a label from a ticket. |
 | tickets__ticket-block |  | Mark a ticket blocked, with a note saying why. It stays in its column; agents looking for work skip it. |
