@@ -341,7 +341,8 @@ function Write({
   };
   const send = () => {
     const wanted = text.trim();
-    if (!wanted) return;
+    // An empty heading, quote or list item is Markdown marks with no words: nothing to send.
+    if (!wanted.replace(/[#>*_`~\-\s]/g, "")) return;
     setText("");
     setSent(sent + 1);
     void onSend(wanted);
@@ -364,7 +365,10 @@ function Write({
       // and while a word is still being composed on an input-method keyboard.
       onKeyDownCapture={(e) => {
         if (e.key !== "Enter" || e.shiftKey || e.altKey || e.nativeEvent.isComposing) return;
-        if (document.querySelector(".an-rich-md-slash-menu")) return;
+        // The editor's own menu takes Return first, to pick a block, and marks the key as used.
+        if (e.defaultPrevented || document.querySelector(".an-rich-md-slash-menu")) return;
+        // A lone "/word" is a block being asked for, not a message, even when no block matches.
+        if (/^\/\S*$/.test(text.trim())) return;
         e.preventDefault();
         e.stopPropagation();
         send();
