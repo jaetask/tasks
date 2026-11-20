@@ -1,9 +1,8 @@
-import { IconUserOff } from "@tabler/icons-react";
 import type { ReactNode, RefObject } from "react";
 import { DueDatePicker } from "@jaetask/toolkit/suite";
 import { type Feature, OWNER, PRIORITIES, type Ticket, TYPES } from "./api.js";
 import { useApp, useRead } from "./app.js";
-import { Face } from "./local.js";
+import { Face, NoActor } from "./local.js";
 import { LabelDot, PRIORITY_NAME, PriorityIcon, PropertyPicker, StatusIcon } from "./pickers.js";
 
 type Shared = {
@@ -96,7 +95,7 @@ export function ActorPicker({
       disabled={!open(ticket)}
       chosen={[ticket.assignee ?? ""]}
       choices={[
-        { id: "", name: "No actor", icon: <IconUserOff size={16} aria-hidden /> },
+        { id: "", name: "No actor", icon: <NoActor /> },
         ...catalog.actors
           .filter((a) => !a.archived || a.id === ticket.assignee)
           .map((a) => ({

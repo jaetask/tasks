@@ -38,7 +38,6 @@ import {
   IconPlus,
   IconStack2,
   IconStopwatch,
-  IconUserOff,
   IconUsers,
 } from "@tabler/icons-react";
 import { type DragEvent, type ReactNode, useEffect, useState } from "react";
@@ -54,7 +53,7 @@ import {
 } from "./api.js";
 import { useApp, useRead } from "./app.js";
 import { ServiceIcon, service } from "@jaetask/toolkit/suite";
-import { Nothing, Picker, projectEmoji, projectLook } from "./local.js";
+import { Nothing, Picker, projectEmoji, projectLook, NoActor } from "./local.js";
 import { LabelDot, PriorityIcon, StatusIcon } from "./pickers.js";
 import {
   ActorPicker,
@@ -445,11 +444,7 @@ export function TicketCard({
               )}
               {has("actor") && !together && (
                 <ActorPicker ticket={ticket} armed={hovered}>
-                  <Chip aria-label="Actor">
-                    {avatar ?? (
-                      <IconUserOff size={16} aria-hidden className="text-muted-foreground" />
-                    )}
-                  </Chip>
+                  <Chip aria-label="Actor">{avatar ?? <NoActor size={20} />}</Chip>
                 </ActorPicker>
               )}
             </span>
@@ -475,7 +470,7 @@ export function TicketCard({
             </StatusPicker>
             <ActorPicker ticket={ticket} armed={hovered}>
               <Chip className="gap-2" aria-label="Actor">
-                {avatar}
+                {avatar || <NoActor size={20} />}
                 {actor ? actor.name : <span className="text-muted-foreground">No actor</span>}
               </Chip>
             </ActorPicker>

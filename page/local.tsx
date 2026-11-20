@@ -1,6 +1,7 @@
 // Tasks' own small pieces, each made only of toolkit parts: a ticket as a
 // list row, the badges for kinds and labels, and short forms of the parts
 // the pages use most.
+import { IconCircleDashed, IconUser } from "@tabler/icons-react";
 import { Composer, ListRow, PROJECT_ICONS } from "@jaetask/toolkit/suite";
 import {
   AlertDialog,
@@ -370,3 +371,16 @@ export const addLink =
   (act: (action: string, input: unknown) => Promise<unknown>, ticket: string) =>
   async (url: string, title: string | undefined) =>
     (await act("tickets.ticket-link-add", { ticket, url, ...(title ? { title } : {}) })) !== null;
+
+/** The mark of a ticket nobody is assigned to: a person in a dashed circle. */
+export function NoActor({ size = 16 }: { size?: number }) {
+  return (
+    <span
+      aria-hidden
+      className="relative inline-flex shrink-0 items-center justify-center text-muted-foreground"
+    >
+      <IconCircleDashed size={size} />
+      <IconUser size={Math.round(size * 0.55)} className="absolute" />
+    </span>
+  );
+}

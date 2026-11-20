@@ -33,7 +33,6 @@ import {
   IconPlus,
   IconStack2,
   IconTag,
-  IconUserOff,
   IconX,
 } from "@tabler/icons-react";
 import { useEffect, useRef, useState } from "react";
@@ -52,7 +51,7 @@ import {
 } from "./api.js";
 import { useApp, useRead } from "./app.js";
 import { Editor } from "./editor.js";
-import { addLink, DeleteForGood, Face, LINK_LINE, Nothing } from "./local.js";
+import { addLink, DeleteForGood, Face, LINK_LINE, Nothing, NoActor } from "./local.js";
 import { AddLinkDialog } from "@jaetask/toolkit/suite";
 import { EvidenceSection } from "./evidence.js";
 import { FilesSection } from "./files.js";
@@ -585,13 +584,7 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
               <RailRow
                 data-property="actor"
                 muted={!actor}
-                icon={
-                  actor ? (
-                    <Face name={actor.name} emoji={actor.icon} />
-                  ) : (
-                    <IconUserOff size={16} aria-hidden />
-                  )
-                }
+                icon={actor ? <Face name={actor.name} emoji={actor.icon} /> : <NoActor size={20} />}
               >
                 {actor ? actor.name : "No actor"}
               </RailRow>
