@@ -24,6 +24,7 @@
 | catalog.actor-restore | write | catalog-changed | Restore an archived actor. |
 | catalog.project-create | write | catalog-changed | Create a project. Its board starts with the columns To do, Doing, Review and Done. |
 | catalog.project-edit | write | catalog-changed | Change a project's name, its icon or its colour. Its prefix and ticket ids stay the same. |
+| catalog.project-card-set | write | catalog-changed | Choose what a ticket's card shows on a project's board and backlog, besides its title. With null, the usual set. |
 | catalog.project-move | write | catalog-changed | Move a project to another place in the list of projects. |
 | catalog.project-archive | write | catalog-changed | Archive a project. Its tickets are kept and it can be restored. |
 | catalog.project-restore | write | catalog-changed | Restore an archived project. |
@@ -69,6 +70,7 @@ Tools:
 - catalog__actor-restore (changes): Restore an archived actor.
 - catalog__project-create (changes): Create a project. Its board starts with the columns To do, Doing, Review and Done.
 - catalog__project-edit (changes): Change a project's name, its icon or its colour. Its prefix and ticket ids stay the same.
+- catalog__project-card-set (changes): Choose what a ticket's card shows on a project's board and backlog, besides its title. With null, the usual set.
 - catalog__project-move (changes): Move a project to another place in the list of projects.
 - catalog__project-archive (changes): Archive a project. Its tickets are kept and it can be restored.
 - catalog__project-restore (changes): Restore an archived project.
@@ -256,6 +258,52 @@ A tool that changes something after the person says yes waits for them; tell the
   },
   "required": [
     "project"
+  ]
+}
+```
+
+#### catalog.project-card-set
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string"
+    },
+    "show": {
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "id",
+              "type",
+              "priority",
+              "status",
+              "actor",
+              "feature",
+              "location",
+              "labels",
+              "links",
+              "reactions",
+              "time-in-status",
+              "created",
+              "updated"
+            ]
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "project",
+    "show"
   ]
 }
 ```

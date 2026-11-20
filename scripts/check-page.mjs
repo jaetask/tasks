@@ -197,7 +197,7 @@ try {
     }
   });
   await step("open a ticket; edit it on its own page; comment and react", async () => {
-    await page.locator(".ticket", { hasText: "Voice notes on the phone" }).click();
+    await page.locator(".ticket").getByText("Voice notes on the phone").click();
     await page.getByRole("dialog").waitFor();
     await button("Actions").click();
     await page.getByRole("menuitem", { name: "Edit ticket" }).click();
@@ -388,6 +388,27 @@ try {
     await page.getByLabel("Hide empty columns").click();
   });
   await shot("board-locations");
+  await step("a card shows what Display says, and a property on it opens its picker", async () => {
+    await button("Display").click();
+    await page.getByRole("button", { name: "Labels", exact: true }).click();
+    await page.keyboard.press("Escape");
+    const card = page.locator(".ticket", { hasText: "Voice notes on the phone" });
+    await card.getByText("voice", { exact: true }).waitFor();
+    // Changing the priority on the card does not open the ticket.
+    await card.getByRole("button", { name: "Priority" }).click();
+    await page.getByRole("option", { name: "High", exact: true }).click();
+    await card.getByText("High").waitFor();
+    if (await page.evaluate(() => window.location.hash.includes("ticket="))) {
+      throw new Error("the ticket opened");
+    }
+    await button("Display").click();
+    await button("Reset").click();
+    await page.keyboard.press("Escape");
+    await until(
+      () => ![...document.querySelectorAll(".ticket")].some((t) => t.textContent.includes("voice")),
+    );
+  });
+  await shot("board-display");
   await step("back to the status view", async () => {
     await page.getByRole("radio", { name: "Status view" }).click();
     await page.locator(".lane", { hasText: "To do" }).waitFor();

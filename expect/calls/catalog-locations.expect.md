@@ -79,6 +79,15 @@
           "name": "Done",
           "kind": "done"
         }
+      ],
+      "card": [
+        "id",
+        "type",
+        "priority",
+        "status",
+        "actor",
+        "feature",
+        "updated"
       ]
     }
   ],

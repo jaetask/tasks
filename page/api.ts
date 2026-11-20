@@ -14,6 +14,7 @@ export type Project = {
   colour: string;
   archived: boolean;
   columns: Column[];
+  card: string[];
 };
 export type Label = { id: string; name: string; colour: Colour };
 export type Catalog = {
@@ -48,6 +49,7 @@ export type Ticket = {
   createdAt: string;
   createdBy: string;
   updatedAt: string;
+  columnSince: string;
 };
 export type Board = { columns: (Column & { tickets: Ticket[] })[] };
 export type Overview = { kinds: { kind: Kind; tickets: Ticket[] }[] };

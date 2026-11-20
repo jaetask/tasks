@@ -68,7 +68,8 @@
     "awaiting": 0,
     "createdAt": "2026-01-01T09:04:00.000Z",
     "createdBy": "owner",
-    "updatedAt": "2026-01-01T09:19:00.000Z"
+    "updatedAt": "2026-01-01T09:19:00.000Z",
+    "columnSince": "2026-01-01T09:04:00.000Z"
   }
 ]
 ```

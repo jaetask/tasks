@@ -111,6 +111,42 @@
       }
     },
     {
+      "call": "catalog.project-card-set",
+      "input": {
+        "project": "TLK",
+        "show": ["id", "labels", "links"]
+      }
+    },
+    {
+      "call": "catalog.project-card-set",
+      "input": {
+        "project": "TLK",
+        "show": ["colour"]
+      }
+    },
+    {
+      "as": "a1",
+      "call": "catalog.project-card-set",
+      "input": {
+        "project": "TLK",
+        "show": []
+      }
+    },
+    {
+      "call": "catalog.project-card-set",
+      "input": {
+        "project": "MNY",
+        "show": []
+      }
+    },
+    {
+      "call": "catalog.project-card-set",
+      "input": {
+        "project": "NTS",
+        "show": null
+      }
+    },
+    {
       "call": "catalog.catalog-read"
     }
   ]

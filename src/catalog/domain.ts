@@ -5,6 +5,7 @@ import { z } from "zod";
 import { type Base, readAction, writeAction } from "../actions.js";
 import {
   Actor,
+  CardProperty,
   type Catalog,
   CatalogView,
   Colour,
@@ -163,6 +164,23 @@ const projectEdit = write({
         : `changed how project ${project.name} looks`,
       { kind: "updated", subject: "project", id },
     );
+    return project;
+  },
+});
+
+const projectCardSet = write({
+  name: "project-card-set",
+  description:
+    "Choose what a ticket's card shows on a project's board and backlog, besides its title. With null, the usual set.",
+  input: z.object({ project: z.string(), show: z.array(CardProperty).nullable() }),
+  output: Project,
+  run: ({ project: id, show }, { catalog, log }) => {
+    const project = catalog.setCard(id, show === null ? null : [...new Set(show)]);
+    log(`chose what cards show on the board of ${project.name}`, {
+      kind: "updated",
+      subject: "project",
+      id,
+    });
     return project;
   },
 });
@@ -412,6 +430,7 @@ export const catalogDomain = defineDomain<CatalogDeps>({
     actorRestore,
     projectCreate,
     projectEdit,
+    projectCardSet,
     projectMove,
     projectArchive,
     projectRestore,
