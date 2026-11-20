@@ -41,6 +41,8 @@
         "colour": "teal"
       }
     ],
+    "location": null,
+    "locationName": "",
     "blocked": null,
     "state": "open",
     "backlog": false,
@@ -88,6 +90,8 @@
       "colour": "teal"
     }
   ],
+  "location": null,
+  "locationName": "",
   "blocked": null,
   "state": "open",
   "backlog": false,
@@ -189,11 +193,11 @@
 
 ### Actors
 
-| id | name | archived |
-| --- | --- | --- |
-| owner | Sam |  |
-| a1 | Coder |  |
-| a2 | Reviewer |  |
+| id | name | icon | archived |
+| --- | --- | --- | --- |
+| owner | Sam |  |  |
+| a1 | Coder |  |  |
+| a2 | Reviewer |  |  |
 
 ### Projects
 
@@ -208,16 +212,20 @@
 | l1 | voice | teal |
 | l2 | bug | pink |
 
+### Locations
+
+None.
+
 ### Features
 
 None.
 
 ### Tickets
 
-| id | title | feature | column | assigned | labels | blocked | state |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| TLK-1 | Voice notes on the phone |  | Done | Reviewer | voice |  | open |
-| TLK-2 | Fix the crash on send |  | Doing | Reviewer | bug |  | open |
+| id | title | feature | column | assigned | location | labels | blocked | state |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| TLK-1 | Voice notes on the phone |  | Done | Reviewer |  | voice |  | open |
+| TLK-2 | Fix the crash on send |  | Doing | Reviewer |  | bug |  | open |
 
 ### Comments
 

@@ -49,6 +49,8 @@
       "colour": "teal"
     }
   ],
+  "location": null,
+  "locationName": "",
   "blocked": null,
   "state": "open",
   "backlog": false,
@@ -63,10 +65,10 @@
 
 ### Actors
 
-| id | name | archived |
-| --- | --- | --- |
-| owner |  |  |
-| a1 | Coder |  |
+| id | name | icon | archived |
+| --- | --- | --- | --- |
+| owner |  |  |  |
+| a1 | Coder |  |  |
 
 ### Projects
 
@@ -80,15 +82,19 @@
 | --- | --- | --- |
 | l1 | voice | teal |
 
+### Locations
+
+None.
+
 ### Features
 
 None.
 
 ### Tickets
 
-| id | title | feature | column | assigned | labels | blocked | state |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| TLK-1 | Voice notes |  | To do | Coder | voice |  | open |
+| id | title | feature | column | assigned | location | labels | blocked | state |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| TLK-1 | Voice notes |  | To do | Coder |  | voice |  | open |
 
 ### Comments
 

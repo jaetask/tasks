@@ -88,6 +88,8 @@
     "assignee": null,
     "assigneeName": "",
     "labels": [],
+    "location": null,
+    "locationName": "",
     "blocked": null,
     "state": "open",
     "backlog": true,
@@ -131,10 +133,10 @@ r3 on n3: every step had its turn: the item is received
 
 ### Tickets
 
-| id | title | feature | column | assigned | labels | blocked | state |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| TLK-1 | the board crashes when I drag a ticket |  | To do |  |  |  | open |
-| MNY-1 | Need export to CSV |  | (backlog) |  |  |  | open |
+| id | title | feature | column | assigned | location | labels | blocked | state |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| TLK-1 | the board crashes when I drag a ticket |  | To do |  |  |  |  | open |
+| MNY-1 | Need export to CSV |  | (backlog) |  |  |  |  | open |
 
 ### Changes
 

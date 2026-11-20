@@ -31,7 +31,7 @@
 
 | tool | reads only | description |
 | --- | --- | --- |
-| catalog__catalog-read | yes | List the actors, the projects with their columns, and the labels. |
+| catalog__catalog-read | yes | List the actors, the projects with their columns, the labels and the locations. |
 | tickets__work-find | yes | Find work to do: open tickets on a board, in to-do columns, that are not blocked and are assigned to you or to nobody, oldest first. |
 | tickets__ticket-find | yes | Find tickets, oldest first. Every filter is optional; a column's kind says what the column means. |
 | tickets__ticket-read | yes | Read one ticket. |
@@ -48,6 +48,7 @@
 | tickets__ticket-backlog-send |  | Send a ticket to its project's backlog, off the board. |
 | tickets__ticket-board-send |  | Put a backlog ticket on the board, in the first to-do column. |
 | tickets__ticket-feature-set |  | Put a ticket in a feature of its project, or in no feature with null. |
+| tickets__ticket-location-set |  | Set the location a ticket's work is done at, such as a machine, or none with null. |
 | tickets__ticket-label-add |  | Add a label to a ticket. |
 | tickets__ticket-label-remove |  | Remove a label from a ticket. |
 | tickets__ticket-block |  | Mark a ticket blocked, with a note saying why. It stays in its column; agents looking for work skip it. |
@@ -106,16 +107,20 @@ updated connection <Coding agent> (connections.connection-approve, caller ui)
 
 ### Actors
 
-| id | name | archived |
-| --- | --- | --- |
-| owner |  |  |
-| a1 | Coder |  |
+| id | name | icon | archived |
+| --- | --- | --- | --- |
+| owner |  |  |  |
+| a1 | Coder |  |  |
 
 ### Projects
 
 None.
 
 ### Labels
+
+None.
+
+### Locations
 
 None.
 

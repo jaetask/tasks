@@ -1,0 +1,106 @@
+{
+  "steps": [
+    {
+      "call": "catalog.actor-rename",
+      "input": {
+        "actor": "owner",
+        "name": "Sam"
+      }
+    },
+    {
+      "call": "catalog.actor-create",
+      "input": {
+        "name": "Coder"
+      }
+    },
+    {
+      "call": "catalog.project-create",
+      "input": {
+        "name": "Talk",
+        "prefix": "TLK"
+      }
+    },
+    {
+      "call": "catalog.location-create",
+      "input": {
+        "name": "Studio"
+      }
+    },
+    {
+      "call": "catalog.location-create",
+      "input": {
+        "name": "Laptop"
+      }
+    },
+    {
+      "call": "tickets.ticket-create",
+      "input": {
+        "project": "TLK",
+        "title": "Run the voice model",
+        "location": "p1"
+      }
+    },
+    {
+      "call": "tickets.ticket-create",
+      "input": {
+        "project": "TLK",
+        "title": "Write the guide"
+      }
+    },
+    {
+      "as": "a1",
+      "call": "tickets.ticket-location-set",
+      "input": {
+        "ticket": "TLK-2",
+        "location": "p2"
+      }
+    },
+    {
+      "call": "tickets.ticket-location-set",
+      "input": {
+        "ticket": "TLK-2",
+        "location": "p9"
+      }
+    },
+    {
+      "call": "catalog.location-archive",
+      "input": {
+        "location": "p2"
+      }
+    },
+    {
+      "call": "tickets.ticket-location-set",
+      "input": {
+        "ticket": "TLK-1",
+        "location": "p2"
+      }
+    },
+    {
+      "call": "tickets.ticket-create",
+      "input": {
+        "project": "TLK",
+        "title": "Try the laptop",
+        "location": "p2"
+      }
+    },
+    {
+      "call": "tickets.ticket-read",
+      "input": {
+        "ticket": "TLK-2"
+      }
+    },
+    {
+      "call": "tickets.ticket-location-set",
+      "input": {
+        "ticket": "TLK-1",
+        "location": null
+      }
+    },
+    {
+      "call": "history.change-undo",
+      "input": {
+        "change": "h8"
+      }
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-// The catalog Domain: actors, projects with their columns, and labels.
+// The catalog Domain: actors, projects with their columns, labels and locations.
 // Anyone may read it; only the owner changes it.
 import { defineCard, defineDomain } from "@jaetask/open-agent-kit";
 import { z } from "zod";
@@ -11,6 +11,7 @@ import {
   type Column,
   Kind,
   Label,
+  Location,
   OWNER,
   Project,
 } from "./catalog.js";
@@ -22,15 +23,16 @@ export type CatalogDeps = Base & {
 };
 
 const name = z.string().trim().min(1).max(60);
+const icon = z.string().trim().max(16).describe("An emoji, or empty for none.");
 const prefix = z
   .string()
-  .regex(/^[A-Z]{2,6}$/, "a prefix is 2 to 6 capital letters, like TLK")
+  .regex(/^[A-Z]{1,6}$/, "a prefix is 1 to 6 capital letters, like TLK")
   .describe("The project's id and the start of its ticket ids, like TLK.");
 
 export const catalogChanged = defineCard({
   name: "catalog-changed",
   version: 1,
-  about: "What a Call changed in the actors, projects, columns or labels.",
+  about: "What a Call changed in the actors, projects, columns, labels or locations.",
   view: { kind: "change", title: "Catalog changed" },
 });
 
@@ -40,7 +42,7 @@ const write = <Input extends z.ZodType, Output extends z.ZodType>(
 
 export const catalogRead = readAction({
   name: "catalog-read",
-  description: "List the actors, the projects with their columns, and the labels.",
+  description: "List the actors, the projects with their columns, the labels and the locations.",
   input: z.object({}),
   output: CatalogView,
   run: (_input, { catalog }: CatalogDeps) => catalog.read(),
@@ -49,10 +51,10 @@ export const catalogRead = readAction({
 const actorCreate = write({
   name: "actor-create",
   description: "Add an actor for an agent. A Connection acts as an actor.",
-  input: z.object({ name }),
+  input: z.object({ name, icon: icon.default("") }),
   output: Actor,
-  run: ({ name }, { catalog, log }) => {
-    const actor = catalog.createActor(name);
+  run: ({ name, icon }, { catalog, log }) => {
+    const actor = catalog.createActor(name, icon);
     log(`added actor ${name}`, { kind: "created", subject: "actor", id: actor.id });
     return actor;
   },
@@ -71,6 +73,23 @@ const actorRename = write({
       subject: "actor",
       id,
     });
+    return actor;
+  },
+});
+
+const actorIconSet = write({
+  name: "actor-icon-set",
+  description: "Set the icon shown beside an actor's name: an emoji, or empty for none.",
+  input: z.object({ actor: z.string(), icon }),
+  output: Actor,
+  run: ({ actor: id, icon }, { catalog, log }) => {
+    const actor = catalog.setActorIcon(id, icon);
+    log(
+      icon
+        ? `set the icon of actor ${actor.name} to ${icon}`
+        : `removed the icon of actor ${actor.name}`,
+      { kind: "updated", subject: "actor", id },
+    );
     return actor;
   },
 });
@@ -118,7 +137,7 @@ const projectEdit = write({
   input: z.object({
     project: z.string(),
     name: name.optional(),
-    icon: z.string().trim().max(16).optional(),
+    icon: icon.optional(),
     colour: Colour.optional(),
   }),
   output: Project,
@@ -317,15 +336,66 @@ const labelRemove = write({
   },
 });
 
+const locationCreate = write({
+  name: "location-create",
+  description: "Add a location: a place where a ticket's work is done, such as a machine.",
+  input: z.object({ name }),
+  output: Location,
+  run: ({ name }, { catalog, log }) => {
+    const location = catalog.createLocation(name);
+    log(`added location ${name}`, { kind: "created", subject: "location", id: location.id });
+    return location;
+  },
+});
+
+const locationRename = write({
+  name: "location-rename",
+  description: "Rename a location.",
+  input: z.object({ location: z.string(), name }),
+  output: Location,
+  run: ({ location: id, name }, { catalog, log }) => {
+    const was = catalog.location(id).name;
+    const location = catalog.renameLocation(id, name);
+    log(`renamed location ${was} to ${name}`, { kind: "updated", subject: "location", id });
+    return location;
+  },
+});
+
+const locationArchive = write({
+  name: "location-archive",
+  description:
+    "Archive a location. No more tickets can be given it; tickets that have it keep showing it.",
+  input: z.object({ location: z.string() }),
+  output: Location,
+  run: ({ location: id }, { catalog, log }) => {
+    const location = catalog.archiveLocation(id, true);
+    log(`archived location ${location.name}`, { kind: "updated", subject: "location", id });
+    return location;
+  },
+});
+
+const locationRestore = write({
+  name: "location-restore",
+  description: "Restore an archived location.",
+  input: z.object({ location: z.string() }),
+  output: Location,
+  run: ({ location: id }, { catalog, log }) => {
+    const location = catalog.archiveLocation(id, false);
+    log(`restored location ${location.name}`, { kind: "updated", subject: "location", id });
+    return location;
+  },
+});
+
 export const catalogDomain = defineDomain<CatalogDeps>({
   name: "catalog",
   version: "1.0.0",
   about:
-    "The actors, the projects with their columns, and the labels. Only the owner changes them.",
+    "The actors, the projects with their columns, the labels and the locations. Only the owner changes them.",
   actions: [
     catalogRead,
     actorCreate,
     actorRename,
+    actorIconSet,
     actorArchive,
     actorRestore,
     projectCreate,
@@ -342,6 +412,10 @@ export const catalogDomain = defineDomain<CatalogDeps>({
     labelRename,
     labelColourSet,
     labelRemove,
+    locationCreate,
+    locationRename,
+    locationArchive,
+    locationRestore,
   ],
   cards: [catalogChanged],
   authorise: (principal, action) => action.effect === "read" || principal.id === OWNER,

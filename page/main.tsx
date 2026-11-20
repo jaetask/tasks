@@ -36,6 +36,7 @@ import {
   ConnectionApprove,
   FeatureEdit,
   LabelEdit,
+  LocationEdit,
   OwnerEdit,
   ProjectEdit,
   StepEdit,
@@ -241,6 +242,7 @@ function Page({ path, onSignOut }: { path: string; onSignOut: () => void }) {
     if (b === "owner") return <OwnerEdit />;
     if (b === "actors" && c) return <ActorEdit key={c} id={c === "new" ? null : c} />;
     if (b === "labels" && c) return <LabelEdit key={c} id={c === "new" ? null : c} />;
+    if (b === "locations" && c) return <LocationEdit key={c} id={c === "new" ? null : c} />;
     if (b === "projects" && c === "new") return <ProjectEdit project={null} />;
     return <SettingsPage onSignOut={onSignOut} />;
   }

@@ -3,7 +3,8 @@
 
 export type Kind = "todo" | "doing" | "waiting" | "done";
 export type Colour = "blue" | "teal" | "green" | "amber" | "purple" | "pink";
-export type Actor = { id: string; name: string; archived: boolean };
+export type Actor = { id: string; name: string; icon: string; archived: boolean };
+export type Location = { id: string; name: string; archived: boolean };
 export type Column = { id: string; name: string; kind: Kind };
 export type Project = {
   id: string;
@@ -14,7 +15,12 @@ export type Project = {
   columns: Column[];
 };
 export type Label = { id: string; name: string; colour: Colour };
-export type Catalog = { actors: Actor[]; projects: Project[]; labels: Label[] };
+export type Catalog = {
+  actors: Actor[];
+  locations: Location[];
+  projects: Project[];
+  labels: Label[];
+};
 export type Ticket = {
   id: string;
   project: string;
@@ -25,6 +31,8 @@ export type Ticket = {
   column: Column;
   assignee: string | null;
   assigneeName: string;
+  location: string | null;
+  locationName: string;
   labels: Label[];
   blocked: string | null;
   state: "open" | "archived" | "canceled";

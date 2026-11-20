@@ -32,6 +32,7 @@
 | tickets.ticket-backlog-send | write | ticket-changed | Send a ticket to its project's backlog, off the board. |
 | tickets.ticket-board-send | write | ticket-changed | Put a backlog ticket on the board, in the first to-do column. |
 | tickets.ticket-feature-set | write | ticket-changed | Put a ticket in a feature of its project, or in no feature with null. |
+| tickets.ticket-location-set | write | ticket-changed | Set the location a ticket's work is done at, such as a machine, or none with null. |
 | tickets.ticket-label-add | write | ticket-changed | Add a label to a ticket. |
 | tickets.ticket-label-remove | write | ticket-changed | Remove a label from a ticket. |
 | tickets.ticket-block | write | ticket-changed | Mark a ticket blocked, with a note saying why. It stays in its column; agents looking for work skip it. |
@@ -176,6 +177,7 @@ Tools:
 - tickets__ticket-backlog-send (changes): Send a ticket to its project's backlog, off the board.
 - tickets__ticket-board-send (changes): Put a backlog ticket on the board, in the first to-do column.
 - tickets__ticket-feature-set (changes): Put a ticket in a feature of its project, or in no feature with null.
+- tickets__ticket-location-set (changes): Set the location a ticket's work is done at, such as a machine, or none with null.
 - tickets__ticket-label-add (changes): Add a label to a ticket.
 - tickets__ticket-label-remove (changes): Remove a label from a ticket.
 - tickets__ticket-block (changes): Mark a ticket blocked, with a note saying why. It stays in its column; agents looking for work skip it.
@@ -429,6 +431,10 @@ A tool that changes something after the person says yes waits for them; tell the
       "description": "The id of a feature of the project.",
       "type": "string"
     },
+    "location": {
+      "description": "The id of the location its work is done at.",
+      "type": "string"
+    },
     "backlog": {
       "default": false,
       "description": "True to put it in the backlog, to wait there until it is put on the board.",
@@ -628,6 +634,31 @@ A tool that changes something after the person says yes waits for them; tell the
   "required": [
     "ticket",
     "feature"
+  ]
+}
+```
+
+#### tickets.ticket-location-set
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "ticket": {
+      "type": "string",
+      "description": "A ticket id, like TLK-529."
+    },
+    "location": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "required": [
+    "ticket",
+    "location"
   ]
 }
 ```

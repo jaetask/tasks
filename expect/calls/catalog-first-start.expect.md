@@ -16,9 +16,11 @@
     {
       "id": "owner",
       "name": "",
+      "icon": "",
       "archived": false
     }
   ],
+  "locations": [],
   "projects": [],
   "labels": []
 }
@@ -36,14 +38,17 @@
     {
       "id": "owner",
       "name": "Sam",
+      "icon": "",
       "archived": false
     },
     {
       "id": "a1",
       "name": "Coder",
+      "icon": "",
       "archived": false
     }
   ],
+  "locations": [],
   "projects": [
     {
       "id": "TLK",
@@ -88,10 +93,10 @@
 
 ### Actors
 
-| id | name | archived |
-| --- | --- | --- |
-| owner | Sam |  |
-| a1 | Coder |  |
+| id | name | icon | archived |
+| --- | --- | --- | --- |
+| owner | Sam |  |  |
+| a1 | Coder |  |  |
 
 ### Projects
 
@@ -104,6 +109,10 @@
 | id | name | colour |
 | --- | --- | --- |
 | l1 | bug | pink |
+
+### Locations
+
+None.
 
 ### Features
 

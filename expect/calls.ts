@@ -62,8 +62,8 @@ export function renderData(db: DatabaseSync): string[] {
   return [
     "### Actors",
     table(
-      ["id", "name", "archived"],
-      catalog.actors.map((a) => [a.id, a.name, a.archived ? "yes" : ""]),
+      ["id", "name", "icon", "archived"],
+      catalog.actors.map((a) => [a.id, a.name, a.icon, a.archived ? "yes" : ""]),
     ),
     "### Projects",
     catalog.projects.length
@@ -85,6 +85,13 @@ export function renderData(db: DatabaseSync): string[] {
           catalog.labels.map((l) => [l.id, l.name, l.colour]),
         )
       : "None.",
+    "### Locations",
+    catalog.locations.length
+      ? table(
+          ["id", "name", "archived"],
+          catalog.locations.map((l) => [l.id, l.name, l.archived ? "yes" : ""]),
+        )
+      : "None.",
     "### Features",
     features.length
       ? table(
@@ -102,13 +109,24 @@ export function renderData(db: DatabaseSync): string[] {
     "### Tickets",
     all.length
       ? table(
-          ["id", "title", "feature", "column", "assigned", "labels", "blocked", "state"],
+          [
+            "id",
+            "title",
+            "feature",
+            "column",
+            "assigned",
+            "location",
+            "labels",
+            "blocked",
+            "state",
+          ],
           all.map((t) => [
             t.id,
             t.title,
             t.featureName,
             t.backlog ? "(backlog)" : t.column.name,
             t.assigneeName,
+            t.locationName,
             t.labels.map((l) => l.name).join(", "),
             t.blocked ?? "",
             t.state,

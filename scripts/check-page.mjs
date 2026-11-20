@@ -149,6 +149,7 @@ try {
     await open("/settings");
     await link("Add actor").click();
     await page.fill("#name", "Coder");
+    await page.fill("#icon", "🤖");
     await button("Add actor").click();
     await see("One for each of your agents");
     await page.locator("#actors").getByText("Coder").waitFor();
@@ -161,6 +162,10 @@ try {
     await page.getByRole("radio", { name: "pink" }).click();
     await button("Add label").click();
     await page.locator("#labels").getByText("bug").waitFor();
+    await link("New location").click();
+    await page.fill("#name", "Studio");
+    await button("Add location").click();
+    await page.locator("#locations").getByText("Studio").waitFor();
   });
   await shot("settings");
   await step("add two tickets, each on the new ticket page", async () => {
@@ -214,6 +219,12 @@ try {
     await until(
       () => !document.querySelector("#place").textContent.includes("waiting on the API key"),
     );
+  });
+  await step("give it a location on its edit page", async () => {
+    await page.locator("#place").getByRole("link", { name: "Edit" }).click();
+    await page.selectOption("#location", { label: "Studio" });
+    await button("Save").click();
+    await page.locator("#place").getByText("Studio").waitFor();
   });
   await step("an agent asks to connect; approve it as Coder on an edit page", async () => {
     const asked = await (

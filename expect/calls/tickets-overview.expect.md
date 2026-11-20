@@ -42,6 +42,8 @@
           "assignee": null,
           "assigneeName": "",
           "labels": [],
+          "location": null,
+          "locationName": "",
           "blocked": null,
           "state": "open",
           "backlog": false,
@@ -71,6 +73,8 @@
           "assignee": "a1",
           "assigneeName": "Coder",
           "labels": [],
+          "location": null,
+          "locationName": "",
           "blocked": null,
           "state": "open",
           "backlog": false,
@@ -100,6 +104,8 @@
           "assignee": null,
           "assigneeName": "",
           "labels": [],
+          "location": null,
+          "locationName": "",
           "blocked": null,
           "state": "open",
           "backlog": false,
@@ -142,6 +148,8 @@
           "assignee": null,
           "assigneeName": "",
           "labels": [],
+          "location": null,
+          "locationName": "",
           "blocked": null,
           "state": "open",
           "backlog": false,
@@ -171,6 +179,8 @@
           "assignee": "a1",
           "assigneeName": "Coder",
           "labels": [],
+          "location": null,
+          "locationName": "",
           "blocked": null,
           "state": "open",
           "backlog": false,
@@ -221,6 +231,8 @@
           "assignee": "a1",
           "assigneeName": "Coder",
           "labels": [],
+          "location": null,
+          "locationName": "",
           "blocked": null,
           "state": "open",
           "backlog": false,
@@ -273,6 +285,8 @@
           "assignee": null,
           "assigneeName": "",
           "labels": [],
+          "location": null,
+          "locationName": "",
           "blocked": null,
           "state": "open",
           "backlog": false,
@@ -341,6 +355,8 @@
           "assignee": "a1",
           "assigneeName": "Coder",
           "labels": [],
+          "location": null,
+          "locationName": "",
           "blocked": null,
           "state": "open",
           "backlog": false,
@@ -392,6 +408,8 @@
           "assignee": null,
           "assigneeName": "",
           "labels": [],
+          "location": null,
+          "locationName": "",
           "blocked": null,
           "state": "open",
           "backlog": false,
@@ -421,6 +439,8 @@
           "assignee": "a1",
           "assigneeName": "Coder",
           "labels": [],
+          "location": null,
+          "locationName": "",
           "blocked": null,
           "state": "open",
           "backlog": false,
@@ -447,10 +467,10 @@
 
 ### Actors
 
-| id | name | archived |
-| --- | --- | --- |
-| owner |  |  |
-| a1 | Coder |  |
+| id | name | icon | archived |
+| --- | --- | --- | --- |
+| owner |  |  |  |
+| a1 | Coder |  |  |
 
 ### Projects
 
@@ -463,18 +483,22 @@
 
 None.
 
+### Locations
+
+None.
+
 ### Features
 
 None.
 
 ### Tickets
 
-| id | title | feature | column | assigned | labels | blocked | state |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| TLK-1 | Voice notes |  | To do |  |  |  | open |
-| TLK-2 | Crash on send |  | Doing | Coder |  |  | open |
-| MNY-1 | Export to CSV |  | Sign-off |  |  |  | open |
-| MNY-2 | Archived one |  | To do |  |  |  | archived |
+| id | title | feature | column | assigned | location | labels | blocked | state |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| TLK-1 | Voice notes |  | To do |  |  |  |  | open |
+| TLK-2 | Crash on send |  | Doing | Coder |  |  |  | open |
+| MNY-1 | Export to CSV |  | Sign-off |  |  |  |  | open |
+| MNY-2 | Archived one |  | To do |  |  |  |  | archived |
 
 ### Comments
 

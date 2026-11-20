@@ -52,18 +52,31 @@ export function OwnerEdit() {
   const { catalog, act } = useApp();
   const back = useBackTo("/settings");
   const { busy, save } = useSave(back);
-  const [name, setName] = useState(catalog.actors.find((a) => a.id === OWNER)?.name ?? "");
+  const owner = catalog.actors.find((a) => a.id === OWNER);
+  const [name, setName] = useState(owner?.name ?? "");
+  const [icon, setIcon] = useState(owner?.icon ?? "");
   return (
     <EditFrame
       title="Edit your name"
       backTo={back}
       busy={busy}
       onSave={() =>
-        save(async () => (await act("catalog.actor-rename", { actor: OWNER, name })) !== null)
+        save(async () => {
+          if (name !== owner?.name) {
+            if ((await act("catalog.actor-rename", { actor: OWNER, name })) === null) return false;
+          }
+          if (icon.trim() !== (owner?.icon ?? "")) {
+            await act("catalog.actor-icon-set", { actor: OWNER, icon });
+          }
+          return true;
+        })
       }
     >
       <Row title="Name" line="Your changes show under this name." htmlFor="name">
         <Input id="name" value={name} onChange={(e) => setName(e.target.value)} maxLength={60} />
+      </Row>
+      <Row title="Icon" line="An emoji shown beside the name. Leave empty for none." htmlFor="icon">
+        <Input id="icon" value={icon} onChange={(e) => setIcon(e.target.value)} maxLength={16} />
       </Row>
     </EditFrame>
   );
@@ -75,6 +88,7 @@ export function ActorEdit({ id }: { id: string | null }) {
   const { busy, save } = useSave(back);
   const actor = catalog.actors.find((a) => a.id === id) as Actor | undefined;
   const [name, setName] = useState(actor?.name ?? "");
+  const [icon, setIcon] = useState(actor?.icon ?? "");
   return (
     <EditFrame
       title={actor ? `Edit ${actor.name}` : "Add an actor"}
@@ -83,12 +97,17 @@ export function ActorEdit({ id }: { id: string | null }) {
       busy={busy}
       saveLabel={actor ? "Save" : "Add actor"}
       onSave={() =>
-        save(async () =>
-          actor
-            ? name === actor.name ||
-              (await act("catalog.actor-rename", { actor: actor.id, name })) !== null
-            : (await act("catalog.actor-create", { name })) !== null,
-        )
+        save(async () => {
+          if (!actor) return (await act("catalog.actor-create", { name, icon })) !== null;
+          if (name !== actor.name) {
+            if ((await act("catalog.actor-rename", { actor: actor.id, name })) === null)
+              return false;
+          }
+          if (icon.trim() !== actor.icon) {
+            await act("catalog.actor-icon-set", { actor: actor.id, icon });
+          }
+          return true;
+        })
       }
       {...(actor
         ? {
@@ -107,6 +126,54 @@ export function ActorEdit({ id }: { id: string | null }) {
         : {})}
     >
       <Row title="Name" line="Such as Coder or Reviewer." htmlFor="name">
+        <Input id="name" value={name} onChange={(e) => setName(e.target.value)} maxLength={60} />
+      </Row>
+      <Row title="Icon" line="An emoji shown beside the name. Leave empty for none." htmlFor="icon">
+        <Input id="icon" value={icon} onChange={(e) => setIcon(e.target.value)} maxLength={16} />
+      </Row>
+    </EditFrame>
+  );
+}
+
+export function LocationEdit({ id }: { id: string | null }) {
+  const { catalog, act, go } = useApp();
+  const back = useBackTo("/settings");
+  const { busy, save } = useSave(back);
+  const location = catalog.locations.find((l) => l.id === id);
+  const [name, setName] = useState(location?.name ?? "");
+  return (
+    <EditFrame
+      title={location ? `Edit the location ${location.name}` : "New location"}
+      line="A place where a ticket's work is done, such as a machine. A ticket has one or none."
+      backTo={back}
+      busy={busy}
+      saveLabel={location ? "Save" : "Add location"}
+      onSave={() =>
+        save(async () =>
+          location
+            ? name === location.name ||
+              (await act("catalog.location-rename", { location: location.id, name })) !== null
+            : (await act("catalog.location-create", { name })) !== null,
+        )
+      }
+      {...(location
+        ? {
+            extra: (
+              <Button
+                onClick={() =>
+                  void act(
+                    location.archived ? "catalog.location-restore" : "catalog.location-archive",
+                    { location: location.id },
+                  ).then((done) => done && go(back))
+                }
+              >
+                {location.archived ? "Restore" : "Archive"}
+              </Button>
+            ),
+          }
+        : {})}
+    >
+      <Row title="Name" line="Shown on tickets." htmlFor="name">
         <Input id="name" value={name} onChange={(e) => setName(e.target.value)} maxLength={60} />
       </Row>
     </EditFrame>
@@ -644,6 +711,8 @@ function PlaceForm({ ticket }: { ticket: Ticket }) {
   const [column, setColumn] = useState(ticket.column.id);
   const [assignee, setAssignee] = useState(ticket.assignee ?? "");
   const [blocked, setBlocked] = useState(ticket.blocked ?? "");
+  const [location, setLocation] = useState(ticket.location ?? "");
+  const locations = catalog.locations.filter((l) => !l.archived || l.id === ticket.location);
   const [place, setPlace] = useState<"board" | "backlog">(ticket.backlog ? "backlog" : "board");
   const id = ticket.id;
   const leave = (action: string) => () =>
@@ -666,6 +735,9 @@ function PlaceForm({ ticket }: { ticket: Ticket }) {
           }
           if (assignee !== (ticket.assignee ?? "")) {
             await act("tickets.ticket-assign", { ticket: id, actor: assignee || null });
+          }
+          if (location !== (ticket.location ?? "")) {
+            await act("tickets.ticket-location-set", { ticket: id, location: location || null });
           }
           const note = blocked.trim();
           if (note !== (ticket.blocked ?? "")) {
@@ -713,11 +785,23 @@ function PlaceForm({ ticket }: { ticket: Ticket }) {
             .filter((a) => !a.archived)
             .map((a) => (
               <option key={a.id} value={a.id}>
-                {a.name}
+                {`${a.icon} ${a.name}`.trim()}
               </option>
             ))}
         </Select>
       </Row>
+      {locations.length > 0 && (
+        <Row title="Location" line="Where its work is done, such as a machine." htmlFor="location">
+          <Select id="location" value={location} onChange={(e) => setLocation(e.target.value)}>
+            <option value="">None</option>
+            {locations.map((l) => (
+              <option key={l.id} value={l.id}>
+                {l.name}
+              </option>
+            ))}
+          </Select>
+        </Row>
+      )}
       <Row
         title="Blocked"
         line="Say why it is blocked. Leave empty when it is not. Agents looking for work skip blocked tickets."

@@ -39,6 +39,8 @@
     "assignee": null,
     "assigneeName": "",
     "labels": [],
+    "location": null,
+    "locationName": "",
     "blocked": null,
     "state": "archived",
     "backlog": false,
@@ -62,10 +64,10 @@
 
 ### Actors
 
-| id | name | archived |
-| --- | --- | --- |
-| owner |  |  |
-| a1 | Coder |  |
+| id | name | icon | archived |
+| --- | --- | --- | --- |
+| owner |  |  |  |
+| a1 | Coder |  |  |
 
 ### Projects
 
@@ -77,17 +79,21 @@
 
 None.
 
+### Locations
+
+None.
+
 ### Features
 
 None.
 
 ### Tickets
 
-| id | title | feature | column | assigned | labels | blocked | state |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| TLK-1 | Keep |  | Review |  |  |  | open |
-| TLK-2 | Drop |  | To do |  |  |  | open |
-| TLK-4 | Number four |  | To do |  |  |  | open |
+| id | title | feature | column | assigned | location | labels | blocked | state |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| TLK-1 | Keep |  | Review |  |  |  |  | open |
+| TLK-2 | Drop |  | To do |  |  |  |  | open |
+| TLK-4 | Number four |  | To do |  |  |  |  | open |
 
 ### Comments
 

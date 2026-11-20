@@ -1,0 +1,92 @@
+{
+  "steps": [
+    {
+      "call": "catalog.actor-rename",
+      "input": {
+        "actor": "owner",
+        "name": "Sam"
+      }
+    },
+    {
+      "call": "catalog.actor-create",
+      "input": {
+        "name": "Coder"
+      }
+    },
+    {
+      "call": "catalog.location-create",
+      "input": {
+        "name": "Studio"
+      }
+    },
+    {
+      "call": "catalog.location-create",
+      "input": {
+        "name": "Laptop"
+      }
+    },
+    {
+      "call": "catalog.location-create",
+      "input": {
+        "name": "studio"
+      }
+    },
+    {
+      "call": "catalog.location-rename",
+      "input": {
+        "location": "p2",
+        "name": "Travel laptop"
+      }
+    },
+    {
+      "call": "catalog.location-rename",
+      "input": {
+        "location": "p2",
+        "name": "Studio"
+      }
+    },
+    {
+      "call": "catalog.location-archive",
+      "input": {
+        "location": "p1"
+      }
+    },
+    {
+      "call": "catalog.location-restore",
+      "input": {
+        "location": "p1"
+      }
+    },
+    {
+      "call": "catalog.location-rename",
+      "input": {
+        "location": "p9",
+        "name": "Nowhere"
+      }
+    },
+    {
+      "as": "a1",
+      "call": "catalog.location-create",
+      "input": {
+        "name": "Server"
+      }
+    },
+    {
+      "call": "catalog.project-create",
+      "input": {
+        "name": "Notes",
+        "prefix": "N"
+      }
+    },
+    {
+      "call": "catalog.project-create",
+      "input": {
+        "name": "Too long",
+        "prefix": "TOOLONG"
+      }
+    },
+    {
+      "call": "catalog.catalog-read"
+    }
+  ]
+}

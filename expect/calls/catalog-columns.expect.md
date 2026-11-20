@@ -26,9 +26,9 @@
 
 ### Actors
 
-| id | name | archived |
-| --- | --- | --- |
-| owner |  |  |
+| id | name | icon | archived |
+| --- | --- | --- | --- |
+| owner |  |  |  |
 
 ### Projects
 
@@ -38,6 +38,10 @@
 | MNY | Money | teal |  | c10 Done (done) |
 
 ### Labels
+
+None.
+
+### Locations
 
 None.
 

@@ -17,6 +17,9 @@ _Avoid_: task, issue, item, card
 **Label**: A coloured tag on a ticket, such as `bug`. The owner makes them.
 _Avoid_: tag, category
 
+**Location**: Where a ticket's work is done, such as a machine. The owner makes them; a ticket has one or none.
+_Avoid_: host, machine, environment
+
 **Backlog**: Where a project's tickets wait, off the board, until someone puts them on it. Agents looking for work do not see them.
 _Avoid_: icebox, later list
 
@@ -32,7 +35,7 @@ _Avoid_: status, category, type
 **Blocked**: A state on a ticket, in any column, with a note saying why. Agents looking for work skip blocked tickets.
 _Avoid_: stuck, on hold
 
-**Actor**: Who did something: the owner, or one of the owner's agents. Every change shows its actor.
+**Actor**: Who did something: the owner, or one of the owner's agents. Every change shows its actor. An actor can have an icon.
 _Avoid_: user, member, assignee, account
 
 **Owner**: The one person an install of Tasks serves. The first actor, named at setup.
@@ -60,7 +63,7 @@ _Avoid_: processor, stage, rule
 
 - A **Project** has one **Board**. A **Board** is an ordered list of **Columns**. Each **Column** has one **Kind**.
 - A **Ticket** belongs to one **Project** and sits in one of its **Columns**. It can move from any **Column** to any other.
-- A **Ticket** may be assigned to one **Actor**, may carry **Labels**, and may be **Blocked**.
+- A **Ticket** may be assigned to one **Actor**, may carry **Labels**, may have one **Location**, and may be **Blocked**.
 - A Connection acts as one **Actor**, chosen by the **Owner** when approving it.
 - Every **Change** names its **Actor**. The **Owner** can undo a **Change**.
 
