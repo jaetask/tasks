@@ -50,7 +50,7 @@ import {
   TYPES,
 } from "./api.js";
 import { useApp, useRead } from "./app.js";
-import { ServiceIcon, service } from "./links.js";
+import { ServiceIcon, service } from "@jaetask/toolkit/suite";
 import { Nothing, Picker, projectEmoji, projectLook } from "./local.js";
 import { LabelDot, PriorityIcon, StatusIcon } from "./pickers.js";
 import {

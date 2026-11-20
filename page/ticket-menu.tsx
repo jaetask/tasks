@@ -23,8 +23,9 @@ import { Input } from "@jaetask/toolkit/ui/input";
 import { type ReactElement, useRef, useState } from "react";
 import { day, endOfWeek } from "../src/due.js";
 import type { Ticket } from "./api.js";
-import { AddLinkDialog } from "./add-link.js";
+import { AddLinkDialog } from "@jaetask/toolkit/suite";
 import { useApp } from "./app.js";
+import { addLink, LINK_LINE } from "./local.js";
 
 export function TicketMenu({ ticket, children }: { ticket: Ticket; children: ReactElement }) {
   const { act, go, path } = useApp();
@@ -147,9 +148,11 @@ export function TicketMenu({ ticket, children }: { ticket: Ticket; children: Rea
         </ContextMenuContent>
       </ContextMenu>
       <AddLinkDialog
-        ticket={id}
+        to={id}
+        line={LINK_LINE}
         open={ask === "link"}
         onOpenChange={(next) => setAsk(next ? "link" : null)}
+        onAdd={addLink(act, id)}
       />
       <Dialog open={ask === "block"} onOpenChange={(next) => setAsk(next ? "block" : null)}>
         {ask === "block" && (
