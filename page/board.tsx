@@ -667,7 +667,8 @@ export function TicketDialog() {
   if (!id) return null;
   return (
     <Dialog open onOpenChange={(open) => !open && go(path)}>
-      <DialogContent className="max-h-[90vh] w-[min(64rem,95vw)] max-w-none overflow-y-auto">
+      {/* A fixed height: the dialog stays where it is as the ticket inside it grows or shrinks. */}
+      <DialogContent className="h-[90vh] w-[min(64rem,95vw)] max-w-none content-start overflow-y-auto">
         <TicketTitle id={id} />
         <DialogDescription className="sr-only">The ticket and its conversation.</DialogDescription>
         <TicketView key={id} id={id} onGone={() => go(path)} />
