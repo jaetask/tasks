@@ -52,7 +52,10 @@ export const PRIORITY_NAME = {
 /** A priority's grey icon: dashes for none, a square for urgent, bars for the rest. */
 export function PriorityIcon({ priority }: { priority: keyof typeof PRIORITY_NAME }) {
   const look = { size: 16, "aria-hidden": true, className: "text-muted-foreground" } as const;
-  if (priority === "urgent") return <IconAlertSquareFilled {...look} />;
+  // Urgent is the one priority with a colour.
+  if (priority === "urgent") {
+    return <IconAlertSquareFilled size={16} aria-hidden className="text-orange-500" />;
+  }
   if (priority === "high") return <IconAntennaBars5 {...look} />;
   if (priority === "medium") return <IconAntennaBars3 {...look} />;
   if (priority === "low") return <IconAntennaBars2 {...look} />;
