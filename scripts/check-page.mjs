@@ -501,21 +501,24 @@ try {
   });
   await step("a right click on a card opens its menu: blocked and due date", async () => {
     const card = page.locator(".ticket", { hasText: "Show the recording length" });
-    await card.click({ button: "right" });
-    await page.getByRole("menuitem", { name: "Mark as" }).press("ArrowRight");
-    await page.getByRole("menuitem", { name: "Blocked..." }).press("Enter");
-    await page.getByRole("textbox", { name: "Mark as blocked" }).fill("Waiting on the codec");
-    await button("Mark as blocked").click();
-    await card.getByText("Blocked").waitFor();
-    await card.click({ button: "right" });
-    await page.getByRole("menuitem", { name: "Mark as" }).press("ArrowRight");
-    await page.getByRole("menuitem", { name: "Not blocked" }).press("Enter");
-    await until(
-      () =>
-        ![...document.querySelectorAll(".ticket")]
-          .find((t) => t.textContent.includes("Show the recording length"))
-          ?.textContent.includes("Blocked"),
-    );
+    // Enter in the box submits what was typed, every time: BLOCK_RUNS repeats it.
+    for (let run = 0; run < Number(process.env.BLOCK_RUNS ?? 1); run += 1) {
+      await card.click({ button: "right" });
+      await page.getByRole("menuitem", { name: "Mark as" }).press("ArrowRight");
+      await page.getByRole("menuitem", { name: "Blocked..." }).press("Enter");
+      await page.getByRole("textbox", { name: "Mark as blocked" }).fill("Waiting on the codec");
+      await page.keyboard.press("Enter");
+      await card.getByText("Blocked").waitFor();
+      await card.click({ button: "right" });
+      await page.getByRole("menuitem", { name: "Mark as" }).press("ArrowRight");
+      await page.getByRole("menuitem", { name: "Not blocked" }).press("Enter");
+      await until(
+        () =>
+          ![...document.querySelectorAll(".ticket")]
+            .find((t) => t.textContent.includes("Show the recording length"))
+            ?.textContent.includes("Blocked"),
+      );
+    }
     if (await page.evaluate(() => window.location.hash.includes("ticket="))) {
       throw new Error("the ticket opened");
     }
@@ -525,8 +528,13 @@ try {
     await page.fill("#link-url", "https://www.youtube.com/watch?v=abc");
     await page.getByText("YouTube URL").waitFor();
     await page.fill("#link-title", "Check this out");
-    await button("Add link").click();
+    await page.keyboard.press("Enter");
     await page.getByRole("heading", { name: "Add link to TLK-3" }).waitFor({ state: "detached" });
+    // The ticket lists it under Resources, by its title.
+    await card.click();
+    await page.locator("#links .resource", { hasText: "Check this out" }).waitFor();
+    await page.keyboard.press("Escape");
+    await page.waitForFunction(() => !window.location.hash.includes("ticket="));
     await card.click({ button: "right" });
     await page.getByRole("menuitem", { name: "Make a copy" }).waitFor();
     await page.getByRole("menuitem", { name: "Due date", exact: true }).press("ArrowRight");

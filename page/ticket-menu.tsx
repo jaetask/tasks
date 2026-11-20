@@ -20,34 +20,16 @@ import {
   DialogTitle,
 } from "@jaetask/toolkit/ui/dialog";
 import { Input } from "@jaetask/toolkit/ui/input";
-import { Label } from "@jaetask/toolkit/ui/label";
-import { type ReactElement, useState } from "react";
+import { type ReactElement, useRef, useState } from "react";
 import { day, endOfWeek } from "../src/due.js";
 import type { Ticket } from "./api.js";
+import { AddLinkDialog } from "./add-link.js";
 import { useApp } from "./app.js";
-import { knownService, ServiceIcon } from "./links.js";
-
-/** What the menu asks for in a dialog before it acts. */
-const ASKS = {
-  link: {
-    title: "Add link",
-    line: "A web address that belongs to this ticket, such as a pull request.",
-    placeholder: "https://",
-    save: "Add link",
-  },
-  block: {
-    title: "Mark as blocked",
-    line: "Say why. Agents looking for work skip a blocked ticket.",
-    placeholder: "What it waits for",
-    save: "Mark as blocked",
-  },
-} as const;
 
 export function TicketMenu({ ticket, children }: { ticket: Ticket; children: ReactElement }) {
   const { act, go, path } = useApp();
-  const [ask, setAsk] = useState<keyof typeof ASKS | null>(null);
-  const [text, setText] = useState("");
-  const [title, setTitle] = useState("");
+  const [ask, setAsk] = useState<"link" | "block" | null>(null);
+  const wanted = useRef<"link" | "block" | null>(null);
   const id = ticket.id;
   const copy = (value: string) => void navigator.clipboard?.writeText(value);
   const link = `${window.location.origin}${window.location.pathname}#/t/${id}`;
@@ -72,29 +54,23 @@ export function TicketMenu({ ticket, children }: { ticket: Ticket; children: Rea
     });
     if (made) go(`${path}?ticket=${made.id}`);
   };
-  const answer = async () => {
-    const value = text.trim();
-    if (!ask || !value) return;
-    const done =
-      ask === "link"
-        ? await act("tickets.ticket-link-add", {
-            ticket: id,
-            url: value,
-            ...(title.trim() ? { title: title.trim() } : {}),
-          })
-        : await act("tickets.ticket-block", { ticket: id, note: value });
-    if (done) {
-      setAsk(null);
-      setText("");
-      setTitle("");
-    }
-  };
   if (ticket.state !== "open") return children;
   return (
     <>
       <ContextMenu>
         <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
-        <ContextMenuContent className="w-56" aria-label={`Ticket ${id}`}>
+        <ContextMenuContent
+          className="w-56"
+          aria-label={`Ticket ${id}`}
+          // A dialog the menu asks for opens once the menu has closed and given up the focus;
+          // opened sooner, the closing menu would take the focus out of the dialog's box.
+          onCloseAutoFocus={(e) => {
+            if (wanted.current === null) return;
+            e.preventDefault();
+            setAsk(wanted.current);
+            wanted.current = null;
+          }}
+        >
           <ContextMenuSub>
             <ContextMenuSubTrigger>Due date</ContextMenuSubTrigger>
             <ContextMenuSubContent>
@@ -108,14 +84,25 @@ export function TicketMenu({ ticket, children }: { ticket: Ticket; children: Rea
               )}
             </ContextMenuSubContent>
           </ContextMenuSub>
-          <ContextMenuItem onSelect={() => setAsk("link")}>Add link...</ContextMenuItem>
+          <ContextMenuItem
+            onSelect={() => {
+              wanted.current = "link";
+            }}
+          >
+            Add link...
+          </ContextMenuItem>
           <ContextMenuItem onSelect={() => go(`/p/${ticket.project}/new?related=${id}`)}>
             Create related
           </ContextMenuItem>
           <ContextMenuSub>
             <ContextMenuSubTrigger>Mark as</ContextMenuSubTrigger>
             <ContextMenuSubContent>
-              <ContextMenuItem disabled={ticket.blocked !== null} onSelect={() => setAsk("block")}>
+              <ContextMenuItem
+                disabled={ticket.blocked !== null}
+                onSelect={() => {
+                  wanted.current = "block";
+                }}
+              >
                 Blocked...
               </ContextMenuItem>
               <ContextMenuItem
@@ -159,62 +146,47 @@ export function TicketMenu({ ticket, children }: { ticket: Ticket; children: Rea
           </ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
-      <Dialog
-        open={ask !== null}
-        onOpenChange={(next) => {
-          if (!next) {
-            setAsk(null);
-            setText("");
-          }
-        }}
-      >
-        {ask && (
+      <AddLinkDialog
+        ticket={id}
+        open={ask === "link"}
+        onOpenChange={(next) => setAsk(next ? "link" : null)}
+      />
+      <Dialog open={ask === "block"} onOpenChange={(next) => setAsk(next ? "block" : null)}>
+        {ask === "block" && (
           <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                {ask === "link" && <ServiceIcon url={text.trim()} size={18} />}
-                {ask === "link" ? `Add link to ${id}` : `${ASKS[ask].title} · ${id}`}
-              </DialogTitle>
-              <DialogDescription>{ASKS[ask].line}</DialogDescription>
-            </DialogHeader>
-            {ask === "link" && (
-              <Label htmlFor="link-url">{`${knownService(text.trim()) || "Link"} URL`}</Label>
-            )}
-            <Input
-              autoFocus
-              id={ask === "link" ? "link-url" : "blocked-why"}
-              aria-label={ASKS[ask].title}
-              placeholder={ASKS[ask].placeholder}
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") void answer();
+            {/* A form, so Enter marks it blocked with what the box holds. */}
+            <form
+              className="grid gap-4"
+              onSubmit={(e) => {
+                e.preventDefault();
+                const note = String(new FormData(e.currentTarget).get("note") ?? "").trim();
+                if (!note) return;
+                void act("tickets.ticket-block", { ticket: id, note }).then(
+                  (done) => done && setAsk(null),
+                );
               }}
-            />
-            {ask === "link" && (
-              <>
-                <Label htmlFor="link-title">
-                  Title <span className="font-normal text-muted-foreground">(optional)</span>
-                </Label>
-                <Input
-                  id="link-title"
-                  maxLength={200}
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") void answer();
-                  }}
-                />
-              </>
-            )}
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setAsk(null)}>
-                Cancel
-              </Button>
-              <Button disabled={!text.trim()} onClick={() => void answer()}>
-                {ASKS[ask].save}
-              </Button>
-            </DialogFooter>
+            >
+              <DialogHeader>
+                <DialogTitle>{`Mark as blocked · ${id}`}</DialogTitle>
+                <DialogDescription>
+                  Say why. Agents looking for work skip a blocked ticket.
+                </DialogDescription>
+              </DialogHeader>
+              <Input
+                autoFocus
+                required
+                name="note"
+                aria-label="Mark as blocked"
+                placeholder="What it waits for"
+                maxLength={500}
+              />
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setAsk(null)}>
+                  Cancel
+                </Button>
+                <Button type="submit">Mark as blocked</Button>
+              </DialogFooter>
+            </form>
           </DialogContent>
         )}
       </Dialog>
