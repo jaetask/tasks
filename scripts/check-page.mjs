@@ -390,11 +390,14 @@ try {
       .fill("Good. Ask for review when the lock screen works.");
     await thread.locator('[aria-label="Leave a reply"]').press("Control+Enter");
     await thread.locator(".comment").nth(1).waitFor();
-    await thread
-      .locator('[aria-label="Leave a reply"]')
-      .fill("And tell me which phones you tried.");
-    await thread.locator('[aria-label="Leave a reply"]').press("Control+Enter");
-    await thread.locator(".comment").nth(2).waitFor();
+    // Return sends; Shift+Return starts a new line in the same reply.
+    await thread.locator('[aria-label="Leave a reply"]').click();
+    await page.keyboard.type("And tell me which phones you tried.");
+    await page.keyboard.press("Shift+Enter");
+    await page.keyboard.type("One line each.");
+    await page.keyboard.press("Enter");
+    await thread.locator(".comment").nth(2).getByText("One line each.").waitFor();
+    if ((await thread.locator(".comment").count()) !== 3) throw new Error("Shift+Return sent");
     await thread.scrollIntoViewIfNeeded();
     await thread.screenshot({ path: "docs/img/thread.png" });
     // Resolving a thread folds it to one line; Show opens it again.
