@@ -80,6 +80,7 @@
 | steps.ticket-step-uncheck | write |
 | tickets.backlog-read | read |
 | tickets.board-read | read |
+| tickets.column-archive | write |
 | tickets.feature-archive | write |
 | tickets.feature-create | write |
 | tickets.feature-edit | write |

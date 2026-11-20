@@ -65,6 +65,7 @@
 | tickets__ticket-block |  | Mark a ticket blocked, with a note saying why. It stays in its column; agents looking for work skip it. |
 | tickets__ticket-unblock |  | Mark a ticket no longer blocked. |
 | tickets__ticket-archive |  | Archive a ticket. It leaves the board and keeps its column; the owner can restore it. |
+| tickets__column-archive |  | Archive every ticket in one column of a board, such as everything in Done. They leave the board and keep their column; the owner can restore them, or undo this as one change. |
 | tickets__ticket-cancel |  | Cancel a ticket. It goes to the Archive as canceled; the owner can restore it. |
 | tickets__feature-find | yes | List a project's features, each with how many open tickets belong to it. |
 | tickets__feature-create |  | Create a feature: one part of a project, which groups the tickets for that part. |

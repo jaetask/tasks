@@ -492,6 +492,7 @@ try {
     await page.keyboard.press("Escape");
     await page.getByRole("button", { name: "Column To do" }).click();
     await page.getByRole("menuitem", { name: "Move right" }).waitFor();
+    await page.getByRole("menuitem", { name: "Archive all" }).waitFor();
     await page.keyboard.press("Escape");
   });
   await step("the Overview groups by project, and a project can be filtered out", async () => {
