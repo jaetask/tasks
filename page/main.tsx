@@ -5,7 +5,6 @@ import "@jaetask/toolkit/styles.css";
 import "./page.css";
 import {
   AppShell,
-  Avatar,
   Button,
   CenteredPage,
   type Group,
@@ -24,8 +23,8 @@ import {
   type Connection,
   call,
   type InputRequest,
-  OWNER,
   type Outcome,
+  OWNER,
   refusal,
   whenSignedOut,
 } from "./api.js";
@@ -44,6 +43,7 @@ import {
   TicketNew,
 } from "./edits.js";
 import { IntakePage } from "./inbox.js";
+import { ProjectAvatar } from "./local.js";
 import {
   ArchivePage,
   BacklogPage,
@@ -309,7 +309,7 @@ function Shell({ path, onSignOut }: { path: string; onSignOut: () => void }) {
         id: p.id,
         href: `/p/${p.id}/board`,
         label: p.name,
-        avatar: <Avatar name={p.name} colour={p.colour} {...(p.icon ? { emoji: p.icon } : {})} />,
+        avatar: <ProjectAvatar project={p} />,
         current: here === p.id,
         // A project you have been to stays open until you close it.
         defaultOpen: visited.includes(p.id),

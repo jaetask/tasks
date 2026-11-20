@@ -13,7 +13,9 @@ import {
   Label,
   Location,
   OWNER,
+  PROJECT_ICONS,
   Project,
+  ProjectColour,
 } from "./catalog.js";
 
 export type CatalogDeps = Base & {
@@ -24,6 +26,16 @@ export type CatalogDeps = Base & {
 
 const name = z.string().trim().min(1).max(60);
 const icon = z.string().trim().max(16).describe("An emoji, or empty for none.");
+// A word in small letters must be one of the icon names; anything else is an emoji.
+const projectIcon = z
+  .string()
+  .trim()
+  .max(16)
+  .refine(
+    (v) => !/^[a-z-]+$/.test(v) || (PROJECT_ICONS as readonly string[]).includes(v),
+    `an icon is one of: ${PROJECT_ICONS.join(", ")}`,
+  )
+  .describe(`An icon name (${PROJECT_ICONS.join(", ")}), an emoji, or empty for none.`);
 const prefix = z
   .string()
   .regex(/^[A-Z]{1,6}$/, "a prefix is 1 to 6 capital letters, like TLK")
@@ -133,12 +145,12 @@ const projectCreate = write({
 const projectEdit = write({
   name: "project-edit",
   description:
-    "Change a project's name, its icon (an emoji, or empty for none) or its colour. Its prefix and ticket ids stay the same.",
+    "Change a project's name, its icon or its colour. Its prefix and ticket ids stay the same.",
   input: z.object({
     project: z.string(),
     name: name.optional(),
-    icon: icon.optional(),
-    colour: Colour.optional(),
+    icon: projectIcon.optional(),
+    colour: ProjectColour.optional(),
   }),
   output: Project,
   run: ({ project: id, ...patch }, { catalog, log }) => {
