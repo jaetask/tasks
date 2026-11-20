@@ -1,12 +1,15 @@
+# Installed by the guardrails skill. Runs on every branch push; main requires the ci check.
 name: ci
 on:
-  pull_request:
   push:
-    branches: [main]
+  workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
-  test:
+  ci:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
