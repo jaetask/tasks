@@ -33,10 +33,10 @@ import { Nothing, projectLook } from "./local.js";
 import { StatusIcon } from "./pickers.js";
 
 const VIEWS: readonly ViewChoice[] = [
+  { id: "status", label: "Status", Icon: IconCircleCheck, heading: "Progress" },
   { id: "projects", label: "Projects", Icon: IconFolders, heading: "Projects" },
   { id: "actors", label: "Actors", Icon: IconUsers, heading: "Who is working" },
   { id: "locations", label: "Locations", Icon: IconMapPin, heading: "Where work happens" },
-  { id: "status", label: "Status", Icon: IconCircleCheck, heading: "Progress" },
 ];
 
 type Group = {

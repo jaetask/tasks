@@ -72,10 +72,10 @@ import { TicketView } from "./ticket.js";
 import { TicketMenu } from "./ticket-menu.js";
 
 export const VIEWS: readonly ViewChoice[] = [
+  { id: "status", label: "Status", Icon: IconCircleCheck, heading: "Progress" },
   { id: "features", label: "Features", Icon: IconStack2, heading: "Features" },
   { id: "actors", label: "Actors", Icon: IconUsers, heading: "Who is working" },
   { id: "locations", label: "Locations", Icon: IconMapPin, heading: "Where work happens" },
-  { id: "status", label: "Status", Icon: IconCircleCheck, heading: "Progress" },
 ];
 type View = "features" | "actors" | "locations" | "status" | "projects";
 type ViewChoice = SuiteViewChoice<View> & { heading: string };
@@ -98,7 +98,7 @@ type Filters = {
 };
 export type { Filters, View, ViewChoice };
 const ALL: Filters = {
-  view: "features",
+  view: "status",
   text: "",
   actor: "",
   feature: "",
