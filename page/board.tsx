@@ -1,7 +1,7 @@
 // A project's board and backlog: working surfaces that use the full width.
 // The board groups the same tickets four ways: by column, by feature, by
 // actor and by location. Dragging a ticket changes what the view groups by.
-import { EditLink, PageBody, PrimaryLink } from "@jaetask/toolkit/suite";
+import { EditLink, Link, PageBody, PrimaryLink } from "@jaetask/toolkit/suite";
 import { Button } from "@jaetask/toolkit/ui/button";
 import { Checkbox } from "@jaetask/toolkit/ui/checkbox";
 import {
@@ -23,6 +23,7 @@ import {
   IconChevronDown,
   IconCircleCheck,
   IconMapPin,
+  IconPlus,
   IconStack2,
   IconUsers,
 } from "@tabler/icons-react";
@@ -320,6 +321,7 @@ export function Lane({
   title,
   icon,
   count,
+  addTo,
   onDrop,
   children,
 }: {
@@ -327,6 +329,8 @@ export function Lane({
   title: string;
   icon?: ReactNode;
   count: number;
+  /** Where "+" goes: the new-ticket page, starting in this lane. */
+  addTo?: string;
   onDrop?: (ticket: string) => void;
   children?: ReactNode;
 }) {
@@ -349,14 +353,28 @@ export function Lane({
         setOver(false);
         onDrop?.(e.dataTransfer.getData(DRAG));
       }}
-      className={`lane min-h-72 w-72 shrink-0 rounded-xl p-3 ${over ? "bg-muted" : "bg-muted/45"}`}
+      className={`lane group/lane min-h-72 w-72 shrink-0 rounded-xl p-3 ${over ? "bg-muted" : "bg-muted/45"}`}
     >
       <div className="mb-3 flex items-center justify-between px-1">
         <h2 className="flex items-center gap-2 text-sm font-medium">
           {icon}
           {title}
         </h2>
-        <span className="text-xs text-muted-foreground">{count}</span>
+        <span className="flex items-center gap-1">
+          {addTo && (
+            <Button
+              asChild
+              variant="ghost"
+              size="icon-xs"
+              className="opacity-0 focus-visible:opacity-100 group-hover/lane:opacity-100"
+            >
+              <Link href={addTo} aria-label={`New ticket in ${title}`}>
+                <IconPlus aria-hidden />
+              </Link>
+            </Button>
+          )}
+          <span className="text-xs text-muted-foreground">{count}</span>
+        </span>
       </div>
       <div className="grid gap-3">
         {count > 0 ? (
@@ -405,6 +423,8 @@ type Group = {
   id: string;
   title: string;
   kind?: Kind;
+  /** What a new ticket made in this lane starts with, as the new-ticket page reads it. */
+  start: string;
   tickets: Ticket[];
   drop: (ticket: string) => unknown;
 };
@@ -444,6 +464,7 @@ export function BoardPage({ project }: { project: Project }) {
     ].map((g) => ({
       id: g.id ?? "none",
       title: g.title,
+      start: g.id ? `feature=${g.id}` : "",
       tickets: by((t) => t.feature, g.id),
       drop: (ticket) => act("tickets.ticket-feature-set", { ticket, feature: g.id }),
     }));
@@ -457,6 +478,7 @@ export function BoardPage({ project }: { project: Project }) {
     ].map((g) => ({
       id: g.id ?? "none",
       title: g.title,
+      start: g.id ? `assignee=${g.id}` : "",
       tickets: by((t) => t.assignee, g.id),
       drop: (ticket) => act("tickets.ticket-assign", { ticket, actor: g.id }),
     }));
@@ -470,6 +492,7 @@ export function BoardPage({ project }: { project: Project }) {
     ].map((g) => ({
       id: g.id ?? "none",
       title: g.title,
+      start: g.id ? `location=${g.id}` : "",
       tickets: by((t) => t.location, g.id),
       drop: (ticket) => act("tickets.ticket-location-set", { ticket, location: g.id }),
     }));
@@ -480,6 +503,7 @@ export function BoardPage({ project }: { project: Project }) {
         id: c.id,
         title: c.name,
         kind: c.kind,
+        start: `column=${c.id}`,
         tickets: by((t) => t.column.id, c.id),
         drop: (ticket) => act("tickets.ticket-move", { ticket, column: c.id }),
       }));
@@ -567,6 +591,7 @@ export function BoardPage({ project }: { project: Project }) {
               title={g.title}
               {...(g.kind ? { icon: <StatusIcon kind={g.kind} /> } : {})}
               count={g.tickets.length}
+              addTo={`/p/${project.id}/new?${g.start}`}
               onDrop={(ticket) => void g.drop(ticket)}
             >
               {g.tickets.map((t) => (
