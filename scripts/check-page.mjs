@@ -209,13 +209,18 @@ try {
     await see("Record a voice note");
     await page.locator("#place").getByText("voice").waitFor();
     await page.fill(
-      '[aria-label="Write a comment"]',
+      '[aria-label="Leave a comment"]',
       "Keep the record button big on the lock screen.",
     );
-    await page.press('[aria-label="Write a comment"]', "Enter");
-    await page.waitForSelector(".tk-comment");
-    await page.locator(".tk-reaction", { hasText: "👀" }).click();
-    await page.waitForSelector('.tk-reaction[aria-pressed="true"]');
+    await page.press('[aria-label="Leave a comment"]', "Control+Enter");
+    await page.waitForSelector(".thread .comment");
+    await button("Add a reaction").click();
+    await button("React with 👀").click();
+    await page.waitForSelector('.reaction[aria-pressed="true"]');
+    // The same emoji again takes it back; a different one is added beside it.
+    await button("Add a reaction").click();
+    await button("React with ✅").click();
+    await until(() => document.querySelectorAll(".reaction").length === 2);
   });
   await step("attach an image", async () => {
     await page.setInputFiles('#images input[type="file"]', {
@@ -229,15 +234,13 @@ try {
     await page.waitForSelector(".tk-thumb img");
   });
   await step(
-    "mark it blocked in its properties, then undo that from the Activity tab",
+    "mark it blocked in its properties, then undo that from its line in the activity",
     async () => {
       await page.fill('[aria-label="Blocked"]', "waiting on the API key");
       await page.press('[aria-label="Blocked"]', "Enter");
-      await page.getByRole("tab", { name: /Activity/ }).click();
       await see("marked TLK-1 blocked");
       await page.locator("#conversation").getByRole("button", { name: "Undo" }).last().click();
       await until(() => document.querySelector('[aria-label="Blocked"]').value === "");
-      await page.getByRole("tab", { name: /Comments/ }).click();
     },
   );
   await step("give it a location in its properties, and a step", async () => {
@@ -296,17 +299,22 @@ try {
   );
   await step("the ticket shows the agent's comment and its changes; reply to it", async () => {
     await open("/t/TLK-1");
-    await see("Coder (agent)");
-    await page.getByRole("tab", { name: /Activity/ }).click();
     await see("Coder claimed TLK-1 and moved it to Doing");
-    await page.getByRole("tab", { name: /Comments/ }).click();
-    await page.locator(".tk-comment").getByRole("button", { name: "Reply" }).last().click();
-    await page.fill(
-      '[aria-label="Reply to Coder"]',
-      "Good. Ask for review when the lock screen works.",
-    );
-    await page.press('[aria-label="Reply to Coder"]', "Enter");
-    await page.waitForSelector('.tk-comment[data-reply="true"]');
+    const thread = page.locator(".thread", { hasText: "Recording works in the app" });
+    await thread
+      .locator('[aria-label="Leave a reply"]')
+      .fill("Good. Ask for review when the lock screen works.");
+    await thread.locator('[aria-label="Leave a reply"]').press("Enter");
+    await thread.locator(".comment").nth(1).waitFor();
+    // Resolving a thread folds it to one line; Show opens it again.
+    await thread.getByRole("button", { name: "Comment actions" }).first().click();
+    await page.getByRole("menuitem", { name: "Resolve thread" }).click();
+    await see("Resolved · Coder");
+    await page
+      .locator(".thread", { hasText: "Resolved · Coder" })
+      .getByRole("button", { name: "Show" })
+      .press("Enter");
+    await page.getByRole("button", { name: "Comment actions" }).first().waitFor();
   });
   await page.evaluate(() => {
     document.querySelector(".tk-main")?.scrollTo(0, 0);

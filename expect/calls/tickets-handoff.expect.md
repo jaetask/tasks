@@ -75,6 +75,7 @@
         "at": "2026-01-01T09:06:00.000Z",
         "editedAt": null,
         "removed": false,
+        "resolved": false,
         "reactions": [],
         "replies": []
       }
@@ -102,6 +103,7 @@
         "at": "2026-01-01T09:07:00.000Z",
         "editedAt": null,
         "removed": false,
+        "resolved": false,
         "reactions": [],
         "replies": []
       }

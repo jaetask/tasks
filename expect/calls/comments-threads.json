@@ -1,0 +1,142 @@
+{
+  "steps": [
+    {
+      "call": "catalog.actor-rename",
+      "input": {
+        "actor": "owner",
+        "name": "Sam"
+      }
+    },
+    {
+      "call": "catalog.actor-create",
+      "input": {
+        "name": "Coder"
+      }
+    },
+    {
+      "call": "catalog.project-create",
+      "input": {
+        "name": "Talk",
+        "prefix": "TLK"
+      }
+    },
+    {
+      "call": "tickets.ticket-create",
+      "input": {
+        "project": "TLK",
+        "title": "Voice notes on the phone"
+      }
+    },
+    {
+      "as": "a1",
+      "call": "comments.comment-add",
+      "input": {
+        "ticket": "TLK-1",
+        "text": "Trim silence from recordings\nLong pauses make notes twice as long as they need to be."
+      }
+    },
+    {
+      "call": "comments.comment-add",
+      "input": {
+        "ticket": "TLK-1",
+        "text": "Good idea, separate ticket.",
+        "reply_to": "m1"
+      }
+    },
+    {
+      "call": "comments.reaction-add",
+      "input": {
+        "comment": "m1",
+        "emoji": "\ud83d\udc4d"
+      }
+    },
+    {
+      "call": "comments.reaction-add",
+      "input": {
+        "comment": "m1",
+        "emoji": "\ud83c\udf89"
+      }
+    },
+    {
+      "call": "comments.reaction-add",
+      "input": {
+        "comment": "m1",
+        "emoji": "\ud83d\udc4d"
+      }
+    },
+    {
+      "as": "a1",
+      "call": "comments.reaction-add",
+      "input": {
+        "comment": "m1",
+        "emoji": "\ud83d\udc4d"
+      }
+    },
+    {
+      "as": "a1",
+      "call": "comments.reaction-add",
+      "input": {
+        "comment": "m2",
+        "emoji": "\ud83e\udee1"
+      }
+    },
+    {
+      "call": "comments.comment-ticket-create",
+      "input": {
+        "comment": "m1"
+      }
+    },
+    {
+      "call": "comments.thread-resolve",
+      "input": {
+        "comment": "m1"
+      }
+    },
+    {
+      "call": "comments.thread-resolve",
+      "input": {
+        "comment": "m1"
+      }
+    },
+    {
+      "call": "comments.thread-resolve",
+      "input": {
+        "comment": "m2"
+      }
+    },
+    {
+      "as": "a1",
+      "call": "comments.thread-reopen",
+      "input": {
+        "comment": "m1"
+      }
+    },
+    {
+      "as": "a1",
+      "call": "comments.comment-edit",
+      "input": {
+        "comment": "m2",
+        "text": "Not mine to edit."
+      }
+    },
+    {
+      "call": "comments.comment-edit",
+      "input": {
+        "comment": "m2",
+        "text": "Good idea, made a separate ticket."
+      }
+    },
+    {
+      "call": "comments.conversation-read",
+      "input": {
+        "ticket": "TLK-1"
+      }
+    },
+    {
+      "call": "tickets.ticket-read",
+      "input": {
+        "ticket": "TLK-2"
+      }
+    }
+  ]
+}

@@ -21,6 +21,9 @@ export const Reply = z.object({
   at: z.string(),
   editedAt: z.string().nullable(),
   removed: z.boolean(),
+  resolved: z
+    .boolean()
+    .describe("True on a comment whose thread was resolved. Always false on a reply."),
   reactions: z.array(Reaction),
 });
 export type Reply = z.infer<typeof Reply>;
@@ -37,6 +40,8 @@ export type Comments = {
   add(by: string, at: string, ticket: string, text: string, replyTo?: string): Reply;
   edit(id: string, at: string, text: string): Reply;
   remove(id: string): Reply;
+  /** Marks a comment's thread resolved, or open again. Only a comment that starts a thread can be. */
+  resolve(id: string, resolved: boolean): Reply;
   react(id: string, actor: string, emoji: string): Reply;
   unreact(id: string, actor: string, emoji: string): Reply;
   /** Deletes every comment and reaction of a ticket. They cannot be brought back. */
@@ -47,6 +52,11 @@ export function migrateComments(db: DatabaseSync): void {
   db.exec(
     "CREATE TABLE IF NOT EXISTS comments (id TEXT PRIMARY KEY, ticket TEXT NOT NULL REFERENCES tickets (id), parent TEXT REFERENCES comments (id), author TEXT NOT NULL, text TEXT NOT NULL, at TEXT NOT NULL, edited_at TEXT, removed INTEGER NOT NULL DEFAULT 0)",
   );
+  // Added after the first version: a database made before it gets the column here.
+  const columns = db.prepare("PRAGMA table_info(comments)").all() as { name: string }[];
+  if (!columns.some((c) => c.name === "resolved")) {
+    db.exec("ALTER TABLE comments ADD COLUMN resolved INTEGER NOT NULL DEFAULT 0");
+  }
   db.exec(
     "CREATE TABLE IF NOT EXISTS reactions (id TEXT PRIMARY KEY, comment TEXT NOT NULL REFERENCES comments (id), actor TEXT NOT NULL, emoji TEXT NOT NULL)",
   );
@@ -61,6 +71,7 @@ type CommentRow = {
   at: string;
   edited_at: string | null;
   removed: number;
+  resolved: number;
 };
 
 export function sqliteComments(
@@ -83,6 +94,7 @@ export function sqliteComments(
       at: r.at,
       editedAt: r.edited_at,
       removed: r.removed === 1,
+      resolved: r.resolved === 1,
       reactions: emojis.map((emoji) => ({
         emoji,
         actors: reacted.filter((x) => x.emoji === emoji).map((x) => x.actor),
@@ -141,6 +153,7 @@ export function sqliteComments(
         at,
         edited_at: null,
         removed: 0,
+        resolved: 0,
       });
       return get(id);
     },
@@ -152,6 +165,20 @@ export function sqliteComments(
     remove: (id) => {
       live(id);
       rows.update("comments", id, { removed: 1 });
+      return get(id);
+    },
+    resolve: (id, resolved) => {
+      const found = live(id);
+      if (found.parent !== null) {
+        throw new Refusal("a-reply", `${id} is a reply. Resolve the comment it replies to.`);
+      }
+      if ((found.resolved === 1) === resolved) {
+        throw new Refusal(
+          "no-change",
+          `The thread of ${id} is already ${resolved ? "resolved" : "open"}.`,
+        );
+      }
+      rows.update("comments", id, { resolved: resolved ? 1 : 0 });
       return get(id);
     },
     react: (id, actor, emoji) => {

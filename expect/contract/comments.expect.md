@@ -20,7 +20,10 @@
 | comments.comment-add | write | comment-changed | Comment on a ticket: say what you did or found, or ask. With reply_to, it is a reply to that comment. |
 | comments.comment-edit | write | comment-changed | Change the text of a comment you wrote. |
 | comments.comment-remove | write | comment-changed | Remove a comment. Its author or the owner can. Its replies stay. |
-| comments.reaction-add | write | comment-changed | React to a comment with an emoji. |
+| comments.thread-resolve | write | comment-changed | Resolve a comment's thread: the comment and its replies are settled. It can be reopened. |
+| comments.thread-reopen | write | comment-changed | Reopen a resolved thread. |
+| comments.comment-ticket-create | write | comment-changed | Make a new ticket from a comment, in the same project: the comment is its description, with a line saying where it came from. It starts in the backlog. |
+| comments.reaction-add | write | comment-changed | React to a comment or reply with an emoji. An actor can add several different emoji to one comment, each one once. |
 | comments.reaction-remove | write | comment-changed | Take back your reaction to a comment. |
 
 ### Cards
@@ -47,7 +50,10 @@ Tools:
 - comments__comment-add (changes): Comment on a ticket: say what you did or found, or ask. With reply_to, it is a reply to that comment.
 - comments__comment-edit (changes): Change the text of a comment you wrote.
 - comments__comment-remove (changes): Remove a comment. Its author or the owner can. Its replies stay.
-- comments__reaction-add (changes): React to a comment with an emoji.
+- comments__thread-resolve (changes): Resolve a comment's thread: the comment and its replies are settled. It can be reopened.
+- comments__thread-reopen (changes): Reopen a resolved thread.
+- comments__comment-ticket-create (changes): Make a new ticket from a comment, in the same project: the comment is its description, with a line saying where it came from. It starts in the backlog.
+- comments__reaction-add (changes): React to a comment or reply with an emoji. An actor can add several different emoji to one comment, each one once.
 - comments__reaction-remove (changes): Take back your reaction to a comment.
 A tool that changes something after the person says yes waits for them; tell them what you asked for.
 ```
@@ -130,6 +136,63 @@ A tool that changes something after the person says yes waits for them; tell the
   "properties": {
     "comment": {
       "type": "string"
+    }
+  },
+  "required": [
+    "comment"
+  ]
+}
+```
+
+#### comments.thread-resolve
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "comment": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "comment"
+  ]
+}
+```
+
+#### comments.thread-reopen
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "comment": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "comment"
+  ]
+}
+```
+
+#### comments.comment-ticket-create
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "comment": {
+      "type": "string"
+    },
+    "title": {
+      "description": "The comment's first line if left out.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
     }
   },
   "required": [

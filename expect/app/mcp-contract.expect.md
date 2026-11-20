@@ -69,7 +69,10 @@
 | comments__comment-add |  | Comment on a ticket: say what you did or found, or ask. With reply_to, it is a reply to that comment. |
 | comments__comment-edit |  | Change the text of a comment you wrote. |
 | comments__comment-remove |  | Remove a comment. Its author or the owner can. Its replies stay. |
-| comments__reaction-add |  | React to a comment with an emoji. |
+| comments__thread-resolve |  | Resolve a comment's thread: the comment and its replies are settled. It can be reopened. |
+| comments__thread-reopen |  | Reopen a resolved thread. |
+| comments__comment-ticket-create |  | Make a new ticket from a comment, in the same project: the comment is its description, with a line saying where it came from. It starts in the backlog. |
+| comments__reaction-add |  | React to a comment or reply with an emoji. An actor can add several different emoji to one comment, each one once. |
 | comments__reaction-remove |  | Take back your reaction to a comment. |
 | steps__ticket-step-list | yes | List a ticket's steps in order, each with whether it is done and its notes. |
 | steps__ticket-step-add |  | Add a step to the end of a ticket's checklist. |
