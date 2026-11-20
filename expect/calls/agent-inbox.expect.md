@@ -100,10 +100,10 @@
 ]
 ```
 
-16. a2 calls replies.reply-list {"actor":"a1"} → refused: not-yours: You can read only your own agent inbox.
-17. a2 calls replies.reply-acknowledge {"reply":"r1"} → refused: not-yours: Only the actor it is for, or the owner, can acknowledge it.
+16. a2 calls replies.reply-list {"actor":"a1"} → rejected: not-yours: You can read only your own agent inbox.
+17. a2 calls replies.reply-acknowledge {"reply":"r1"} → rejected: not-yours: Only the actor it is for, or the owner, can acknowledge it.
 18. a1 calls replies.reply-acknowledge {"reply":"r1"} → succeeded; updated reply r1
-19. a1 calls replies.reply-acknowledge {"reply":"r1"} → refused: no-change: r1 is already acknowledged.
+19. a1 calls replies.reply-acknowledge {"reply":"r1"} → rejected: no-change: r1 is already acknowledged.
 20. owner calls replies.reply-acknowledge {"reply":"r2"} → succeeded; updated reply r2
 21. owner calls replies.reply-list {"actor":"a1","state":"unread"} → succeeded:
 

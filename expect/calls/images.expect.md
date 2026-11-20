@@ -55,14 +55,14 @@
 }
 ```
 
-10. a2 calls images.image-remove {"image":"i1"} → refused: not-yours: Only whoever attached it or the owner can remove an image.
+10. a2 calls images.image-remove {"image":"i1"} → rejected: not-yours: Only whoever attached it or the owner can remove an image.
 11. a1 calls images.image-remove {"image":"i1"} → succeeded; deleted image i1
-12. a2 calls images.image-read {"image":"i1"} → refused: unknown-image: No image has id i1.
+12. a2 calls images.image-read {"image":"i1"} → rejected: unknown-image: No image has id i1.
 13. owner calls history.change-undo {"change":"h8"} → succeeded; updated change h8
 14. owner calls images.image-remove {"image":"i2"} → succeeded; deleted image i2
 15. a1 calls images.image-add {"ticket":"TLK-1","name":"notes.txt","type":"text/plain","data":"aGVsbG8="} → rejected: invalid-input: type: Invalid option: expected one of "image/png"|"image/jpeg"|"image/gif"|"image/webp"
 16. a1 calls images.image-add {"ticket":"TLK-1","name":"bad.png","type":"image/png","data":"not base64!"} → rejected: invalid-input: data: data is base64
-17. a1 calls images.image-add {"ticket":"TLK-9","name":"x.png","type":"image/png","data":"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="} → refused: unknown-ticket: No ticket has id TLK-9.
+17. a1 calls images.image-add {"ticket":"TLK-9","name":"x.png","type":"image/png","data":"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="} → rejected: unknown-ticket: No ticket has id TLK-9.
 18. owner calls comments.conversation-read {"ticket":"TLK-1"} → succeeded:
 
 ```json
@@ -142,7 +142,7 @@
 19. owner calls tickets.ticket-create {"project":"TLK","title":"Second"} → succeeded; created ticket TLK-2
 20. a2 calls images.image-add {"ticket":"TLK-2","name":"kept.png","type":"image/png","data":"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="} → succeeded; created image i3
 21. owner calls tickets.ticket-delete {"ticket":"TLK-1"} → succeeded; deleted ticket TLK-1
-22. owner calls images.image-read {"image":"i1"} → refused: unknown-image: No image has id i1.
+22. owner calls images.image-read {"image":"i1"} → rejected: unknown-image: No image has id i1.
 
 ### Actors
 

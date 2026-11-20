@@ -15,7 +15,7 @@
 5. owner calls inbox.item-capture {"project":"TLK","text":"the board crashes when I drag a ticket"} → succeeded; created item n1
 6. owner calls inbox.item-capture {"project":"MNY","text":"Need export to CSV"} → succeeded; created item n2
 7. a1 calls inbox.item-capture {"project":"MNY","text":"Totals are wrong in May","source":"agent"} → succeeded; created item n3
-8. owner calls inbox.item-capture {"project":"NOPE","text":"No such project"} → refused: unknown-project: No project has id NOPE.
+8. owner calls inbox.item-capture {"project":"NOPE","text":"No such project"} → rejected: unknown-project: No project has id NOPE.
 9. owner calls inbox.item-capture {"text":"No project given"} → rejected: invalid-input: project: Invalid input: expected string, received undefined
 10. a1 calls inbox.inbox-read {"project":"MNY"} → succeeded:
 
@@ -101,7 +101,7 @@
 ```
 
 14. owner calls catalog.project-archive {"project":"MNY"} → succeeded; updated project MNY
-15. owner calls inbox.item-capture {"project":"MNY","text":"Too late"} → refused: archived-project: Project MNY is archived.
+15. owner calls inbox.item-capture {"project":"MNY","text":"Too late"} → rejected: archived-project: Project MNY is archived.
 
 ### The inbox steps, in order
 

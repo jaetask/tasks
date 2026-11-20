@@ -12,13 +12,11 @@ import {
 import { z } from "zod";
 import type { Base } from "../actions.js";
 import { type Catalog, OWNER } from "../catalog/catalog.js";
-import { orRefused, type Refused } from "../refusal.js";
+import { Refusal } from "../refusal.js";
 
 export type ConnectionsDeps = Base & {
   catalog: Catalog;
   connections: Connections;
-  /** Sets who a Connection acts as and what it may do, before it is approved. */
-  scope(connection: string, actor: string, effects: ("read" | "write")[]): void;
 };
 
 const ConnectionView = z.object({
@@ -63,8 +61,6 @@ export const connectionChanged = defineCard({
   },
 });
 
-const refuse = (code: string, message: string): Refused => ({ refused: { code, message } });
-
 async function views({ connections, catalog }: ConnectionsDeps): Promise<ConnectionView[]> {
   const actors = catalog.read().actors;
   return (await connections.list()).map((c) => {
@@ -100,23 +96,25 @@ const approve = defineAction({
     actor: z.string().describe("The id of an agent's actor. Never the owner."),
     change: z.boolean().describe("True if it may change things; false if it may only read."),
   }),
-  output: orRefused(ConnectionView),
+  output: ConnectionView,
   card: connectionChanged,
   run: async ({ connection: id, actor: actorId, change }, context: RunContext<ConnectionsDeps>) => {
-    const { connections, catalog, journal, principal, scope } = context;
+    const { connections, catalog, journal, principal } = context;
     const found = await connections.get(id);
-    if (!found) return refuse("unknown-connection", `No Connection has id ${id}.`);
+    if (!found) throw new Refusal("unknown-connection", `No Connection has id ${id}.`);
     if (found.state !== "pairing") {
-      return refuse("not-waiting", `That Connection is already ${found.state}.`);
+      throw new Refusal("not-waiting", `That Connection is already ${found.state}.`);
     }
     const actor = catalog.read().actors.find((a) => a.id === actorId);
-    if (!actor) return refuse("unknown-actor", `No actor has id ${actorId}.`);
+    if (!actor) throw new Refusal("unknown-actor", `No actor has id ${actorId}.`);
     if (actor.id === OWNER) {
-      return refuse("owner", "A Connection cannot act as the owner. Pick an agent's actor.");
+      throw new Refusal("owner", "A Connection cannot act as the owner. Pick an agent's actor.");
     }
-    if (actor.archived) return refuse("archived-actor", `${actor.name} is archived.`);
-    scope(id, actor.id, change ? ["read", "write"] : ["read"]);
-    await connections.approve(id);
+    if (actor.archived) throw new Refusal("archived-actor", `${actor.name} is archived.`);
+    await connections.approve(id, {
+      principal: { id: actor.id },
+      effects: change ? ["read", "write"] : ["read"],
+    });
     const may = change ? "read and change" : "read";
     journal.record({
       actor: principal.id,
@@ -135,14 +133,14 @@ const revoke = defineAction({
     "Revoke a Connection, or turn down one that is waiting. It is cut off at once; what it did stays visible.",
   effect: "write",
   input: z.object({ connection: z.string() }),
-  output: orRefused(ConnectionView),
+  output: ConnectionView,
   card: connectionChanged,
   run: async ({ connection: id }, context: RunContext<ConnectionsDeps>) => {
     const { connections, journal, principal } = context;
     const found = await connections.get(id);
-    if (!found) return refuse("unknown-connection", `No Connection has id ${id}.`);
+    if (!found) throw new Refusal("unknown-connection", `No Connection has id ${id}.`);
     if (found.state === "revoked")
-      return refuse("no-change", "That Connection is already revoked.");
+      throw new Refusal("no-change", "That Connection is already revoked.");
     await connections.revoke(id);
     journal.record({
       actor: principal.id,

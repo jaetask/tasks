@@ -44,10 +44,10 @@
 ```
 
 14. POST /api/connections/$Coding agent/approve (signed in) → HTTP 404: {"error":"Approve a Connection with the Action connections.connection-approve."}
-15. the page calls connections.connection-approve {"connection":"$Coding agent","actor":"owner","change":true} → refused: owner: A Connection cannot act as the owner. Pick an agent's actor.
-16. the page calls connections.connection-approve {"connection":"$Coding agent","actor":"a9","change":true} → refused: unknown-actor: No actor has id a9.
+15. the page calls connections.connection-approve {"connection":"$Coding agent","actor":"owner","change":true} → rejected: owner: A Connection cannot act as the owner. Pick an agent's actor.
+16. the page calls connections.connection-approve {"connection":"$Coding agent","actor":"a9","change":true} → rejected: unknown-actor: No actor has id a9.
 17. the page calls connections.connection-approve {"connection":"$Coding agent","actor":"a1","change":true} → succeeded; updated connection <Coding agent>
-18. the page calls connections.connection-approve {"connection":"$Coding agent","actor":"a2","change":true} → refused: not-waiting: That Connection is already connected.
+18. the page calls connections.connection-approve {"connection":"$Coding agent","actor":"a2","change":true} → rejected: not-waiting: That Connection is already connected.
 19. the page calls connections.connection-approve {"connection":"$Dashboard","actor":"a2","change":false} → succeeded; updated connection <Dashboard>
 20. Coding agent asks for its key → HTTP 200: its key
 21. Coding agent asks for its key → HTTP 403: refused
@@ -98,7 +98,7 @@
 36. Coding agent calls tickets__ticket-review-request {"ticket":"TLK-1"} over MCP → succeeded; updated ticket TLK-1
 37. the page calls connections.connection-revoke {"connection":"$Coding agent"} → succeeded; updated connection <Coding agent>
 38. Coding agent calls tickets__ticket-finish {"ticket":"TLK-1"} over MCP → no answer: Error POSTing to endpoint: {"error":"A valid Connection token is required."}
-39. the page calls connections.connection-revoke {"connection":"$Coding agent"} → refused: no-change: That Connection is already revoked.
+39. the page calls connections.connection-revoke {"connection":"$Coding agent"} → rejected: no-change: That Connection is already revoked.
 40. the page calls connections.connection-list → succeeded:
 
 ```json

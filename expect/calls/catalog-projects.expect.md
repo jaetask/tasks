@@ -16,7 +16,7 @@
 6. owner calls catalog.project-move {"project":"NTS","before":"TLK"} → succeeded; updated project NTS
 7. owner calls catalog.project-move {"project":"NTS"} → succeeded; updated project NTS
 8. owner calls catalog.project-move {"project":"MNY","before":"TLK"} → succeeded; updated project MNY
-9. owner calls catalog.project-move {"project":"MNY","before":"NOPE"} → refused: unknown-project: No project has id NOPE.
+9. owner calls catalog.project-move {"project":"MNY","before":"NOPE"} → rejected: unknown-project: No project has id NOPE.
 10. owner calls catalog.project-edit {"project":"TLK","icon":""} → succeeded; updated project TLK
 11. owner calls history.change-undo {"change":"h9"} → succeeded; updated change h9
 12. a1 calls catalog.project-move {"project":"TLK"} → rejected: not-allowed: a1 may not run catalog.project-move

@@ -79,11 +79,11 @@
 ```
 
 11. a1 calls input.input-resolve {"request":"q1","answer":"I say yes."} → rejected: not-allowed: a1 may not run input.input-resolve
-12. a2 calls input.input-withdraw {"request":"q2"} → refused: not-yours: Only whoever asked or the owner can take back a request.
+12. a2 calls input.input-withdraw {"request":"q2"} → rejected: not-yours: Only whoever asked or the owner can take back a request.
 13. a1 calls input.input-withdraw {"request":"q2"} → succeeded; updated input-request q2
 14. owner calls input.input-resolve {"request":"q1","answer":"Keep them for 30 days."} → succeeded; updated input-request q1
-15. owner calls input.input-resolve {"request":"q1","answer":"Changed my mind."} → refused: not-awaiting: q1 is already resolved.
-16. owner calls input.input-resolve {"request":"q2","answer":"Too late."} → refused: not-awaiting: q2 is already withdrawn.
+15. owner calls input.input-resolve {"request":"q1","answer":"Changed my mind."} → rejected: not-awaiting: q1 is already resolved.
+16. owner calls input.input-resolve {"request":"q2","answer":"Too late."} → rejected: not-awaiting: q2 is already withdrawn.
 17. a1 calls input.input-read {"request":"q1"} → succeeded:
 
 ```json
@@ -108,9 +108,9 @@
 []
 ```
 
-19. a1 calls input.input-request {"ticket":"TLK-9","question":"Anyone?"} → refused: unknown-ticket: No ticket has id TLK-9.
+19. a1 calls input.input-request {"ticket":"TLK-9","question":"Anyone?"} → rejected: unknown-ticket: No ticket has id TLK-9.
 20. a1 calls tickets.ticket-archive {"ticket":"TLK-1"} → succeeded; updated ticket TLK-1
-21. a1 calls input.input-request {"ticket":"TLK-1","question":"Still there?"} → refused: not-open: TLK-1 is archived. The owner can restore it.
+21. a1 calls input.input-request {"ticket":"TLK-1","question":"Still there?"} → rejected: not-open: TLK-1 is archived. The owner can restore it.
 22. owner calls comments.conversation-read {"ticket":"TLK-1"} → succeeded:
 
 ```json

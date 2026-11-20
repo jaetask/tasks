@@ -15,14 +15,14 @@
 5. owner calls catalog.column-kind-set {"column":"c6","kind":"done"} → succeeded; updated column c6
 6. owner calls catalog.column-move {"column":"c6","before":"c4"} → succeeded; updated column c6
 7. owner calls catalog.column-remove {"column":"c5"} → succeeded; deleted column c5
-8. owner calls catalog.column-add {"project":"TLK","name":"doing","kind":"doing"} → refused: name-taken: This board already has a column named doing.
-9. owner calls catalog.column-move {"column":"c1","before":"c99"} → refused: unknown-column: No column c99 is on this board.
-10. owner calls catalog.column-remove {"column":"c99"} → refused: unknown-column: No column has id c99.
+8. owner calls catalog.column-add {"project":"TLK","name":"doing","kind":"doing"} → rejected: name-taken: This board already has a column named doing.
+9. owner calls catalog.column-move {"column":"c1","before":"c99"} → rejected: unknown-column: No column c99 is on this board.
+10. owner calls catalog.column-remove {"column":"c99"} → rejected: unknown-column: No column has id c99.
 11. owner calls catalog.project-create {"name":"Money","prefix":"MNY"} → succeeded; created project MNY
 12. owner calls catalog.column-remove {"column":"c7"} → succeeded; deleted column c7
 13. owner calls catalog.column-remove {"column":"c8"} → succeeded; deleted column c8
 14. owner calls catalog.column-remove {"column":"c9"} → succeeded; deleted column c9
-15. owner calls catalog.column-remove {"column":"c10"} → refused: last-column: A board needs at least one column.
+15. owner calls catalog.column-remove {"column":"c10"} → rejected: last-column: A board needs at least one column.
 
 ### Actors
 

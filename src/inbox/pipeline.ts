@@ -5,7 +5,6 @@
 import type { DatabaseSync } from "node:sqlite";
 import { type ActionName, type Calls, contract } from "@jaetask/open-agent-kit";
 import { openJournal } from "../journal.js";
-import { isRefused } from "../refusal.js";
 import { inboxDomain } from "./domain.js";
 import { type Condition, INTAKE, type Item, sqliteInbox } from "./inbox.js";
 import { type Run, type StepRun, sqliteRuns } from "./runs.js";
@@ -92,12 +91,10 @@ export function createPipeline(options: PipelineOptions): Pipeline {
             action: `inbox.${call.action}` as ActionName,
             input: { ...call.input, item: id },
             principal: { id: step.actor },
-            caller: "agent",
+            caller: "app",
           });
           if (outcome.state !== "succeeded") {
             made.outcome = `${outcome.state}${"reason" in outcome ? `: ${outcome.reason.message}` : ""}`;
-          } else if (isRefused(outcome.output)) {
-            made.outcome = `refused: ${outcome.output.refused.message}`;
           } else {
             made.outcome = "done";
           }

@@ -183,11 +183,8 @@ export const call = (action: string, input: unknown = {}) =>
 
 /** Why a Call did not do what was asked, or null when it did. */
 export function refusal(outcome: Outcome): string | null {
-  if (outcome.state !== "succeeded") {
-    return outcome.reason?.message ?? outcome.error ?? `The Call was ${outcome.state}.`;
-  }
-  const output = outcome.output as { refused?: { message: string } } | null;
-  return output && typeof output === "object" && output.refused ? output.refused.message : null;
+  if (outcome.state === "succeeded") return null;
+  return outcome.reason?.message ?? outcome.error ?? `The Call was ${outcome.state}.`;
 }
 
 export const when = (at: string) =>

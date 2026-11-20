@@ -153,7 +153,7 @@ async function app(step: Step, input: StepInput, context: StepContext): Promise<
     action: text(step.config, "action") as ActionName,
     input,
     principal: { id: step.actor },
-    caller: "agent",
+    caller: "app",
   });
   if (outcome.state !== "succeeded") {
     throw new Error(
