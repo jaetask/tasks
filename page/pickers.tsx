@@ -135,7 +135,9 @@ export function PropertyPicker({
         ...choices.filter((c) => !chosen.includes(c.id)),
       ]
     : choices;
-  const groups = [...new Set(ordered.map((c) => c.group ?? ""))];
+  // With several to choose, the chosen ones sit above a line; otherwise choices keep their groups.
+  const groupOf = (c: Choice) => (many ? (chosen.includes(c.id) ? "chosen" : "") : (c.group ?? ""));
+  const groups = [...new Set(ordered.map(groupOf))];
   const numbered = !many && ordered.length <= 10;
   const wanted = search.trim();
   return (
@@ -184,9 +186,9 @@ export function PropertyPicker({
             {groups.map((group, g) => (
               <div key={group}>
                 {g > 0 && <CommandSeparator />}
-                <CommandGroup {...(group ? { heading: group } : {})}>
+                <CommandGroup {...(group && !many ? { heading: group } : {})}>
                   {ordered
-                    .filter((c) => (c.group ?? "") === group)
+                    .filter((c) => groupOf(c) === group)
                     .map((c) => {
                       const number = ordered.indexOf(c) + (zeroFirst(ordered) ? 0 : 1);
                       return (
