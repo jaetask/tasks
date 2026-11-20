@@ -29,6 +29,7 @@ import {
   IconArrowUp,
   IconChevronDown,
   IconChevronRight,
+  IconDots,
   IconMapPin,
   IconNote,
   IconPlus,
@@ -54,6 +55,7 @@ import {
 import { useApp, useRead } from "./app.js";
 import { Editor } from "./editor.js";
 import { DeleteForGood, Face, Nothing } from "./local.js";
+import { AddLinkDialog } from "./add-link.js";
 import { EvidenceSection } from "./evidence.js";
 import { linkHost, ServiceIcon } from "./links.js";
 import { RequestCard } from "./pages.js";
@@ -298,7 +300,7 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
   const [replyTo, _setReplyTo] = useState<string | null>(null);
   const [_tab, _setTab] = useState<"comments" | "activity">("comments");
   const [handoff, setHandoff] = useState("");
-  const [link, setLink] = useState("");
+  const [adding, setAdding] = useState(false);
   const [title, setTitle] = useState<string | null>(null);
   // What the description editor holds, until it is saved on leaving it.
   const draft = useRef<string | null>(null);
@@ -385,62 +387,94 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
         </section>
 
         {(ticket.links.length > 0 || open) && (
-          <section id="links" aria-label="Links" className="grid gap-1">
-            {ticket.links.map((l) => (
-              <div key={l.id} className="group flex items-start gap-2">
-                <ServiceIcon url={l.url} className="mt-1 shrink-0" />
-                <span className="grid min-w-0">
-                  <a
-                    href={l.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    title={l.url}
-                    className={`min-w-0 underline underline-offset-2 ${l.title ? "" : "break-all"}`}
-                  >
-                    {l.title || l.url}
-                  </a>
-                  {l.title && (
-                    <span className="truncate text-xs text-muted-foreground">
-                      {[linkHost(l.url), l.description].filter(Boolean).join(" · ")}
-                    </span>
-                  )}
-                </span>
-                {open && (
+          <Collapsible asChild defaultOpen>
+            <section id="links" aria-label="Resources" className="grid gap-1">
+              <div className="flex items-center justify-between">
+                <CollapsibleTrigger asChild>
                   <Button
                     variant="ghost"
-                    size="icon-xs"
-                    aria-label={`Remove the link ${l.url}`}
-                    className="opacity-0 focus-visible:opacity-100 group-hover:opacity-100"
-                    onClick={() =>
-                      void act("tickets.ticket-link-remove", { ticket: id, link: l.id })
-                    }
+                    size="sm"
+                    className="group/resources h-auto justify-start gap-1 p-0 text-xs font-medium text-muted-foreground hover:bg-transparent"
                   >
-                    <IconX aria-hidden />
+                    <IconChevronRight
+                      size={14}
+                      aria-hidden
+                      className="transition-transform group-data-[state=open]/resources:rotate-90"
+                    />
+                    Resources
+                  </Button>
+                </CollapsibleTrigger>
+                {open && (
+                  <Button
+                    variant="outline"
+                    size="icon-xs"
+                    aria-label="Add a link"
+                    className="rounded-full"
+                    onClick={() => setAdding(true)}
+                  >
+                    <IconPlus aria-hidden />
                   </Button>
                 )}
               </div>
-            ))}
-            {open && (
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  const url = link.trim();
-                  if (!url) return;
-                  void act("tickets.ticket-link-add", { ticket: id, url }).then(
-                    (done) => done && setLink(""),
-                  );
-                }}
-              >
-                <Input
-                  aria-label="New link"
-                  placeholder="Add a link"
-                  className="border-transparent shadow-none hover:border-input focus-visible:border-input"
-                  value={link}
-                  onChange={(e) => setLink(e.target.value)}
-                />
-              </form>
-            )}
-          </section>
+              <CollapsibleContent className="grid gap-1">
+                {ticket.links.map((l) => (
+                  <div
+                    key={l.id}
+                    className="resource group flex items-center gap-2 rounded-md bg-muted/40 px-2 py-1.5 text-sm"
+                  >
+                    <ServiceIcon url={l.url} className="shrink-0" />
+                    <a
+                      href={l.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      title={l.url}
+                      className={`shrink-0 font-medium hover:underline ${l.title ? "max-w-[50%] truncate" : "min-w-0 shrink break-all"}`}
+                    >
+                      {l.title || l.url}
+                    </a>
+                    <span
+                      className="min-w-0 flex-1 truncate text-muted-foreground"
+                      title={l.description}
+                    >
+                      {l.title ? l.description || linkHost(l.url) : ""}
+                    </span>
+                    {open && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon-xs"
+                            aria-label={`Link ${l.title || l.url}`}
+                            className="opacity-0 focus-visible:opacity-100 group-hover:opacity-100 data-[state=open]:opacity-100"
+                          >
+                            <IconDots aria-hidden />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onSelect={() => void navigator.clipboard?.writeText(l.url)}
+                          >
+                            Copy link
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onSelect={() =>
+                              void act("tickets.ticket-link-remove", { ticket: id, link: l.id })
+                            }
+                          >
+                            Remove
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
+                  </div>
+                ))}
+                {ticket.links.length === 0 && (
+                  <p className="m-0 text-xs text-muted-foreground">No links yet.</p>
+                )}
+              </CollapsibleContent>
+              <AddLinkDialog ticket={id} open={adding} onOpenChange={setAdding} />
+            </section>
+          </Collapsible>
         )}
 
         <Steps ticket={id} open={open} />
