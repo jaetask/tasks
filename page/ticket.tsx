@@ -286,6 +286,8 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
   // What the description editor holds, until it is saved on leaving it.
   const draft = useRef<string | null>(null);
   const [blocked, setBlocked] = useState<string | null>(null);
+  // The labels list opens beside this heading, which does not move as labels come and go.
+  const labelsAt = useRef<HTMLHeadingElement>(null);
   const pictures = usePictures(id);
   if (!ticket) return <Nothing text={`No ticket has the id ${id}.`} />;
   const open = ticket.state === "open";
@@ -692,7 +694,9 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
               }}
             />
           </form>
-          <h3 className="m-0 mt-3 px-2 text-xs font-medium text-muted-foreground">Labels</h3>
+          <h3 ref={labelsAt} className="m-0 mt-3 px-2 text-xs font-medium text-muted-foreground">
+            Labels
+          </h3>
           <div className="flex flex-wrap items-center gap-1.5 px-2">
             {ticket.labels.map((l) => (
               <span
@@ -703,7 +707,7 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
                 {l.name}
               </span>
             ))}
-            <LabelsPicker ticket={ticket}>
+            <LabelsPicker ticket={ticket} anchor={labelsAt}>
               <Button
                 variant="ghost"
                 aria-label="Change or add labels"

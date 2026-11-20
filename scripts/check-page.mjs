@@ -208,6 +208,20 @@ try {
     );
     await button("Change or add labels").click();
     await page.getByRole("option", { name: "voice", exact: true }).click();
+    // The list stays where it opened as the label lands on the ticket and the plus moves along.
+    const at = () =>
+      page.evaluate(() => {
+        const box = document
+          .querySelector("[data-radix-popper-content-wrapper]")
+          .getBoundingClientRect();
+        return [Math.round(box.x), Math.round(box.y)];
+      });
+    const before = await at();
+    await page.locator("#place .pill", { hasText: "voice" }).waitFor();
+    const after = await at();
+    if (before.join() !== after.join())
+      throw new Error(`the labels list moved: ${before} to ${after}`);
+    await shot("labels-picker");
     await page.keyboard.press("Escape");
     await see("Record a voice note");
     await open("/t/TLK-1");

@@ -1,5 +1,5 @@
 import { IconUserOff } from "@tabler/icons-react";
-import type { ReactNode } from "react";
+import type { ReactNode, RefObject } from "react";
 import { DueDatePicker } from "@jaetask/toolkit/suite";
 import { type Feature, OWNER, PRIORITIES, type Ticket, TYPES } from "./api.js";
 import { useApp, useRead } from "./app.js";
@@ -185,11 +185,20 @@ export function TypePicker({ ticket, children }: Shared) {
   );
 }
 
-export function LabelsPicker({ ticket, children, armed }: Shared) {
+export function LabelsPicker({
+  ticket,
+  children,
+  armed,
+  anchor,
+}: Shared & {
+  /** A part that stays put, such as the Labels heading: the list opens beside it. */
+  anchor?: RefObject<HTMLElement | null>;
+}) {
   const { catalog, act } = useApp();
   return (
     <PropertyPicker
       label="Labels"
+      {...(anchor ? { anchor, side: "left" as const } : {})}
       placeholder="Change or add labels..."
       hint="L"
       armed={armed}
