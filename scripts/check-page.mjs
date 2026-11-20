@@ -277,6 +277,10 @@ try {
     async () => {
       const box = page.locator('[aria-label="Leave a comment"]');
       await box.click();
+      await page.keyboard.type("x");
+      await page.locator("form.write").last().hover();
+      await page.locator("form.write").last().screenshot({ path: "docs/img/comment-box.png" });
+      await page.keyboard.press("Backspace");
       await page.evaluate(() => {
         const bytes = Uint8Array.from(
           atob(

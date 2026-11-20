@@ -350,8 +350,10 @@ function Write({
     <form
       className={
         tall
-          ? "write grid gap-1 rounded-xl border bg-card p-3"
-          : "write flex items-start gap-2 px-4 py-2"
+          ? // Room on the left for the editor's handle, which sits beside the line being written.
+            "write grid gap-1 rounded-xl border bg-card py-3 pr-3 pl-9"
+          : // A reply is one short line beside an avatar: no handle there.
+            "write flex items-start gap-2 px-4 py-2 [&_.drag-handle]:hidden"
       }
       onSubmit={(e) => {
         e.preventDefault();
