@@ -16,9 +16,9 @@
 6. owner calls catalog.actor-create {"name":"Coder"} → succeeded; created actor a1
 7. owner calls catalog.actor-create {"name":"coder"} → rejected: name-taken: An actor is already named coder.
 8. owner calls catalog.actor-archive {"actor":"owner"} → rejected: owner: The owner cannot be archived.
-9. owner calls catalog.label-create {"name":"bug","colour":"pink"} → rejected: invalid-input: colour: Invalid option: expected one of "teal"|"plum"|"red"|"amber"|"green"|"grey"
-10. owner calls catalog.label-create {"name":"bug","colour":"red"} → succeeded; created label l1
-11. owner calls catalog.label-create {"name":"Bug","colour":"red"} → rejected: name-taken: A label is already named Bug.
+9. owner calls catalog.label-create {"name":"bug","colour":"beige"} → rejected: invalid-input: colour: Invalid option: expected one of "blue"|"teal"|"green"|"amber"|"purple"|"pink"
+10. owner calls catalog.label-create {"name":"bug","colour":"pink"} → succeeded; created label l1
+11. owner calls catalog.label-create {"name":"Bug","colour":"pink"} → rejected: name-taken: A label is already named Bug.
 12. owner calls catalog.column-add {"project":"TLK","name":"Doing","kind":"doing"} → rejected: name-taken: This board already has a column named Doing.
 13. owner calls catalog.column-add {"project":"TLK","name":"Later","kind":"someday"} → rejected: invalid-input: kind: Invalid option: expected one of "todo"|"doing"|"waiting"|"done"
 14. owner calls catalog.project-edit {"project":"TLK","name":"Changed"} → succeeded; created project TLK
@@ -40,7 +40,7 @@
 
 | id | name | colour |
 | --- | --- | --- |
-| l1 | bug | red |
+| l1 | bug | pink |
 
 ### Features
 

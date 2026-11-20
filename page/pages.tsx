@@ -1,24 +1,29 @@
 // The screens that show things. Each is a page of panels from the toolkit;
 // anything that is edited opens its own edit page (see edits.tsx).
 import {
+  Avatar,
+  Board,
   Button,
   Card,
   Chip,
+  Column,
   EditLink,
   EmptyCard,
-  Input,
+  FilterBar,
   ListCard,
   ListRow,
   PageBody,
   PageLink,
   Panel,
   PrimaryLink,
+  SearchInput,
   Select,
+  Tabs,
 } from "@jaetask/toolkit";
 import { useState } from "react";
 import {
   type AgentReply,
-  type Board,
+  type Board as BoardData,
   type Change,
   type Connection,
   type Feature,
@@ -32,7 +37,7 @@ import {
   when,
 } from "./api.js";
 import { actorName, narrowInput, useApp, useRead } from "./app.js";
-import { Composer, Initial, LabelChip, Lanes, Tabs, TicketRow } from "./local.js";
+import { KindChip, LabelChip, Say, TicketRow } from "./local.js";
 
 export const projectTitle = (p: Project, screen: string) =>
   `${p.icon} ${p.name} · ${screen}`.trim();
@@ -40,21 +45,13 @@ export const projectTitle = (p: Project, screen: string) =>
 /** A search box and the pickers that narrow a board, the Overview or a backlog. */
 function NarrowBar({ features }: { features?: Feature[] }) {
   const { catalog, narrow, setNarrow } = useApp();
-  const [text, setText] = useState(narrow.text);
   return (
-    <form
-      className="narrow"
-      onSubmit={(e) => {
-        e.preventDefault();
-        setNarrow({ ...narrow, text: text.trim() });
-      }}
-    >
-      <Input
-        aria-label="Search tickets"
+    <FilterBar label="Narrow the tickets">
+      <SearchInput
+        label="Search tickets"
         placeholder="Search tickets"
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        onBlur={() => setNarrow({ ...narrow, text: text.trim() })}
+        value={narrow.text}
+        onChange={(text) => setNarrow({ ...narrow, text })}
       />
       <Select
         aria-label="Assigned to"
@@ -86,7 +83,7 @@ function NarrowBar({ features }: { features?: Feature[] }) {
           ))}
         </Select>
       )}
-    </form>
+    </FilterBar>
   );
 }
 
@@ -110,7 +107,7 @@ export function OverviewPage() {
     );
   }
   // Dropping a ticket on a kind moves it to its own board's first column of that kind.
-  const drop = (id: string, kind: string) => {
+  const drop = (id: string, kind: Kind) => {
     const project = projects.find((p) => id.startsWith(`${p.id}-`));
     const column = project?.columns.find((c) => c.kind === kind);
     if (column) void act("tickets.ticket-move", { ticket: id, column: column.id });
@@ -119,16 +116,22 @@ export function OverviewPage() {
     <PageBody title="Overview" line="Every project's tickets, lined up by what their column means.">
       <Panel id="overview" title="All projects" line="Drag a ticket to move it on its own board.">
         <NarrowBar />
-        <Lanes
-          lanes={(overview?.kinds ?? []).map(({ kind, tickets }) => ({
-            id: kind,
-            title: KINDS[kind as Kind],
-            kind,
-            count: true,
-            tickets,
-          }))}
-          onDrop={drop}
-        />
+        <Board label="Every project's tickets by kind">
+          {(overview?.kinds ?? []).map(({ kind, tickets }) => (
+            <Column
+              key={kind}
+              id={`kind-${kind}`}
+              title={KINDS[kind as Kind]}
+              count={tickets.length}
+              empty="No tickets."
+              onDrop={(ticket) => drop(ticket, kind)}
+            >
+              {tickets.map((t) => (
+                <TicketRow key={t.id} ticket={t} />
+              ))}
+            </Column>
+          ))}
+        </Board>
       </Panel>
     </PageBody>
   );
@@ -137,7 +140,7 @@ export function OverviewPage() {
 export function BoardPage({ project }: { project: Project }) {
   const { narrow, act } = useApp();
   const features = useRead<Feature[]>("tickets.feature-find", { project: project.id });
-  const board = useRead<Board>("tickets.board-read", {
+  const board = useRead<BoardData>("tickets.board-read", {
     project: project.id,
     ...narrowInput(narrow, true),
   });
@@ -167,15 +170,23 @@ export function BoardPage({ project }: { project: Project }) {
         action={<EditLink to={`/p/${project.id}/columns`} label="Edit columns" />}
       >
         <NarrowBar features={features ?? []} />
-        <Lanes
-          lanes={(board?.columns ?? []).map((c) => ({
-            id: c.id,
-            title: c.name,
-            kind: c.kind,
-            tickets: c.tickets,
-          }))}
-          onDrop={(ticket, column) => void act("tickets.ticket-move", { ticket, column })}
-        />
+        <Board label={`The board of ${project.name}`}>
+          {(board?.columns ?? []).map((c) => (
+            <Column
+              key={c.id}
+              id={`column-${c.id}`}
+              title={c.name}
+              kind={<KindChip kind={c.kind} />}
+              count={c.tickets.length}
+              empty="No tickets."
+              onDrop={(ticket) => void act("tickets.ticket-move", { ticket, column: c.id })}
+            >
+              {c.tickets.map((t) => (
+                <TicketRow key={t.id} ticket={t} />
+              ))}
+            </Column>
+          ))}
+        </Board>
       </Panel>
     </PageBody>
   );
@@ -236,10 +247,11 @@ export function FeaturesPage({ project }: { project: Project }) {
     >
       <Panel id="features" title="Features" line="Open one to rename, favourite or archive it.">
         <Tabs
+          label="Which features"
           value={archived ? "all" : "active"}
           options={[
-            ["active", "Active"],
-            ["all", "With archived"],
+            { id: "active", name: "Active" },
+            { id: "all", name: "With archived" },
           ]}
           onChange={(v) => setArchived(v === "all")}
         />
@@ -267,7 +279,7 @@ export function FeaturesPage({ project }: { project: Project }) {
                   {f.favourite ? "★ " : ""}
                   {f.name}
                 </b>
-                <span className="tk-muted small">
+                <span className="tk-muted">
                   {f.tickets} open{f.archived ? " · archived" : ""}
                   {f.description ? ` · ${f.description}` : ""}
                 </span>
@@ -288,9 +300,9 @@ export function RequestCard({ request, link }: { request: InputRequest; link?: b
   return (
     <Card className="request">
       <div className="who">
-        <Initial id={request.askedBy} name={request.askedByName} />
+        <Avatar name={request.askedByName || "?"} />
         <b>{request.askedByName} asks</b>
-        <span className="tk-muted small">{when(request.at)}</span>
+        <span className="tk-muted">{when(request.at)}</span>
         {link && (
           <PageLink
             to={`/t/${request.ticket}`}
@@ -299,15 +311,15 @@ export function RequestCard({ request, link }: { request: InputRequest; link?: b
         )}
       </div>
       <p className="text">{request.question}</p>
-      {request.context && <p className="tk-muted small">{request.context}</p>}
+      {request.context && <p className="tk-muted">{request.context}</p>}
       {request.state === "awaiting" ? (
-        <Composer
-          placeholder="Your answer"
+        <Say
+          label="Your answer"
           button="Answer"
           onSubmit={(answer) => act("input.input-resolve", { request: request.id, answer })}
         />
       ) : (
-        <p className="tk-muted small">
+        <p className="tk-muted">
           {request.answer ? `You answered: ${request.answer}` : "Taken back."}
         </p>
       )}
@@ -329,12 +341,13 @@ export function InputPage() {
       line="Questions your agents asked you on a ticket. An agent waits for your answer before it goes on."
     >
       <Panel id="input" title="Questions" line="Answer here, or on the ticket.">
-        <div className="narrow">
+        <FilterBar>
           <Tabs
+            label="Which questions"
             value={state}
             options={[
-              ["awaiting", "Awaiting input"],
-              ["resolved", "Resolved"],
+              { id: "awaiting", name: "Awaiting input" },
+              { id: "resolved", name: "Resolved" },
             ]}
             onChange={setState}
           />
@@ -346,13 +359,13 @@ export function InputPage() {
               </option>
             ))}
           </Select>
-        </div>
+        </FilterBar>
         {requests && requests.length > 0 ? (
-          <div className="stack">
+          <>
             {requests.map((r) => (
               <RequestCard key={r.id} request={r} link />
             ))}
-          </div>
+          </>
         ) : (
           <EmptyCard
             text={state === "awaiting" ? "No agent is waiting for you." : "Nothing here yet."}
@@ -383,13 +396,14 @@ export function RepliesPage() {
         title="Replies"
         line="An agent acknowledges each one when it has dealt with it."
       >
-        <div className="narrow">
+        <FilterBar>
           <Tabs
+            label="Which replies"
             value={state}
             options={[
-              ["unread", "Unread"],
-              ["acknowledged", "Acknowledged"],
-              ["all", "All"],
+              { id: "unread", name: "Unread" },
+              { id: "acknowledged", name: "Acknowledged" },
+              { id: "all", name: "All" },
             ]}
             onChange={setState}
           />
@@ -403,7 +417,7 @@ export function RepliesPage() {
                 </option>
               ))}
           </Select>
-        </div>
+        </FilterBar>
         {replies && replies.length > 0 ? (
           <ListCard>
             {replies.map((r) => (
@@ -429,7 +443,7 @@ export function RepliesPage() {
               >
                 <b>{`${r.fromName} ${SAID[r.kind]} ${r.toName}`}</b>
                 <span className="text">{r.text}</span>
-                <span className="tk-muted small">{`${r.ticket} · ${when(r.at)}`}</span>
+                <span className="tk-muted">{`${r.ticket} · ${when(r.at)}`}</span>
               </ListRow>
             ))}
           </ListCard>
@@ -460,11 +474,12 @@ export function ArchivePage() {
         line="Open one to read it, restore it or delete it for good."
       >
         <Tabs
+          label="Which tickets"
           value={state}
           options={[
-            ["all", "All"],
-            ["archived", "Archived"],
-            ["canceled", "Canceled"],
+            { id: "all", name: "All" },
+            { id: "archived", name: "Archived" },
+            { id: "canceled", name: "Canceled" },
           ]}
           onChange={setState}
         />
@@ -488,7 +503,7 @@ export function ArchivePage() {
                 }
               >
                 <b>{t.title}</b>
-                <span className="tk-muted small">{`${t.id} · ${t.state} · was in ${t.column.name}`}</span>
+                <span className="tk-muted">{`${t.id} · ${t.state} · was in ${t.column.name}`}</span>
               </ListRow>
             ))}
           </ListCard>
@@ -521,10 +536,10 @@ export function ChangesPage() {
                 ) : undefined
               }
             >
-              <span className={c.undoneBy ? "undone" : ""}>
+              <span className={c.undoneBy ? "tk-muted" : ""}>
                 <b>{actorName(catalog, c.actor)}</b> {c.summary}
               </span>
-              <span className="tk-muted small">{when(c.at)}</span>
+              <span className="tk-muted">{when(c.at)}</span>
             </ListRow>
           ))}
         </ListCard>
@@ -553,7 +568,7 @@ export function ConnectionsPage() {
             {waiting.map((c) => (
               <ListRow key={c.id} to={`/connections/${c.id}`} aside={<Chip>Approve</Chip>}>
                 <b>{c.name}</b>
-                <span className="tk-muted small">{`asks to ${c.may}`}</span>
+                <span className="tk-muted">{`asks to ${c.may}`}</span>
               </ListRow>
             ))}
           </ListCard>
@@ -588,7 +603,7 @@ export function ConnectionsPage() {
                 }
               >
                 <b>{c.name}</b>
-                <span className="tk-muted small">{`acts as ${c.actorName} · may ${c.may}`}</span>
+                <span className="tk-muted">{`acts as ${c.actorName} · may ${c.may}`}</span>
               </ListRow>
             ))}
           </ListCard>
@@ -628,7 +643,7 @@ export function SettingsPage({ onSignOut }: { onSignOut: () => void }) {
               .map((a) => (
                 <ListRow key={a.id} to={`/settings/actors/${a.id}`}>
                   <b>{a.name}</b>
-                  {a.archived && <span className="tk-muted small">archived</span>}
+                  {a.archived && <span className="tk-muted">archived</span>}
                 </ListRow>
               ))}
           </ListCard>
@@ -647,7 +662,7 @@ export function SettingsPage({ onSignOut }: { onSignOut: () => void }) {
             {catalog.projects.map((p) => (
               <ListRow key={p.id} to={`/p/${p.id}/edit`}>
                 <b>{`${p.icon} ${p.name}`.trim()}</b>
-                <span className="tk-muted small">{`${p.id}${p.archived ? " · archived" : ""}`}</span>
+                <span className="tk-muted">{`${p.id}${p.archived ? " · archived" : ""}`}</span>
               </ListRow>
             ))}
           </ListCard>

@@ -11,7 +11,7 @@
 1. owner calls catalog.project-create {"name":"Talk","prefix":"TLK"} → succeeded; created project TLK
 2. owner calls catalog.project-edit {"project":"TLK","name":"Talk app"} → succeeded; updated project TLK
 3. owner calls catalog.column-remove {"column":"c3"} → succeeded; deleted column c3
-4. owner calls catalog.label-create {"name":"bug","colour":"red"} → succeeded; created label l1
+4. owner calls catalog.label-create {"name":"bug","colour":"pink"} → succeeded; created label l1
 5. owner calls catalog.label-remove {"label":"l1"} → succeeded; deleted label l1
 6. owner calls history.change-undo {"change":"h5"} → succeeded; updated change h5
 7. owner calls history.change-undo {"change":"h3"} → succeeded; updated change h3
@@ -80,7 +80,7 @@
 
 | id | name | colour |
 | --- | --- | --- |
-| l1 | bug | red |
+| l1 | bug | pink |
 
 ### Features
 

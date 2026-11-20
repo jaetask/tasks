@@ -2,7 +2,7 @@
 // Action, through POST /api/calls, the same pipeline agents use.
 
 export type Kind = "todo" | "doing" | "waiting" | "done";
-export type Colour = "teal" | "plum" | "red" | "amber" | "green" | "grey";
+export type Colour = "blue" | "teal" | "green" | "amber" | "purple" | "pink";
 export type Actor = { id: string; name: string; archived: boolean };
 export type Column = { id: string; name: string; kind: Kind };
 export type Project = {
@@ -154,7 +154,7 @@ export const KINDS: Record<Kind, string> = {
   waiting: "waiting",
   done: "done",
 };
-export const COLOURS: Colour[] = ["teal", "plum", "red", "amber", "green", "grey"];
+export const COLOURS: Colour[] = ["blue", "teal", "green", "amber", "purple", "pink"];
 
 let onSignedOut = () => {};
 export const whenSignedOut = (handler: () => void) => {

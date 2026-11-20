@@ -2,8 +2,10 @@
 // labelled rows, then Cancel and Save, which both return to where you were.
 import {
   Button,
+  ChipMultiPicker,
   ChipPicker,
   EditFrame,
+  Inline,
   Input,
   Row,
   Select,
@@ -28,7 +30,6 @@ import {
 } from "./api.js";
 import { useApp, useRead } from "./app.js";
 import { CONDITIONS } from "./inbox.js";
-import { PickMany } from "./local.js";
 
 const COLOUR_OPTIONS = COLOURS.map((c) => ({ id: c, name: c }));
 
@@ -229,7 +230,7 @@ function ColumnRow({
   const [name, setName] = useState(column.name);
   return (
     <Row title={column.name} line={`Column ${index + 1}. Its kind says what it means.`}>
-      <div className="fields">
+      <Inline>
         <Input
           aria-label="Column name"
           value={name}
@@ -285,7 +286,7 @@ function ColumnRow({
         >
           Remove
         </Button>
-      </div>
+      </Inline>
     </Row>
   );
 }
@@ -306,7 +307,7 @@ export function ColumnsEdit({ project }: { project: Project }) {
         <ColumnRow key={c.id} column={c} index={i} columns={project.columns} />
       ))}
       <Row title="Add a column" line="It goes last; move it where you want it.">
-        <div className="fields">
+        <Inline>
           <Input
             aria-label="New column name"
             placeholder="Column name"
@@ -335,7 +336,7 @@ export function ColumnsEdit({ project }: { project: Project }) {
           >
             Add column
           </Button>
-        </div>
+        </Inline>
       </Row>
     </EditFrame>
   );
@@ -609,7 +610,12 @@ function TicketForm({ ticket }: { ticket: Ticket }) {
       </Row>
       <Row title="Labels" line="Tick the labels it carries.">
         {catalog.labels.length > 0 ? (
-          <PickMany value={labels} options={catalog.labels} onChange={setLabels} />
+          <ChipMultiPicker
+            label="Labels"
+            value={labels}
+            options={catalog.labels}
+            onChange={setLabels}
+          />
         ) : (
           <span className="tk-muted">No labels yet. Add them in Settings.</span>
         )}
@@ -985,14 +991,15 @@ function StepForm({ step, steps }: { step: Step | null; steps: Step[] }) {
         </Row>
       ))}
       <Row title="It may" line="The Actions it may ask for. It can ask for no others.">
-        <PickMany
+        <ChipMultiPicker
+          label="It may"
           value={actions}
           options={INTAKE.map((a) => ({ id: a, name: a.replace("item-", "") }))}
           onChange={setActions}
         />
       </Row>
       <Row title="It runs on" line="Every item, or only some." htmlFor="runs-on">
-        <div className="fields">
+        <Inline>
           <Select id="runs-on" value={runsOn} onChange={(e) => setRunsOn(e.target.value)}>
             {Object.entries(CONDITIONS).map(([k, text]) => (
               <option key={k} value={k}>
@@ -1007,7 +1014,7 @@ function StepForm({ step, steps }: { step: Step | null; steps: Step[] }) {
               onChange={(e) => setValue(e.target.value)}
             />
           )}
-        </div>
+        </Inline>
       </Row>
       <Row title="On" line="A step that is off is skipped.">
         <ChipPicker

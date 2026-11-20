@@ -4,7 +4,7 @@
     { "call": "catalog.actor-rename", "input": { "actor": "owner", "name": "Sam" } },
     { "call": "catalog.actor-create", "input": { "name": "Coder" } },
     { "call": "catalog.project-create", "input": { "name": "Talk", "prefix": "TLK" } },
-    { "call": "catalog.label-create", "input": { "name": "bug", "colour": "red" } },
+    { "call": "catalog.label-create", "input": { "name": "bug", "colour": "pink" } },
     { "call": "catalog.catalog-read" }
   ]
 }

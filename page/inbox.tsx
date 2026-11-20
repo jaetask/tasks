@@ -9,11 +9,12 @@ import {
   PageBody,
   PageLink,
   Panel,
+  Tabs,
 } from "@jaetask/toolkit";
 import { useState } from "react";
 import { type Item, type Project, type Run, type Step, when } from "./api.js";
 import { actorName, useApp, useRead } from "./app.js";
-import { Composer, Tabs } from "./local.js";
+import { Say } from "./local.js";
 import { projectTitle } from "./pages.js";
 
 export const CONDITIONS: Record<string, string> = {
@@ -31,7 +32,7 @@ function Runs({ item }: { item: string }) {
     <div className="runs">
       {(found?.runs ?? []).map((run) => (
         <div key={run.id}>
-          <p className="tk-muted small">{`${when(run.at)} · ${run.ended}`}</p>
+          <p className="tk-muted">{`${when(run.at)} · ${run.ended}`}</p>
           <ul>
             {run.steps.map((s, i) => (
               // biome-ignore lint/suspicious/noArrayIndexKey: a run's steps never reorder
@@ -76,7 +77,7 @@ function ItemCard({ item }: { item: Item }) {
     <Card className="item">
       <div className="who">
         <b>{item.title}</b>
-        <span className="tk-muted small mono">{`${item.id} · from ${item.source} · ${when(item.at)}`}</span>
+        <span className="tk-muted mono">{`${item.id} · from ${item.source} · ${when(item.at)}`}</span>
         {item.tags.map((t) => (
           <Chip key={t}>{t}</Chip>
         ))}
@@ -84,16 +85,16 @@ function ItemCard({ item }: { item: Item }) {
       </div>
       {item.text !== item.title && <p className="text">{item.text}</p>}
       {(item.original.title !== item.title || item.original.text !== item.text) && (
-        <p className="tk-muted small">{`As captured: ${item.original.text}`}</p>
+        <p className="tk-muted">{`As captured: ${item.original.text}`}</p>
       )}
       {Object.keys(item.fields).length > 0 && (
-        <p className="tk-muted small mono">
+        <p className="tk-muted mono">
           {Object.entries(item.fields)
             .map(([k, v]) => `${k}: ${v}`)
             .join(" · ")}
         </p>
       )}
-      {item.reason && <p className="tk-muted small">{`Reason: ${item.reason}`}</p>}
+      {item.reason && <p className="tk-muted">{`Reason: ${item.reason}`}</p>}
       <div className="buttons">
         {item.ticket && (
           <PageLink to={`/t/${item.ticket}`} surface="white">{`Open ${item.ticket}`}</PageLink>
@@ -132,13 +133,13 @@ function ItemCard({ item }: { item: Item }) {
   );
 }
 
-const STATES: [Item["state"], string][] = [
-  ["received", "Received"],
-  ["accepted", "Accepted"],
-  ["promoted", "Promoted"],
-  ["linked", "Linked"],
-  ["rejected", "Rejected"],
-  ["dismissed", "Dismissed"],
+const STATES: { id: Item["state"]; name: string }[] = [
+  { id: "received", name: "Received" },
+  { id: "accepted", name: "Accepted" },
+  { id: "promoted", name: "Promoted" },
+  { id: "linked", name: "Linked" },
+  { id: "rejected", name: "Rejected" },
+  { id: "dismissed", name: "Dismissed" },
 ];
 
 export function IntakePage({ project }: { project: Project }) {
@@ -152,18 +153,18 @@ export function IntakePage({ project }: { project: Project }) {
       line="New ideas and requests for this project, before they become tickets."
     >
       <Panel id="items" title="Inbox" line="Your steps look at each new item before it lands here.">
-        <Composer
-          placeholder="A new idea or request"
+        <Say
+          label="A new idea or request"
           button="Capture"
           onSubmit={(text) => act("inbox.item-capture", { project: project.id, text })}
         />
-        <Tabs value={state} options={STATES} onChange={setState} />
+        <Tabs label="Which items" value={state} options={STATES} onChange={setState} />
         {items && items.length > 0 ? (
-          <div className="stack">
+          <>
             {items.map((i) => (
               <ItemCard key={i.id} item={i} />
             ))}
-          </div>
+          </>
         ) : (
           <EmptyCard text={`Nothing is ${state}.`} />
         )}
@@ -179,7 +180,7 @@ export function IntakePage({ project }: { project: Project }) {
             {steps.map((s, i) => (
               <ListRow key={s.id} to={`/steps/${s.id}`} aside={<Chip>{s.on ? "on" : "off"}</Chip>}>
                 <b>{`${i + 1}. ${s.name}`}</b>
-                <span className="tk-muted small">
+                <span className="tk-muted">
                   {`${s.kind.replace("-", " ")} · as ${actorName(catalog, s.actor)} · may ${s.actions
                     .map((a) => a.replace("item-", ""))
                     .join(", ")} · runs on ${

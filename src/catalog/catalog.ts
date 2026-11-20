@@ -14,7 +14,8 @@ export const KINDS = ["todo", "doing", "waiting", "done"] as const;
 export const Kind = z.enum(KINDS).describe("What a column means: todo, doing, waiting or done.");
 export type Kind = z.infer<typeof Kind>;
 
-export const COLOURS = ["teal", "plum", "red", "amber", "green", "grey"] as const;
+// The six colours of the toolkit the page is built from.
+export const COLOURS = ["blue", "teal", "green", "amber", "purple", "pink"] as const;
 export const Colour = z.enum(COLOURS);
 export type Colour = z.infer<typeof Colour>;
 
@@ -113,6 +114,16 @@ export function migrateCatalog(db: DatabaseSync): void {
   db.exec(
     "CREATE TABLE IF NOT EXISTS labels (id TEXT PRIMARY KEY, name TEXT NOT NULL, colour TEXT NOT NULL, removed INTEGER NOT NULL DEFAULT 0)",
   );
+  // The colours were renamed once: a database made before gets the new names.
+  const renamed: [string, string][] = [
+    ["plum", "purple"],
+    ["red", "pink"],
+    ["grey", "blue"],
+  ];
+  for (const [was, now] of renamed) {
+    db.prepare("UPDATE labels SET colour = ? WHERE colour = ?").run(now, was);
+    db.prepare("UPDATE projects SET colour = ? WHERE colour = ?").run(now, was);
+  }
   db.prepare("INSERT OR IGNORE INTO actors (id, name) VALUES (?, '')").run(OWNER);
 }
 

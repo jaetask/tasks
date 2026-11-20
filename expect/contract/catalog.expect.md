@@ -213,12 +213,12 @@ A tool that changes something after the person says yes waits for them; tell the
     "colour": {
       "type": "string",
       "enum": [
+        "blue",
         "teal",
-        "plum",
-        "red",
-        "amber",
         "green",
-        "grey"
+        "amber",
+        "purple",
+        "pink"
       ]
     }
   },
@@ -425,12 +425,12 @@ A tool that changes something after the person says yes waits for them; tell the
     "colour": {
       "type": "string",
       "enum": [
+        "blue",
         "teal",
-        "plum",
-        "red",
-        "amber",
         "green",
-        "grey"
+        "amber",
+        "purple",
+        "pink"
       ]
     }
   },
@@ -477,12 +477,12 @@ A tool that changes something after the person says yes waits for them; tell the
     "colour": {
       "type": "string",
       "enum": [
+        "blue",
         "teal",
-        "plum",
-        "red",
-        "amber",
         "green",
-        "grey"
+        "amber",
+        "purple",
+        "pink"
       ]
     }
   },

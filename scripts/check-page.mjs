@@ -111,10 +111,24 @@ try {
     await button("Create project").click();
     await see("All projects");
   });
+  await step("several projects can be open in the sidebar at once", async () => {
+    await open("/settings/projects/new");
+    await page.fill("#name", "Money");
+    await page.fill("#prefix", "mny");
+    await button("Create project").click();
+    await see("Each has its own board");
+    await open("/p/TLK/board");
+    await page.waitForSelector(".tk-column");
+    await button("Expand Money").click();
+    await until(() => document.querySelectorAll('.tk-side a[href$="/intake"]').length === 2);
+    await open("/p/MNY/edit");
+    await button("Archive").click();
+    await see("Each has its own board");
+  });
   await step("the sidebar opens the project's board with its four columns", async () => {
     await page.getByRole("link", { name: /Talk/ }).first().click();
     await see("Tickets move through the columns");
-    await until(() => document.querySelectorAll(".lane").length === 4);
+    await until(() => document.querySelectorAll(".tk-column").length === 4);
     await page
       .getByRole("link", { name: /Intake/ })
       .first()
@@ -134,12 +148,12 @@ try {
     await link("New label").click();
     await page.fill("#name", "voice");
     await button("Add label").click();
-    await page.waitForSelector(".label.teal");
+    await page.locator("#labels").getByText("voice").waitFor();
     await link("New label").click();
     await page.fill("#name", "bug");
-    await page.getByRole("radio", { name: "red" }).click();
+    await page.getByRole("radio", { name: "pink" }).click();
     await button("Add label").click();
-    await page.waitForSelector(".label.red");
+    await page.locator("#labels").getByText("bug").waitFor();
   });
   await shot("settings");
   await step("add two tickets, each on the new ticket page", async () => {
@@ -148,33 +162,33 @@ try {
       await link("New ticket").click();
       await page.fill("#title", title);
       await button("Create ticket").click();
-      await until((n) => document.querySelectorAll(".ticket-row").length === n, i + 1);
+      await until((n) => document.querySelectorAll(".tk-column .tk-list-row").length === n, i + 1);
     }
   });
   await step("open a ticket; edit it on its own page; comment and react", async () => {
-    await page.click(".ticket-row >> text=Voice notes on the phone");
+    await page.click(".tk-list-row >> text=Voice notes on the phone");
     await see("What the work is.");
     await page.locator("#ticket").getByRole("link", { name: "Edit" }).click();
     await page.fill(
       "#description",
       "Record a voice note from the phone and attach it to a chat. It should work with the screen locked.",
     );
-    await page.getByLabel("voice").check();
+    await page.getByRole("button", { name: "voice", exact: true }).click();
     await shot("ticket-edit");
     await button("Save").click();
     await see("Record a voice note");
-    await page.waitForSelector("#ticket .label.teal");
+    await page.locator("#ticket .tk-chip", { hasText: "voice" }).waitFor();
     await page.fill(
       '[aria-label="Write a comment"]',
       "Keep the record button big on the lock screen.",
     );
     await page.press('[aria-label="Write a comment"]', "Enter");
-    await page.waitForSelector(".comment");
-    await page.click('[aria-label="React with 👀"]');
-    await page.waitForSelector('.reaction[aria-pressed="true"]');
+    await page.waitForSelector(".tk-comment");
+    await page.locator(".tk-reaction", { hasText: "👀" }).click();
+    await page.waitForSelector('.tk-reaction[aria-pressed="true"]');
   });
   await step("attach an image", async () => {
-    await page.setInputFiles('[aria-label="Add an image"]', {
+    await page.setInputFiles('#images input[type="file"]', {
       name: "record-button.png",
       mimeType: "image/png",
       buffer: Buffer.from(
@@ -182,22 +196,24 @@ try {
         "base64",
       ),
     });
-    await page.waitForSelector(".thumb img");
+    await page.waitForSelector(".tk-thumb img");
   });
   await step("mark it blocked on its edit page, then undo that from its line", async () => {
     await page.locator("#place").getByRole("link", { name: "Edit" }).click();
     await page.fill("#blocked", "waiting on the API key");
     await button("Save").click();
-    await page.waitForSelector("#place .blocked-note");
+    await page.locator("#place").getByText("waiting on the API key").waitFor();
     await page.locator("#conversation").getByRole("button", { name: "Undo" }).last().click();
-    await until(() => document.querySelector("#place .blocked-note") === null);
+    await until(
+      () => !document.querySelector("#place").textContent.includes("waiting on the API key"),
+    );
   });
   await step("an agent asks to connect; approve it as Coder on an edit page", async () => {
     const asked = await (
       await post("/pair", { host: "Coding agent", effects: ["read", "write"] })
     ).json();
     await open("/connections");
-    await see("Connections (1)");
+    await page.getByRole("link", { name: /Coding agent/ }).waitFor();
     await shot("connections");
     await page.getByRole("link", { name: /Coding agent/ }).click();
     await see("Approve Coding agent");
@@ -207,7 +223,7 @@ try {
   });
   await step("the agent's work shows on the board as it happens", async () => {
     await open("/p/TLK/board");
-    await page.waitForSelector(".lane");
+    await page.waitForSelector(".tk-column");
     await agent("tickets__ticket-claim", { ticket: "TLK-1" });
     await agent("comments__comment-add", {
       ticket: "TLK-1",
@@ -216,10 +232,11 @@ try {
     await agent("tickets__ticket-create", { project: "TLK", title: "Show the recording length" });
     await agent("tickets__ticket-block", { ticket: "TLK-2", note: "needs a crash report" });
     await until(
-      () => document.querySelectorAll(".lane")[1].querySelectorAll(".ticket-row").length === 1,
+      () =>
+        document.querySelectorAll(".tk-column")[1].querySelectorAll(".tk-list-row").length === 1,
     );
     await see("Show the recording length");
-    await page.waitForSelector(".ticket-row.blocked");
+    await page.waitForSelector('.tk-list-row[data-blocked="true"]');
   });
   await shot("board");
   await step(
@@ -227,27 +244,27 @@ try {
     async () => {
       await link("Overview").click();
       await see("All projects");
-      await until(() => document.querySelectorAll(".ticket-row").length === 3);
+      await until(() => document.querySelectorAll(".tk-column .tk-list-row").length === 3);
       await page.fill('[aria-label="Search tickets"]', "crash");
       await page.press('[aria-label="Search tickets"]', "Enter");
-      await until(() => document.querySelectorAll(".ticket-row").length === 1);
+      await until(() => document.querySelectorAll(".tk-column .tk-list-row").length === 1);
       await shot("overview");
       await page.fill('[aria-label="Search tickets"]', "");
       await page.press('[aria-label="Search tickets"]', "Enter");
-      await until(() => document.querySelectorAll(".ticket-row").length === 3);
+      await until(() => document.querySelectorAll(".tk-column .tk-list-row").length === 3);
     },
   );
   await step("the ticket shows the agent's comment and its changes; reply to it", async () => {
     await open("/t/TLK-1");
-    await page.waitForSelector(".agent");
+    await see("Coder (agent)");
     await see("Coder claimed TLK-1 and moved it to Doing");
-    await page.locator(".reactions").getByRole("button", { name: "Reply" }).last().click();
+    await page.locator(".tk-comment").getByRole("button", { name: "Reply" }).last().click();
     await page.fill(
       '[aria-label="Reply to Coder"]',
       "Good. Ask for review when the lock screen works.",
     );
     await page.press('[aria-label="Reply to Coder"]', "Enter");
-    await page.waitForSelector(".comment.reply");
+    await page.waitForSelector('.tk-comment[data-reply="true"]');
   });
   await page.evaluate(() => {
     document.querySelector(".tk-main")?.scrollTo(0, 0);
@@ -263,7 +280,10 @@ try {
         context: "Keeping them uses about 1 MB a minute.",
       });
       await see("Questions for you");
-      await link("Human input (1)").click();
+      await page
+        .getByRole("link", { name: /Human input/ })
+        .first()
+        .click();
       await see("Coder asks");
       await shot("human-input");
       await page.fill('[aria-label="Your answer"]', "Keep them for 30 days.");
@@ -297,9 +317,9 @@ try {
     await see("What the work is.");
     await open("/p/TLK/board");
     await page.selectOption('[aria-label="Feature"]', { label: "Voice" });
-    await until(() => document.querySelectorAll(".ticket-row").length === 1);
+    await until(() => document.querySelectorAll(".tk-column .tk-list-row").length === 1);
     await page.selectOption('[aria-label="Feature"]', { label: "Every feature" });
-    await until(() => document.querySelectorAll(".ticket-row").length === 3);
+    await until(() => document.querySelectorAll(".tk-column .tk-list-row").length === 3);
   });
   await step("backlog: a new ticket waits there, then goes to the board", async () => {
     await page
@@ -310,19 +330,31 @@ try {
     await link("New ticket").click();
     await page.fill("#title", "Trim silence from recordings");
     await button("Create ticket").click();
-    await page.waitForSelector("#backlog .ticket-row");
+    await page.waitForSelector("#backlog .tk-list-row");
     await open("/p/TLK/board");
-    await until(() => document.querySelectorAll(".ticket-row").length === 3);
+    await until(() => document.querySelectorAll(".tk-column .tk-list-row").length === 3);
     await open("/p/TLK/backlog");
     await button("To the board").click();
     await see("The backlog is empty");
     await open("/p/TLK/board");
-    await until(() => document.querySelectorAll(".ticket-row").length === 4);
+    await until(() => document.querySelectorAll(".tk-column .tk-list-row").length === 4);
   });
   await step("drag a ticket to another column", async () => {
-    await page.dragAndDrop(".ticket-row >> text=Show the recording length", ".lane >> nth=3");
+    // By hand, in small moves, as a person drags.
+    const from = await page
+      .locator(".tk-list-row", { hasText: "Show the recording length" })
+      .boundingBox();
+    const to = await page.locator(".tk-column").nth(3).boundingBox();
+    await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(from.x + from.width / 2 + 20, from.y + from.height / 2 + 10, {
+      steps: 5,
+    });
+    await page.mouse.move(to.x + 40, to.y + 60, { steps: 15 });
+    await page.mouse.up();
     await until(
-      () => document.querySelectorAll(".lane")[3].querySelectorAll(".ticket-row").length === 1,
+      () =>
+        document.querySelectorAll(".tk-column")[3].querySelectorAll(".tk-list-row").length === 1,
     );
   });
   await step("edit the columns on their own page: rename, add, move, remove", async () => {
@@ -347,7 +379,7 @@ try {
     await page.getByRole("button", { name: "Remove" }).nth(3).click();
     await until(columns, [3, "Done", 4]);
     await page.locator(".tk-edit-bar").getByRole("link").first().click();
-    await page.waitForSelector(".lane");
+    await page.waitForSelector(".tk-column");
     await see("Code review");
   });
   await step("intake: capture an item; with no steps it lands as received", async () => {
@@ -367,7 +399,7 @@ try {
     await link("Add a step").click();
     await page.fill("#name", "Spam check");
     await page.fill("#setting-file", "spam-check.mjs");
-    await page.getByLabel("reject", { exact: true }).check();
+    await page.getByRole("button", { name: "reject", exact: true }).click();
     await button("Add step").click();
     await see("1. Spam check");
     await page.fill('[aria-label="A new idea or request"]', "CHEAP WATCHES click here now");
@@ -408,7 +440,10 @@ try {
     await page.locator("#changes b", { hasText: "Coder" }).first().waitFor();
   });
   await step("revoke the agent; it is cut off", async () => {
-    await link("Connections").click();
+    await page
+      .getByRole("link", { name: /^Connections/ })
+      .first()
+      .click();
     await button("Revoke").click();
     await page.locator(".tk-chip", { hasText: "revoked" }).waitFor();
     const cut = await agent("tickets__work-find", {}).then(
@@ -420,7 +455,7 @@ try {
   await step("at phone width the page does not scroll sideways", async () => {
     await page.setViewportSize({ width: 390, height: 800 });
     await open("/p/TLK/board");
-    await page.waitForSelector(".lane");
+    await page.waitForSelector(".tk-column");
     const wide = await page.evaluate(
       () => document.documentElement.scrollWidth > window.innerWidth + 1,
     );

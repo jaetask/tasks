@@ -13,7 +13,7 @@
 3. owner calls catalog.actor-create {"name":"Reviewer"} → succeeded; created actor a2
 4. owner calls catalog.project-create {"name":"Talk","prefix":"TLK"} → succeeded; created project TLK
 5. owner calls catalog.label-create {"name":"voice","colour":"teal"} → succeeded; created label l1
-6. owner calls catalog.label-create {"name":"bug","colour":"red"} → succeeded; created label l2
+6. owner calls catalog.label-create {"name":"bug","colour":"pink"} → succeeded; created label l2
 7. owner calls tickets.ticket-create {"project":"TLK","title":"Voice notes on the phone","description":"Record a voice note and attach it to a chat.","labels":["l1"]} → succeeded; created ticket TLK-1
 8. owner calls tickets.ticket-create {"project":"TLK","title":"Fix the crash on send","labels":["l2"],"assignee":"a2"} → succeeded; created ticket TLK-2
 9. a1 calls tickets.work-find → succeeded:
@@ -206,7 +206,7 @@
 | id | name | colour |
 | --- | --- | --- |
 | l1 | voice | teal |
-| l2 | bug | red |
+| l2 | bug | pink |
 
 ### Features
 
