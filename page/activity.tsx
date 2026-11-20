@@ -357,11 +357,15 @@ function Write({
         e.preventDefault();
         send();
       }}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-          e.preventDefault();
-          send();
-        }
+      // Return sends; Shift+Return starts a new line. Caught before the editor, which would
+      // otherwise start a paragraph. Left alone while the editor's own menu is choosing a block,
+      // and while a word is still being composed on an input-method keyboard.
+      onKeyDownCapture={(e) => {
+        if (e.key !== "Enter" || e.shiftKey || e.altKey || e.nativeEvent.isComposing) return;
+        if (document.querySelector(".an-rich-md-slash-menu")) return;
+        e.preventDefault();
+        e.stopPropagation();
+        send();
       }}
       onPasteCapture={(e) => take(e, e.clipboardData.files)}
       onDropCapture={(e) => take(e, e.dataTransfer.files)}
