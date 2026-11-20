@@ -23,6 +23,7 @@ const state = {
   replyTo: null,
   archive: "all",
   inbox: "received",
+  openRuns: new Set(),
   editingStep: null,
 };
 const imageData = new Map();
@@ -90,7 +91,8 @@ const read = async (action, input) => output(await call(action, input), false);
 // Makes a change, shows its Card or why it was refused, and draws the page again.
 async function act(action, input) {
   const result = output(await call(action, input), true);
-  await refresh();
+  // Gentle, in case the owner has already started typing somewhere else.
+  await refresh({ gentle: true });
   return result;
 }
 
@@ -375,6 +377,45 @@ async function boardView() {
   ];
 }
 
+// ---- backlog ----
+
+async function backlogView() {
+  if (!state.project)
+    return [h("div", { class: "stack" }, newProjectPanel("Create your first project"))];
+  const project = state.catalog.projects.find((p) => p.id === state.project);
+  const tickets =
+    (await read("tickets.backlog-read", { project: state.project, ...narrow() })) ?? [];
+  return [
+    h(
+      "div",
+      { class: "board-head" },
+      h("h2", { class: "grow", text: `${project.icon} ${project.name} · Backlog`.trim() }),
+      narrowControls(),
+      lineForm("New ticket for the backlog", "Add", (title) =>
+        act("tickets.ticket-create", { project: state.project, title, backlog: true }),
+      ),
+    ),
+    h("p", {
+      class: "caption",
+      text: "Tickets wait here until you put them on the board. Agents looking for work do not see them.",
+    }),
+    tickets.length > 0
+      ? h(
+          "ul",
+          { class: "list backlog" },
+          tickets.map((t) =>
+            h(
+              "li",
+              {},
+              h("div", { class: "grow" }, ticketCard(t)),
+              button("To the board", () => act("tickets.ticket-board-send", { ticket: t.id })),
+            ),
+          ),
+        )
+      : h("p", { class: "muted", text: "The backlog is empty." }),
+  ];
+}
+
 // ---- features ----
 
 async function featuresView() {
@@ -585,7 +626,7 @@ async function renderTicket() {
   const open = ticket.state === "open";
   $("tk-where").textContent = [
     ticket.id,
-    `in ${ticket.column.name}`,
+    ticket.backlog ? "in the backlog" : `in ${ticket.column.name}`,
     ticket.assignee ? `assigned to ${ticket.assigneeName}` : "assigned to nobody",
     open ? "" : ticket.state,
   ]
@@ -715,6 +756,11 @@ async function renderTicket() {
                 const note = window.prompt("Why is it blocked?");
                 if (note?.trim()) act("tickets.ticket-block", { ticket: id, note: note.trim() });
               }),
+          ticket.backlog
+            ? button("Put on the board", () => act("tickets.ticket-board-send", { ticket: id }))
+            : button("Send to the backlog", () =>
+                act("tickets.ticket-backlog-send", { ticket: id }),
+              ),
           button("Archive", () => act("tickets.ticket-archive", { ticket: id })),
           button("Cancel ticket", () => act("tickets.ticket-cancel", { ticket: id })),
         ]
@@ -1113,7 +1159,11 @@ function itemView(item) {
   const details = h(
     "details",
     {
+      // Which items are opened is kept, so that drawing the page again leaves them open.
+      open: state.openRuns.has(item.id),
       ontoggle: async () => {
+        if (details.open) state.openRuns.add(item.id);
+        else state.openRuns.delete(item.id);
         if (!details.open) return;
         const found = await read("inbox.item-read", { item: item.id });
         runs.replaceChildren(
@@ -1627,6 +1677,7 @@ async function settingsView() {
 const VIEWS = {
   overview: overviewView,
   board: boardView,
+  backlog: backlogView,
   features: featuresView,
   archive: archiveView,
   inbox: inboxView,
@@ -1636,7 +1687,7 @@ const VIEWS = {
 };
 
 // The screens that show one project; their address ends in the project's id.
-const PROJECT_VIEWS = ["board", "features"];
+const PROJECT_VIEWS = ["backlog", "board", "features"];
 
 function showSignIn() {
   for (const id of ["view", "setup", "side", "menu", "sign-out"]) $(id).hidden = true;
@@ -1660,7 +1711,11 @@ function typing() {
 // Draws the page again. A gentle refresh, after someone else's change,
 // never replaces what the owner is typing: it waits until they are done.
 let waitingToRefresh = false;
+let drawing = 0;
 async function refresh({ gentle = false } = {}) {
+  // Two refreshes can overlap; only the one that started last may draw.
+  drawing += 1;
+  const mine = drawing;
   const catalog = await read("catalog.catalog-read");
   if (!catalog) return;
   state.catalog = catalog;
@@ -1688,6 +1743,7 @@ async function refresh({ gentle = false } = {}) {
     counts: { connections: connections.filter((c) => c.state === "pairing").length },
     moveProject: (id, before) => act("catalog.project-move", { project: id, before }),
   });
+  if (mine !== drawing) return;
   if (gentle && typing()) {
     waitingToRefresh = true;
     return;

@@ -237,6 +237,24 @@ try {
     await page.click(".card >> text=Voice notes on the phone");
     await page.waitForSelector("#ticket[open] h2");
   });
+  await step("backlog: a new ticket waits there, then goes to the board", async () => {
+    await page.click("#tk-close");
+    await page.click('.side-sub a[href="#/backlog/TLK"]');
+    await page.waitForSelector("text=The backlog is empty");
+    await page.fill('[aria-label="New ticket for the backlog"]', "Trim silence from recordings");
+    await page.press('[aria-label="New ticket for the backlog"]', "Enter");
+    await page.waitForSelector(".backlog .card");
+    await page.click('.side-sub a[href="#/board/TLK"]');
+    await page.waitForSelector(".column-head >> text=Review");
+    if ((await count(".card")) !== 3) throw new Error("the backlog ticket is on the board");
+    await page.click('.side-sub a[href="#/backlog/TLK"]');
+    await page.click("text=To the board");
+    await page.waitForSelector("text=The backlog is empty");
+    await page.click('.side-sub a[href="#/board/TLK"]');
+    await until(() => document.querySelectorAll(".card").length === 4);
+    await page.click(".card >> text=Voice notes on the phone");
+    await page.waitForSelector("#ticket[open] h2");
+  });
   await step("drag a ticket to another column", async () => {
     await page.click("#tk-close");
     await page.dragAndDrop("text=Show the recording length", ".column >> nth=3");
@@ -284,8 +302,11 @@ try {
     await page.check("label.check >> text=reject");
     await page.click("text=Add step");
     await page.waitForSelector("ol.list >> text=Spam check");
+    // The page draws again after a change; a person types slower than this script.
+    await page.waitForTimeout(500);
     await page.fill('[aria-label="A new idea or request"]', "CHEAP WATCHES click here now");
     await page.press('[aria-label="A new idea or request"]', "Enter");
+    await page.waitForTimeout(500);
     await page.fill(
       '[aria-label="A new idea or request"]',
       "the board crashes when I drag a ticket",
@@ -305,7 +326,7 @@ try {
     await page.selectOption('[aria-label="Turn into a ticket"] >> nth=0', { label: "Talk" });
     await until(() => document.querySelectorAll(".items > li").length === 1);
     await page.click("button >> text=promoted");
-    await page.waitForSelector("text=Open TLK-4");
+    await page.waitForSelector("text=Open TLK-5");
   });
   await step("archive a ticket, then restore it from the Archive", async () => {
     await page.click('.side-row a[href="#/board/TLK"]');

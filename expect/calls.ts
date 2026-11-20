@@ -103,7 +103,7 @@ export function renderData(db: DatabaseSync): string[] {
             t.id,
             t.title,
             t.featureName,
-            t.column.name,
+            t.backlog ? "(backlog)" : t.column.name,
             t.assigneeName,
             t.labels.map((l) => l.name).join(", "),
             t.blocked ?? "",

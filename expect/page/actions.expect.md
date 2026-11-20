@@ -54,6 +54,7 @@
 | inbox.step-edit | write |
 | inbox.step-move | write |
 | inbox.step-remove | write |
+| tickets.backlog-read | read |
 | tickets.board-read | read |
 | tickets.feature-archive | write |
 | tickets.feature-create | write |
@@ -63,7 +64,9 @@
 | tickets.overview-read | read |
 | tickets.ticket-archive | write |
 | tickets.ticket-assign | write |
+| tickets.ticket-backlog-send | write |
 | tickets.ticket-block | write |
+| tickets.ticket-board-send | write |
 | tickets.ticket-cancel | write |
 | tickets.ticket-create | write |
 | tickets.ticket-delete | write |

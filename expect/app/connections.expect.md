@@ -82,6 +82,7 @@
     "labels": [],
     "blocked": null,
     "state": "archived",
+    "backlog": false,
     "comments": 1,
     "images": 0,
     "createdAt": "2026-01-01T09:08:00.000Z",

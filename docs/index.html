@@ -395,6 +395,7 @@ details.prob .attack b{color:var(--bad)} details.prob .answer2 b{color:var(--ok)
     <details class="prob"><summary>Blocked, canceled and archived tickets</summary><div class="body" style="grid-template-columns:minmax(0,1fr)"><ol class="timeline" style="padding-left:0">
       <li class="wait"><b>Blocked</b><span>A state on the ticket, not a column. A ticket can be blocked in any column, with a note saying why. Agents skip blocked tickets when they look for work.</span></li>
       <li class="bad"><b>Canceled</b><span>An action, not a column. Canceled tickets are in the Archive, under a filter, and can be restored.</span></li>
+      <li><b>Backlog</b><span>A separate list for work not yet planned. Agents looking for work do not see it. Putting a ticket on the board puts it in the first to-do column.</span></li>
       <li class="bad"><b>Archived</b><span>An action, not a column. The ticket keeps its column, so restoring puts it back where it was.</span></li>
     </ol></div></details>
   </div>
@@ -599,6 +600,7 @@ const WORDS = [
   ["Feature", "One part of a project, such as Voice. Groups the tickets for that part."],
   ["Ticket", "One piece of work: a title, a description, labels, images and comments. Has an id like TLK-529."],
   ["Label", "A coloured tag on a ticket, such as bug or voice. You make your own."],
+  ["Backlog", "Where a project's tickets wait until you put them on the board."],
   ["Board", "Where a project's tickets move through its columns."],
   ["Column", "One step on a project's board, such as Review. Each project sets its own; new ones start with To do, Doing, Review and Done."],
   ["Kind", "What a column means: to do, doing, waiting or done. Tasks and agents go by the kind, not the name."],

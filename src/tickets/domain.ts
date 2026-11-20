@@ -129,13 +129,13 @@ const ticketFind = read({
 const workFind = read({
   name: "work-find",
   description:
-    "Find work to do: open tickets in to-do columns that are not blocked and are assigned to you or to nobody, oldest first.",
+    "Find work to do: open tickets on a board, in to-do columns, that are not blocked and are assigned to you or to nobody, oldest first.",
   input: z.object({ project: z.string().optional() }),
   output: z.array(Ticket),
   card: ticketList,
   run: ({ project }, { tickets, principal }) =>
     tickets
-      .find({ project, kind: "todo", blocked: false })
+      .find({ project, kind: "todo", blocked: false, backlog: false })
       .filter((t) => t.assignee === null || t.assignee === principal.id),
 });
 
@@ -151,12 +151,16 @@ const ticketCreate = write({
     labels: z.array(z.string()).max(20).default([]).describe("Label ids."),
     assignee: z.string().optional().describe("An actor id."),
     feature: z.string().optional().describe("The id of a feature of the project."),
+    backlog: z
+      .boolean()
+      .default(false)
+      .describe("True to put it in the backlog, to wait there until it is put on the board."),
   }),
   run: (input, { tickets, actor, now }) => {
     const ticket = tickets.create(actor, new Date(now()).toISOString(), input);
     return {
       ticket,
-      summary: `created ${ticket.id} in ${ticket.column.name}: ${ticket.title}`,
+      summary: `created ${ticket.id} in ${ticket.backlog ? "the backlog" : ticket.column.name}: ${ticket.title}`,
       kind: "created",
     };
   },
@@ -239,6 +243,36 @@ const ticketAssign = write({
         ? `assigned ${ticket} to ${assigned.assigneeName}`
         : `assigned ${ticket} to nobody`,
     };
+  },
+});
+
+const backlogRead = read({
+  name: "backlog-read",
+  description:
+    "Read a project's backlog: open tickets that wait off the board, oldest first. Can be narrowed like a board.",
+  input: Narrow.extend({ project: z.string() }),
+  output: z.array(Ticket),
+  card: ticketList,
+  run: ({ project, ...narrow }, { tickets }) => tickets.backlog(project, narrow),
+});
+
+const ticketBacklogSend = write({
+  name: "ticket-backlog-send",
+  description: "Send a ticket to its project's backlog, off the board.",
+  input: one,
+  run: ({ ticket }, { tickets }) => ({
+    ticket: tickets.setBacklog(ticket, true),
+    summary: `sent ${ticket} to the backlog`,
+  }),
+});
+
+const ticketBoardSend = write({
+  name: "ticket-board-send",
+  description: "Put a backlog ticket on the board, in the first to-do column.",
+  input: one,
+  run: ({ ticket }, { tickets }) => {
+    const sent = tickets.setBacklog(ticket, false);
+    return { ticket: sent, summary: `put ${ticket} on the board in ${sent.column.name}` };
   },
 });
 
@@ -486,6 +520,7 @@ export const ticketsDomain = defineDomain<TicketsDeps>({
     ticketRead,
     boardRead,
     overviewRead,
+    backlogRead,
     ticketCreate,
     ticketClaim,
     ticketMove,
@@ -493,6 +528,8 @@ export const ticketsDomain = defineDomain<TicketsDeps>({
     ticketFinish,
     ticketAssign,
     ticketEdit,
+    ticketBacklogSend,
+    ticketBoardSend,
     ticketFeatureSet,
     ticketLabelAdd,
     ticketLabelRemove,

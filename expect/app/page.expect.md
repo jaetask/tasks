@@ -56,6 +56,7 @@
           "labels": [],
           "blocked": null,
           "state": "open",
+          "backlog": false,
           "comments": 1,
           "images": 0,
           "createdAt": "2026-01-01T09:16:00.000Z",

@@ -1,0 +1,35 @@
+{
+  "steps": [
+    { "call": "catalog.actor-create", "input": { "name": "Coder" } },
+    { "call": "catalog.project-create", "input": { "name": "Talk", "prefix": "TLK" } },
+    { "call": "tickets.ticket-create", "input": { "project": "TLK", "title": "On the board" } },
+    {
+      "call": "tickets.ticket-create",
+      "input": { "project": "TLK", "title": "Waiting one", "backlog": true }
+    },
+    {
+      "as": "a1",
+      "call": "tickets.ticket-create",
+      "input": { "project": "TLK", "title": "Waiting two", "backlog": true }
+    },
+    { "as": "a1", "call": "tickets.backlog-read", "input": { "project": "TLK" } },
+    { "as": "a1", "call": "tickets.work-find" },
+    { "as": "a1", "call": "tickets.board-read", "input": { "project": "TLK" } },
+    { "as": "a1", "call": "tickets.ticket-claim", "input": { "ticket": "TLK-2" } },
+    { "as": "a1", "call": "tickets.ticket-move", "input": { "ticket": "TLK-2", "column": "c3" } },
+    {
+      "as": "a1",
+      "call": "tickets.ticket-edit",
+      "input": { "ticket": "TLK-2", "title": "Waiting one, clearer" }
+    },
+    { "as": "a1", "call": "tickets.ticket-board-send", "input": { "ticket": "TLK-2" } },
+    { "as": "a1", "call": "tickets.ticket-board-send", "input": { "ticket": "TLK-2" } },
+    { "as": "a1", "call": "tickets.ticket-claim", "input": { "ticket": "TLK-2" } },
+    { "as": "a1", "call": "tickets.ticket-backlog-send", "input": { "ticket": "TLK-1" } },
+    { "as": "a1", "call": "tickets.ticket-find", "input": { "backlog": true } },
+    { "as": "a1", "call": "tickets.backlog-read", "input": { "project": "TLK", "text": "two" } },
+    { "call": "history.change-undo", "input": { "change": "h9" } },
+    { "as": "a1", "call": "tickets.ticket-archive", "input": { "ticket": "TLK-3" } },
+    { "call": "tickets.ticket-restore", "input": { "ticket": "TLK-3" } }
+  ]
+}

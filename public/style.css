@@ -328,7 +328,9 @@ button[aria-pressed="true"] {
   padding-bottom: 12px;
 }
 .column {
-  flex: 0 0 270px;
+  flex: 1 0 220px;
+  max-width: 320px;
+  min-width: 0;
   background: var(--sunk);
   border-radius: 10px;
   padding: 10px;

@@ -17,6 +17,9 @@ _Avoid_: task, issue, item, card
 **Label**: A coloured tag on a ticket, such as `bug`. The owner makes them.
 _Avoid_: tag, category
 
+**Backlog**: Where a project's tickets wait, off the board, until someone puts them on it. Agents looking for work do not see them.
+_Avoid_: icebox, later list
+
 **Board**: Where a project's tickets move through its columns.
 _Avoid_: kanban, workflow
 

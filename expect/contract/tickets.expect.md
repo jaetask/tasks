@@ -16,11 +16,12 @@
 
 | action | effect | card | description |
 | --- | --- | --- | --- |
-| tickets.work-find | read | tickets | Find work to do: open tickets in to-do columns that are not blocked and are assigned to you or to nobody, oldest first. |
+| tickets.work-find | read | tickets | Find work to do: open tickets on a board, in to-do columns, that are not blocked and are assigned to you or to nobody, oldest first. |
 | tickets.ticket-find | read | tickets | Find tickets, oldest first. Every filter is optional; a column's kind says what the column means. |
 | tickets.ticket-read | read | ticket | Read one ticket. |
 | tickets.board-read | read |  | Read a project's board: its columns in order, each with its open tickets. Can be narrowed by words or by who a ticket is assigned to. |
 | tickets.overview-read | read |  | Read the open tickets of every project, lined up by column kind: to do, doing, waiting, done. Can be narrowed like a board. |
+| tickets.backlog-read | read | tickets | Read a project's backlog: open tickets that wait off the board, oldest first. Can be narrowed like a board. |
 | tickets.ticket-create | write | ticket-changed | Create a ticket. It starts in the project's first to-do column unless you name a column. |
 | tickets.ticket-claim | write | ticket-changed | Claim a ticket: assign it to yourself and move it to the first doing column. |
 | tickets.ticket-move | write | ticket-changed | Move a ticket to any column of its board. |
@@ -28,6 +29,8 @@
 | tickets.ticket-finish | write | ticket-changed | Finish a ticket: move it to the first done column. |
 | tickets.ticket-assign | write | ticket-changed | Assign a ticket to an actor, to hand it on, or to nobody with null. |
 | tickets.ticket-edit | write | ticket-changed | Change a ticket's title, its description, or both. |
+| tickets.ticket-backlog-send | write | ticket-changed | Send a ticket to its project's backlog, off the board. |
+| tickets.ticket-board-send | write | ticket-changed | Put a backlog ticket on the board, in the first to-do column. |
 | tickets.ticket-feature-set | write | ticket-changed | Put a ticket in a feature of its project, or in no feature with null. |
 | tickets.ticket-label-add | write | ticket-changed | Add a label to a ticket. |
 | tickets.ticket-label-remove | write | ticket-changed | Remove a label from a ticket. |
@@ -157,11 +160,12 @@
 ```text
 tickets: Tickets on project boards: find work, claim it, move it on, hand it on. Every change is recorded with its actor.
 Tools:
-- tickets__work-find (reads): Find work to do: open tickets in to-do columns that are not blocked and are assigned to you or to nobody, oldest first.
+- tickets__work-find (reads): Find work to do: open tickets on a board, in to-do columns, that are not blocked and are assigned to you or to nobody, oldest first.
 - tickets__ticket-find (reads): Find tickets, oldest first. Every filter is optional; a column's kind says what the column means.
 - tickets__ticket-read (reads): Read one ticket.
 - tickets__board-read (reads): Read a project's board: its columns in order, each with its open tickets. Can be narrowed by words or by who a ticket is assigned to.
 - tickets__overview-read (reads): Read the open tickets of every project, lined up by column kind: to do, doing, waiting, done. Can be narrowed like a board.
+- tickets__backlog-read (reads): Read a project's backlog: open tickets that wait off the board, oldest first. Can be narrowed like a board.
 - tickets__ticket-create (changes): Create a ticket. It starts in the project's first to-do column unless you name a column.
 - tickets__ticket-claim (changes): Claim a ticket: assign it to yourself and move it to the first doing column.
 - tickets__ticket-move (changes): Move a ticket to any column of its board.
@@ -169,6 +173,8 @@ Tools:
 - tickets__ticket-finish (changes): Finish a ticket: move it to the first done column.
 - tickets__ticket-assign (changes): Assign a ticket to an actor, to hand it on, or to nobody with null.
 - tickets__ticket-edit (changes): Change a ticket's title, its description, or both.
+- tickets__ticket-backlog-send (changes): Send a ticket to its project's backlog, off the board.
+- tickets__ticket-board-send (changes): Put a backlog ticket on the board, in the first to-do column.
 - tickets__ticket-feature-set (changes): Put a ticket in a feature of its project, or in no feature with null.
 - tickets__ticket-label-add (changes): Add a label to a ticket.
 - tickets__ticket-label-remove (changes): Remove a label from a ticket.
@@ -245,6 +251,10 @@ A tool that changes something after the person says yes waits for them; tell the
       "type": "string"
     },
     "blocked": {
+      "type": "boolean"
+    },
+    "backlog": {
+      "description": "True for the backlog only, false for the board only.",
       "type": "boolean"
     },
     "state": {
@@ -343,6 +353,41 @@ A tool that changes something after the person says yes waits for them; tell the
 }
 ```
 
+#### tickets.backlog-read
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "text": {
+      "description": "Words to look for in the id, title and description.",
+      "type": "string"
+    },
+    "assignee": {
+      "description": "An actor id, or null for tickets assigned to nobody.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "feature": {
+      "description": "A feature id, or null for tickets in no feature.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "project": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "project"
+  ]
+}
+```
+
 #### tickets.ticket-create
 
 ```json
@@ -383,6 +428,11 @@ A tool that changes something after the person says yes waits for them; tell the
     "feature": {
       "description": "The id of a feature of the project.",
       "type": "string"
+    },
+    "backlog": {
+      "default": false,
+      "description": "True to put it in the backlog, to wait there until it is put on the board.",
+      "type": "boolean"
     }
   },
   "required": [
@@ -513,6 +563,42 @@ A tool that changes something after the person says yes waits for them; tell the
     "description": {
       "type": "string",
       "maxLength": 20000
+    }
+  },
+  "required": [
+    "ticket"
+  ]
+}
+```
+
+#### tickets.ticket-backlog-send
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "ticket": {
+      "type": "string",
+      "description": "A ticket id, like TLK-529."
+    }
+  },
+  "required": [
+    "ticket"
+  ]
+}
+```
+
+#### tickets.ticket-board-send
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "ticket": {
+      "type": "string",
+      "description": "A ticket id, like TLK-529."
     }
   },
   "required": [

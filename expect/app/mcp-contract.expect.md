@@ -48,11 +48,12 @@
 | catalog__label-rename |  | Rename a label. |
 | catalog__label-colour-set |  | Set a label's colour. |
 | catalog__label-remove |  | Remove a label. Tickets no longer show it. |
-| tickets__work-find | yes | Find work to do: open tickets in to-do columns that are not blocked and are assigned to you or to nobody, oldest first. |
+| tickets__work-find | yes | Find work to do: open tickets on a board, in to-do columns, that are not blocked and are assigned to you or to nobody, oldest first. |
 | tickets__ticket-find | yes | Find tickets, oldest first. Every filter is optional; a column's kind says what the column means. |
 | tickets__ticket-read | yes | Read one ticket. |
 | tickets__board-read | yes | Read a project's board: its columns in order, each with its open tickets. Can be narrowed by words or by who a ticket is assigned to. |
 | tickets__overview-read | yes | Read the open tickets of every project, lined up by column kind: to do, doing, waiting, done. Can be narrowed like a board. |
+| tickets__backlog-read | yes | Read a project's backlog: open tickets that wait off the board, oldest first. Can be narrowed like a board. |
 | tickets__ticket-create |  | Create a ticket. It starts in the project's first to-do column unless you name a column. |
 | tickets__ticket-claim |  | Claim a ticket: assign it to yourself and move it to the first doing column. |
 | tickets__ticket-move |  | Move a ticket to any column of its board. |
@@ -60,6 +61,8 @@
 | tickets__ticket-finish |  | Finish a ticket: move it to the first done column. |
 | tickets__ticket-assign |  | Assign a ticket to an actor, to hand it on, or to nobody with null. |
 | tickets__ticket-edit |  | Change a ticket's title, its description, or both. |
+| tickets__ticket-backlog-send |  | Send a ticket to its project's backlog, off the board. |
+| tickets__ticket-board-send |  | Put a backlog ticket on the board, in the first to-do column. |
 | tickets__ticket-feature-set |  | Put a ticket in a feature of its project, or in no feature with null. |
 | tickets__ticket-label-add |  | Add a label to a ticket. |
 | tickets__ticket-label-remove |  | Remove a label from a ticket. |

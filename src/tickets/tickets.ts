@@ -36,6 +36,7 @@ export const Ticket = z.object({
   labels: z.array(Label),
   blocked: z.string().nullable().describe("Why it is blocked, or null when it is not."),
   state: State,
+  backlog: z.boolean().describe("True while it waits in the backlog, off the board."),
   comments: z.number().describe("How many comments it has."),
   images: z.number().describe("How many images it has."),
   createdAt: z.string(),
@@ -86,6 +87,7 @@ export const Find = z.object({
     .describe("A feature id, or null for tickets in no feature."),
   text: z.string().optional().describe("Words to look for in the title and description."),
   blocked: z.boolean().optional(),
+  backlog: z.boolean().optional().describe("True for the backlog only, false for the board only."),
   state: State.optional().describe("open if left out."),
 });
 export type Find = z.infer<typeof Find>;
@@ -107,8 +109,13 @@ export type Tickets = {
       labels: string[];
       assignee?: string | undefined;
       feature?: string | undefined;
+      backlog?: boolean | undefined;
     },
   ): Ticket;
+  /** A project's open tickets that wait in the backlog, oldest first. */
+  backlog(project: string, narrow?: Narrow): Ticket[];
+  /** Sends an open ticket to the backlog, or puts it on the board in the first to-do column. */
+  setBacklog(id: string, backlog: boolean): Ticket;
   /** Puts a ticket in a feature of its project, or in none with null. */
   setFeature(id: string, feature: string | null): Ticket;
   /** A project's features, oldest first; archived ones only when asked. */
@@ -152,6 +159,9 @@ export function migrateTickets(db: DatabaseSync): void {
   if (!columns.some((c) => c.name === "feature")) {
     db.exec("ALTER TABLE tickets ADD COLUMN feature TEXT REFERENCES features (id)");
   }
+  if (!columns.some((c) => c.name === "backlog")) {
+    db.exec("ALTER TABLE tickets ADD COLUMN backlog INTEGER NOT NULL DEFAULT 0");
+  }
   db.exec(
     "CREATE TABLE IF NOT EXISTS ticket_labels (id TEXT PRIMARY KEY, ticket TEXT NOT NULL REFERENCES tickets (id), label TEXT NOT NULL REFERENCES labels (id))",
   );
@@ -168,6 +178,7 @@ type TicketRow = {
   assignee: string | null;
   blocked: string | null;
   state: State;
+  backlog: number;
   created_at: string;
   created_by: string;
 };
@@ -245,6 +256,7 @@ export function sqliteTickets(
       labels,
       blocked: r.blocked,
       state: r.state,
+      backlog: r.backlog === 1,
       ...counts(r.id),
       createdAt: r.created_at,
       createdBy: r.created_by,
@@ -259,6 +271,14 @@ export function sqliteTickets(
     const found = row(id);
     if (found.state !== "open") {
       throw new Refusal("not-open", `${id} is ${found.state}. The owner can restore it.`);
+    }
+    return found;
+  };
+  // An open ticket that is on the board: one that can move between columns.
+  const onBoard = (id: string) => {
+    const found = open(id);
+    if (found.backlog) {
+      throw new Refusal("in-backlog", `${id} is in the backlog. Put it on the board first.`);
     }
     return found;
   };
@@ -298,7 +318,9 @@ export function sqliteTickets(
         .map((p) => p.id);
       const all = narrowed(
         db
-          .prepare("SELECT * FROM tickets WHERE state = 'open' ORDER BY created_at, number")
+          .prepare(
+            "SELECT * FROM tickets WHERE state = 'open' AND backlog = 0 ORDER BY created_at, number",
+          )
           .all() as TicketRow[],
         narrow,
       )
@@ -312,7 +334,9 @@ export function sqliteTickets(
       const project = catalog.project(projectId);
       const tickets = narrowed(
         db
-          .prepare("SELECT * FROM tickets WHERE project = ? AND state = 'open' ORDER BY number")
+          .prepare(
+            "SELECT * FROM tickets WHERE project = ? AND state = 'open' AND backlog = 0 ORDER BY number",
+          )
           .all(projectId) as TicketRow[],
         narrow,
       );
@@ -334,6 +358,7 @@ export function sqliteTickets(
         .filter((t) => filter.project === undefined || t.project === filter.project)
         .filter((t) => filter.assignee === undefined || t.assignee === filter.assignee)
         .filter((t) => filter.feature === undefined || t.feature === filter.feature)
+        .filter((t) => filter.backlog === undefined || (t.backlog === 1) === filter.backlog)
         .filter((t) => filter.blocked === undefined || (t.blocked !== null) === filter.blocked)
         .filter((t) => words.every((w) => `${t.title} ${t.description}`.toLowerCase().includes(w)))
         .map(toTicket)
@@ -365,10 +390,37 @@ export function sqliteTickets(
         assignee: ticket.assignee ?? null,
         blocked: null,
         state: "open",
+        backlog: ticket.backlog ? 1 : 0,
         created_at: at,
         created_by: by,
       });
       for (const label of ticket.labels) attach(id, label);
+      return get(id);
+    },
+    backlog: (projectId, narrow) => {
+      catalog.project(projectId);
+      return narrowed(
+        db
+          .prepare(
+            "SELECT * FROM tickets WHERE project = ? AND state = 'open' AND backlog = 1 ORDER BY number",
+          )
+          .all(projectId) as TicketRow[],
+        narrow,
+      ).map(toTicket);
+    },
+    setBacklog: (id, backlog) => {
+      const found = open(id);
+      if ((found.backlog === 1) === backlog) {
+        throw new Refusal(
+          "no-change",
+          backlog ? `${id} is already in the backlog.` : `${id} is already on the board.`,
+        );
+      }
+      const first = backlog ? undefined : catalog.firstColumn(found.project, "todo");
+      rows.update("tickets", id, {
+        backlog: backlog ? 1 : 0,
+        ...(first ? { column_id: first.id } : {}),
+      });
       return get(id);
     },
     setFeature: (id, featureId) => {
@@ -426,11 +478,11 @@ export function sqliteTickets(
       return get(id);
     },
     move: (id, column) => {
-      rows.update("tickets", id, { column_id: columnOn(open(id).project, column).id });
+      rows.update("tickets", id, { column_id: columnOn(onBoard(id).project, column).id });
       return get(id);
     },
     moveToKind: (id, kind) => {
-      const { project } = open(id);
+      const { project } = onBoard(id);
       const column = catalog.firstColumn(project, kind);
       if (!column) {
         throw new Refusal("no-column", `The board of ${project} has no ${kind} column.`);
