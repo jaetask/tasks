@@ -10,6 +10,8 @@ export type App = {
   /** Makes a change, shows its Card or why it was refused, and returns its output or null. */
   act<T = unknown>(action: string, input: unknown): Promise<T | null>;
   go(path: string): void;
+  /** Attaches a file to a ticket: its bytes are uploaded, then a Call records it. */
+  upload(ticket: string, file: File): Promise<boolean>;
   /** The page's path, and what follows its question mark. */
   path: string;
   query: URLSearchParams;

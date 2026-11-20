@@ -22,6 +22,7 @@
 | open-agent-kit://contract/comments | comments Contract |
 | open-agent-kit://contract/steps | steps Contract |
 | open-agent-kit://contract/images | images Contract |
+| open-agent-kit://contract/files | files Contract |
 | open-agent-kit://contract/inbox | inbox Contract |
 | open-agent-kit://contract/input | input Contract |
 | open-agent-kit://contract/replies | replies Contract |
@@ -91,6 +92,11 @@
 | images__image-read | yes | Read one image, with its data as base64. |
 | images__image-add |  | Attach an image to a ticket, such as a screenshot of the result. |
 | images__image-remove |  | Remove an image from a ticket. Whoever attached it or the owner can. |
+| files__file-list | yes | List a ticket's files: their names, types and sizes. The bytes are not included. |
+| files__file-locate | yes | Say where one file's bytes are on this machine, for an agent that runs here and wants to read it. |
+| files__file-add |  | Attach an uploaded file to a ticket. The page uploads the bytes first and names the upload here; an agent on this machine uses file-add-path. |
+| files__file-add-path |  | Attach a file that is on this machine to a ticket, by its path. The file is copied; the original stays. Only files inside the folders the owner allows can be attached. At most 26214400 bytes, or 209715200 for mp4, webm and mov video. |
+| files__file-remove |  | Remove a file from a ticket. Whoever attached it or the owner can. |
 | inbox__inbox-read | yes | List inbox items, oldest first: all of them, those sent to one project, those in one state, or both. |
 | inbox__item-read | yes | Read one inbox item, with the record of each run of the steps on it. |
 | inbox__item-capture |  | Put a new idea or request in a project's inbox. The owner's steps look at it before it lands there. |

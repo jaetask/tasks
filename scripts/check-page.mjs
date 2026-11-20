@@ -237,6 +237,26 @@ try {
     });
     await page.waitForSelector(".tk-thumb img");
   });
+  await step("attach a file and a video: a chip that downloads, a player that plays", async () => {
+    await page.setInputFiles('#ticket input[type="file"]', [
+      { name: "build.log", mimeType: "text/plain", buffer: Buffer.from("all green\n") },
+      { name: "demo.mp4", mimeType: "video/mp4", buffer: Buffer.alloc(2048, 1) },
+    ]);
+    await page.locator("#files a", { hasText: "build.log" }).waitFor();
+    await page.locator("#files video").waitFor();
+    // The bytes come back whole, to the signed-in page.
+    const got = await page.evaluate(async () => {
+      const link = document.querySelector("#files a");
+      const response = await fetch(link.getAttribute("href"));
+      return [response.status, await response.text(), response.headers.get("content-disposition")];
+    });
+    if (got[0] !== 200 || got[1] !== "all green\n" || !String(got[2]).startsWith("attachment")) {
+      throw new Error(`the file came back as ${JSON.stringify(got)}`);
+    }
+    await page.locator("#files .file", { hasText: "build.log" }).hover();
+    await button("Remove the file build.log").click();
+    await until(() => !document.querySelector("#files a"));
+  });
   await step("an image pasted into the comment box is attached too", async () => {
     await page.evaluate(() => {
       const bytes = Uint8Array.from(

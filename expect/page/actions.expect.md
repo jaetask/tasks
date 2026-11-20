@@ -46,6 +46,8 @@
 | connections.connection-approve | write |
 | connections.connection-list | read |
 | connections.connection-revoke | write |
+| files.file-list | read |
+| files.file-remove | write |
 | history.change-list | read |
 | history.change-undo | write |
 | images.image-add | write |

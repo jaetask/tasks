@@ -97,6 +97,32 @@ export type Conversation = {
   entries: ({ type: "comment"; comment: Comment } | { type: "change"; change: Line })[];
 };
 export type Image = { id: string; name: string; type: string };
+export type TicketFile = {
+  id: string;
+  ticket: string;
+  name: string;
+  type: string;
+  size: number;
+  by: string;
+  at: string;
+};
+
+/** Sends a file's bytes to be attached to a ticket. The answer is the Outcome of that Call. */
+export async function uploadFile(ticket: string, file: File): Promise<Outcome | { error: string }> {
+  const response = await fetch(
+    `/api/files?ticket=${encodeURIComponent(ticket)}&name=${encodeURIComponent(file.name || "pasted file")}`,
+    {
+      method: "POST",
+      credentials: "same-origin",
+      headers: {
+        "x-kit-request": "1",
+        "content-type": file.type || "application/octet-stream",
+      },
+      body: file,
+    },
+  );
+  return response.json() as Promise<Outcome | { error: string }>;
+}
 export type TicketStep = {
   id: string;
   ticket: string;

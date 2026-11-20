@@ -1,4 +1,6 @@
 // Tasks' Domains, each paired with its dependencies on the App database.
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import type { DatabaseSync } from "node:sqlite";
 import { type Provided, provide } from "@jaetask/open-agent-kit";
 import { sqliteConnections } from "@jaetask/open-agent-kit/sqlite";
@@ -8,6 +10,8 @@ import { catalogDomain } from "./catalog/domain.js";
 import { migrateComments, sqliteComments } from "./comments/comments.js";
 import { commentsDomain } from "./comments/domain.js";
 import { connectionsDomain } from "./connections/domain.js";
+import { filesDomain } from "./files/domain.js";
+import { migrateFiles, sqliteFiles } from "./files/files.js";
 import { historyDomain } from "./history/domain.js";
 import { migrateIds } from "./ids.js";
 import { imagesDomain } from "./images/domain.js";
@@ -38,6 +42,7 @@ export function migrate(db: DatabaseSync): void {
   migrateComments(db);
   migrateSteps(db);
   migrateImages(db);
+  migrateFiles(db);
   migrateInput(db);
   migrateReplies(db);
   migrateInbox(db);
@@ -45,8 +50,11 @@ export function migrate(db: DatabaseSync): void {
   migrated.add(db);
 }
 
+/** Where files are kept, and where agents may attach them from. */
+export type FilesPlace = { dir: string; from: string[] };
+
 /** Everything one Call needs, built on the store's connection. */
-function open(db: DatabaseSync, now: () => number) {
+function openWith(db: DatabaseSync, now: () => number, place: FilesPlace) {
   migrate(db);
   const journal = openJournal(db, now);
   const catalog = sqliteCatalog(db, journal.rows);
@@ -61,6 +69,7 @@ function open(db: DatabaseSync, now: () => number) {
   const nameOf = (id: string) => catalog.read().actors.find((a) => a.id === id)?.name || id;
   const comments = sqliteComments(db, journal.rows, nameOf);
   const images = sqliteImages(db, journal.rows);
+  const files = sqliteFiles(db, journal.rows, place.dir);
   const inputs = sqliteInputs(db, journal.rows, nameOf);
   const tickets = sqliteTickets(
     db,
@@ -75,10 +84,26 @@ function open(db: DatabaseSync, now: () => number) {
   );
   const replies = sqliteReplies(db, journal.rows, nameOf);
   const steps = sqliteSteps(db, journal.rows, nameOf);
-  return { ...base, catalog, tickets, comments, images, inputs, replies, steps, nameOf, now };
+  return {
+    ...base,
+    catalog,
+    tickets,
+    comments,
+    images,
+    files,
+    inputs,
+    replies,
+    steps,
+    nameOf,
+    now,
+  };
 }
 
-export function domains(now: () => number = Date.now): Provided<DatabaseSync>[] {
+export function domains(
+  now: () => number = Date.now,
+  place: FilesPlace = { dir: join(tmpdir(), "tasks-files"), from: [] },
+): Provided<DatabaseSync>[] {
+  const open = (db: DatabaseSync, at: () => number) => openWith(db, at, place);
   return [
     provide(catalogDomain, (db: DatabaseSync) => {
       const deps = open(db, now);
@@ -92,6 +117,7 @@ export function domains(now: () => number = Date.now): Provided<DatabaseSync>[] 
         deps.inputs.purge(ticket);
         deps.replies.purge(ticket);
         deps.images.purge(ticket);
+        deps.files.purge(ticket);
       };
       const handoff = (ticket: string, from: string, to: string, note: string) => {
         const at = new Date(now()).toISOString();
@@ -131,6 +157,11 @@ export function domains(now: () => number = Date.now): Provided<DatabaseSync>[] 
     }),
     provide(stepsDomain, (db: DatabaseSync) => open(db, now)),
     provide(imagesDomain, (db: DatabaseSync) => open(db, now)),
+    provide(filesDomain, (db: DatabaseSync) => ({
+      ...open(db, now),
+      stagedDir: join(place.dir, "staged"),
+      filesFrom: place.from,
+    })),
     provide(inboxDomain, (db: DatabaseSync) => {
       const deps = open(db, now);
       return { ...deps, inbox: sqliteInbox(db, deps.journal.rows), runs: sqliteRuns(db).of };
