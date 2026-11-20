@@ -17,6 +17,8 @@ type Shared = {
 
 const titleCase = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 const open = (ticket: Ticket) => ticket.state === "open";
+// The backlog is the first choice of status: off the board, before any column.
+const BACKLOG = "backlog";
 
 export function StatusPicker({ ticket, children, armed }: Shared) {
   const { catalog, act } = useApp();
@@ -28,14 +30,21 @@ export function StatusPicker({ ticket, children, armed }: Shared) {
       hint="S"
       armed={armed}
       disabled={!open(ticket)}
-      chosen={ticket.backlog ? [] : [ticket.column.id]}
-      choices={(project?.columns ?? []).map((c) => ({
-        id: c.id,
-        name: c.name,
-        icon: <StatusIcon kind={c.kind} />,
-      }))}
+      chosen={[ticket.backlog ? BACKLOG : ticket.column.id]}
+      choices={[
+        { id: BACKLOG, name: "Backlog", icon: <StatusIcon kind="todo" backlog /> },
+        ...(project?.columns ?? []).map((c) => ({
+          id: c.id,
+          name: c.name,
+          icon: <StatusIcon kind={c.kind} />,
+        })),
+      ]}
       onPick={(column) =>
         void (async () => {
+          if (column === BACKLOG) {
+            if (!ticket.backlog) await act("tickets.ticket-backlog-send", { ticket: ticket.id });
+            return;
+          }
           // A backlog ticket goes on the board first, then to the column picked.
           if (ticket.backlog) await act("tickets.ticket-board-send", { ticket: ticket.id });
           await act("tickets.ticket-move", { ticket: ticket.id, column });
