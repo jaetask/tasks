@@ -235,6 +235,23 @@ try {
     });
     await page.waitForSelector(".tk-thumb img");
   });
+  await step("an image pasted into the comment box is attached too", async () => {
+    await page.evaluate(() => {
+      const bytes = Uint8Array.from(
+        atob(
+          "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
+        ),
+        (c) => c.charCodeAt(0),
+      );
+      const data = new DataTransfer();
+      data.items.add(new File([bytes], "pasted.png", { type: "image/png" }));
+      const forms = document.querySelectorAll("form.write");
+      forms[forms.length - 1]
+        .querySelector("[contenteditable], textarea, div")
+        .dispatchEvent(new ClipboardEvent("paste", { clipboardData: data, bubbles: true }));
+    });
+    await until(() => document.querySelectorAll(".tk-thumb img").length === 2);
+  });
   await step(
     "mark it blocked in its properties, then undo that from its line in the activity",
     async () => {
