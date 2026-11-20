@@ -1,7 +1,16 @@
 // A project's board and backlog: working surfaces that use the full width.
 // The board groups the same tickets four ways: by column, by feature, by
 // actor and by location. Dragging a ticket changes what the view groups by.
-import { EditLink, Link, PageBody, PrimaryLink, ProjectIcon } from "@jaetask/toolkit/suite";
+import {
+  EditLink,
+  Link,
+  PageBody,
+  PrimaryLink,
+  ProjectIcon,
+  PropertyPills,
+  type ViewChoice as SuiteViewChoice,
+  ViewToggle,
+} from "@jaetask/toolkit/suite";
 import { Button } from "@jaetask/toolkit/ui/button";
 import { Checkbox } from "@jaetask/toolkit/ui/checkbox";
 import {
@@ -19,13 +28,6 @@ import {
 import { Input } from "@jaetask/toolkit/ui/input";
 import { Label } from "@jaetask/toolkit/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@jaetask/toolkit/ui/popover";
-import { ToggleGroup, ToggleGroupItem } from "@jaetask/toolkit/ui/toggle-group";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@jaetask/toolkit/ui/tooltip";
 import {
   IconAdjustmentsHorizontal,
   IconChevronDown,
@@ -76,7 +78,7 @@ export const VIEWS: readonly ViewChoice[] = [
   { id: "status", label: "Status", Icon: IconCircleCheck, heading: "Progress" },
 ];
 type View = "features" | "actors" | "locations" | "status" | "projects";
-type ViewChoice = { id: View; label: string; Icon: typeof IconStack2; heading: string };
+type ViewChoice = SuiteViewChoice<View> & { heading: string };
 
 /** How a board or backlog is narrowed. "" means all; "none" means tickets with none. */
 type Filters = {
@@ -703,25 +705,12 @@ function Display({ project }: { project: Project }) {
       </PopoverTrigger>
       <PopoverContent align="end" className="grid w-80 gap-3">
         <p className="m-0 text-xs font-medium text-muted-foreground">Display properties</p>
-        <ToggleGroup
-          type="multiple"
-          aria-label="Display properties"
-          className="flex-wrap justify-start gap-1.5"
+        <PropertyPills
+          label="Display properties"
+          options={CARD_PROPERTIES}
           value={project.card}
-          onValueChange={(show) =>
-            void act("catalog.project-card-set", { project: project.id, show })
-          }
-        >
-          {CARD_PROPERTIES.map(([id, name]) => (
-            <ToggleGroupItem
-              key={id}
-              value={id}
-              className="h-7 rounded-full border px-3 text-xs font-normal text-muted-foreground data-[state=on]:border-transparent data-[state=on]:bg-muted data-[state=on]:text-foreground"
-            >
-              {name}
-            </ToggleGroupItem>
-          ))}
-        </ToggleGroup>
+          onChange={(show) => void act("catalog.project-card-set", { project: project.id, show })}
+        />
         <div className="flex items-center justify-between gap-3 border-t pt-3">
           <span className="text-xs font-medium text-muted-foreground">Ordering</span>
           <Picker
@@ -806,47 +795,6 @@ function ColumnMenu({ project, column, name }: { project: Project; column: strin
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
-  );
-}
-
-/** The buttons that choose how a board groups its tickets. */
-export function ViewToggle({
-  views,
-  value,
-  onChange,
-}: {
-  views: readonly ViewChoice[];
-  value: View;
-  onChange: (view: View) => void;
-}) {
-  return (
-    <TooltipProvider>
-      <ToggleGroup
-        type="single"
-        aria-label="Board view"
-        className="gap-1 rounded-lg border p-1"
-        value={value}
-        onValueChange={(v) => {
-          if (v) onChange(v as View);
-        }}
-      >
-        {views.map(({ id, label, Icon }) => (
-          <Tooltip key={id}>
-            <TooltipTrigger asChild>
-              <ToggleGroupItem
-                value={id}
-                aria-label={`${label} view`}
-                // The tooltip takes over data-state, so the chosen view is marked by class.
-                className={`size-8 p-0 ${value === id ? "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground" : ""}`}
-              >
-                <Icon size={18} aria-hidden />
-              </ToggleGroupItem>
-            </TooltipTrigger>
-            <TooltipContent>{label}</TooltipContent>
-          </Tooltip>
-        ))}
-      </ToggleGroup>
-    </TooltipProvider>
   );
 }
 
