@@ -309,7 +309,17 @@ try {
     await page.locator('[data-property="due"]', { hasText: "Tomorrow" }).waitFor();
     await page.fill('[aria-label="New step"]', "Record with the screen locked");
     await page.press('[aria-label="New step"]', "Enter");
-    await page.getByRole("checkbox", { name: "Record with the screen locked" }).click();
+    // Clicking a step's words edits them in place.
+    await page
+      .locator("#steps")
+      .getByRole("button", { name: "Record with the screen locked", exact: true })
+      .click();
+    await page.fill(
+      '[aria-label="Rename Record with the screen locked"]',
+      "Record with the phone locked",
+    );
+    await page.keyboard.press("Enter");
+    await page.getByRole("checkbox", { name: "Record with the phone locked" }).click();
     await see("Steps · 1 of 1");
   });
   await step("an agent asks to connect; approve it as Coder on an edit page", async () => {
