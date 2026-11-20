@@ -11,7 +11,6 @@ import {
 } from "@jaetask/toolkit/suite";
 import { Button } from "@jaetask/toolkit/ui/button";
 import { Card } from "@jaetask/toolkit/ui/card";
-import { Input } from "@jaetask/toolkit/ui/input";
 import { useState } from "react";
 import {
   type AgentReply,
@@ -19,16 +18,12 @@ import {
   type Connection,
   type Feature,
   type InputRequest,
-  KINDS,
-  type Kind,
-  type Overview,
   OWNER,
   type Project,
   type Ticket,
   when,
 } from "./api.js";
-import { actorLabel, narrowInput, useApp, useRead } from "./app.js";
-import { Lane, Lanes, TicketCard, TicketDialog } from "./board.js";
+import { actorLabel, useApp, useRead } from "./app.js";
 import {
   ActorAvatar,
   LabelChip,
@@ -39,103 +34,9 @@ import {
   Say,
   TabBar,
 } from "./local.js";
-import { StatusIcon } from "./pickers.js";
 
 export const projectTitle = (p: Project, screen: string) =>
   `${projectEmoji(p)} ${p.name} · ${screen}`.trim();
-
-/** A search box and the pickers that narrow a board, the Overview or a backlog. */
-function NarrowBar({ features }: { features?: Feature[] }) {
-  const { catalog, narrow, setNarrow } = useApp();
-  return (
-    <div className="flex flex-wrap items-center gap-2">
-      <Input
-        aria-label="Search tickets"
-        placeholder="Search tickets…"
-        className="max-w-64"
-        value={narrow.text}
-        onChange={(e) => setNarrow({ ...narrow, text: e.target.value })}
-      />
-      <Picker
-        label="Assigned to"
-        value={narrow.actor}
-        onChange={(v) => setNarrow({ ...narrow, actor: v })}
-        options={[
-          { id: "", name: "Anyone" },
-          { id: "none", name: "Nobody" },
-          ...catalog.actors
-            .filter((a) => !a.archived)
-            .map((a) => ({ id: a.id, name: `${a.icon} ${a.name}`.trim() })),
-        ]}
-      />
-      {features && features.length > 0 && (
-        <Picker
-          label="Feature"
-          value={narrow.feature}
-          onChange={(v) => setNarrow({ ...narrow, feature: v })}
-          options={[
-            { id: "", name: "Every feature" },
-            { id: "none", name: "No feature" },
-            ...features.map((f) => ({ id: f.id, name: f.name })),
-          ]}
-        />
-      )}
-    </div>
-  );
-}
-
-export function OverviewPage() {
-  const { catalog, narrow, act } = useApp();
-  const projects = catalog.projects.filter((p) => !p.archived);
-  const overview = useRead<Overview>("tickets.overview-read", narrowInput(narrow, false));
-  if (projects.length === 0) {
-    return (
-      <PageBody
-        title="Overview"
-        line="Every project's tickets, lined up by what their column means."
-      >
-        <Panel id="start" title="Projects" line="A project is a body of work, such as an app.">
-          <Nothing
-            text="Create your first project to get a board."
-            action={<PageLink to="/settings/projects/new">Create a project</PageLink>}
-          />
-        </Panel>
-      </PageBody>
-    );
-  }
-  // Dropping a ticket on a kind moves it to its own board's first column of that kind.
-  const drop = (id: string, kind: Kind) => {
-    const project = projects.find((p) => id.startsWith(`${p.id}-`));
-    const column = project?.columns.find((c) => c.kind === kind);
-    if (column) void act("tickets.ticket-move", { ticket: id, column: column.id });
-  };
-  return (
-    <PageBody
-      wide
-      title="Overview"
-      line="Every project's tickets, lined up by what their column means. Drag a ticket to move it on its own board."
-    >
-      <NarrowBar />
-      <Lanes label="Every project's tickets by kind">
-        {(overview?.kinds ?? []).map(({ kind, tickets }) => (
-          <Lane
-            key={kind}
-            id={`kind-${kind}`}
-            title={KINDS[kind]}
-            icon={<StatusIcon kind={kind} />}
-            count={tickets.length}
-            onDrop={(id) => drop(id, kind)}
-          >
-            {tickets.map((t) => (
-              <TicketCard key={t.id} ticket={t} across />
-            ))}
-          </Lane>
-        ))}
-      </Lanes>
-      <TicketDialog />
-    </PageBody>
-  );
-}
 
 export function FeaturesPage({ project }: { project: Project }) {
   const { go } = useApp();

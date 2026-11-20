@@ -28,7 +28,8 @@ import {
   refusal,
   whenSignedOut,
 } from "./api.js";
-import { type App, AppContext, type Narrow, useApp, useRead } from "./app.js";
+import { type App, AppContext, useApp, useRead } from "./app.js";
+import { OverviewPage } from "./overview.js";
 import { BacklogPage, BoardPage } from "./board.js";
 import {
   ActorEdit,
@@ -50,7 +51,6 @@ import {
   ConnectionsPage,
   FeaturesPage,
   InputPage,
-  OverviewPage,
   RepliesPage,
   SettingsPage,
 } from "./pages.js";
@@ -253,7 +253,6 @@ function Shell({ path, onSignOut }: { path: string; onSignOut: () => void }) {
 function Signed({ path, onSignOut }: { path: string; onSignOut: () => void }) {
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [version, setVersion] = useState(0);
-  const [narrow, setNarrow] = useState<Narrow>({ text: "", actor: "", feature: "" });
   const bump = useCallback(() => setVersion((v) => v + 1), []);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: read again whenever anything changed
@@ -297,8 +296,6 @@ function Signed({ path, onSignOut }: { path: string; onSignOut: () => void }) {
     version,
     act,
     go,
-    narrow,
-    setNarrow,
     path: page,
     query: new URLSearchParams(search),
   };

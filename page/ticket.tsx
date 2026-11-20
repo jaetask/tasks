@@ -283,7 +283,7 @@ function Steps({ ticket, open }: { ticket: string; open: boolean }) {
 
 /** What a ticket is, its steps, images and conversation, with its properties in a rail on the right. */
 export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) {
-  const { catalog, act, go, narrow, setNarrow } = useApp();
+  const { catalog, act, go } = useApp();
   const ticket = useRead<Ticket>("tickets.ticket-read", { ticket: id });
   const conversation = useRead<Conversation>("comments.conversation-read", { ticket: id });
   const images = useRead<Image[]>("images.image-list", { ticket: id });
@@ -560,10 +560,7 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
             {actor && (
               <GoTo
                 label="Go to actor"
-                onClick={() => {
-                  setNarrow({ ...narrow, actor: actor.id });
-                  go("/overview");
-                }}
+                onClick={() => go(`/overview?actor=${encodeURIComponent(actor.id)}`)}
               />
             )}
           </div>
