@@ -120,6 +120,7 @@
   "type": "task",
   "priority": "none",
   "reactions": [],
+  "due": null,
   "links": [],
   "location": null,
   "locationName": "",

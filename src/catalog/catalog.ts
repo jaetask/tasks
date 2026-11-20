@@ -73,6 +73,7 @@ export const CARD_PROPERTIES = [
   "labels",
   "links",
   "reactions",
+  "due",
   "time-in-status",
   "created",
   "updated",

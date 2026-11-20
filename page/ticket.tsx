@@ -59,6 +59,9 @@ import { RequestCard } from "./pages.js";
 import { LabelDot, PRIORITY_NAME, PriorityIcon, RailRow, StatusIcon } from "./pickers.js";
 import {
   ActorPicker,
+  DueIcon,
+  DuePicker,
+  dueLabel,
   FeaturePicker,
   LabelsPicker,
   LocationPicker,
@@ -594,6 +597,11 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
             />
           )}
         </div>
+        <DuePicker ticket={ticket}>
+          <RailRow data-property="due" muted={!ticket.due} icon={<DueIcon due={ticket.due} />}>
+            {ticket.due ? dueLabel(ticket.due) : "Set due date"}
+          </RailRow>
+        </DuePicker>
         <TypePicker ticket={ticket}>
           <RailRow
             data-property="type"

@@ -289,6 +289,7 @@ A tool that changes something after the person says yes waits for them; tell the
               "labels",
               "links",
               "reactions",
+              "due",
               "time-in-status",
               "created",
               "updated"

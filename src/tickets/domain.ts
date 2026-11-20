@@ -288,6 +288,23 @@ const ticketLocationSet = write({
   },
 });
 
+const ticketDueSet = write({
+  name: "ticket-due-set",
+  description: "Set the day a ticket is due, as YYYY-MM-DD, or no due date with null.",
+  input: z.object({
+    ticket: id,
+    due: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "a due date is a day written as YYYY-MM-DD")
+      .refine((d) => !Number.isNaN(Date.parse(d)), "a due date is a day written as YYYY-MM-DD")
+      .nullable(),
+  }),
+  run: ({ ticket, due }, { tickets }) => ({
+    ticket: tickets.setDue(ticket, due),
+    summary: due ? `set ${ticket} due on ${due}` : `removed the due date of ${ticket}`,
+  }),
+});
+
 const ticketTypeSet = write({
   name: "ticket-type-set",
   description: "Set what kind of work a ticket is: task, bug, improvement or specification.",
@@ -637,6 +654,7 @@ export const ticketsDomain = defineDomain<TicketsDeps>({
     ticketBoardSend,
     ticketFeatureSet,
     ticketLocationSet,
+    ticketDueSet,
     ticketTypeSet,
     ticketPrioritySet,
     ticketLinkAdd,

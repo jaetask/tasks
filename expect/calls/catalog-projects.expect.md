@@ -25,7 +25,7 @@
 15. owner calls catalog.project-edit {"project":"NTS","colour":"#48b"} → rejected: invalid-input: colour: a colour is one of blue, teal, green, amber, purple, pink, or six-digit hex such as #48b685
 16. owner calls catalog.project-edit {"project":"NTS","colour":"lime"} → rejected: invalid-input: colour: a colour is one of blue, teal, green, amber, purple, pink, or six-digit hex such as #48b685
 17. owner calls catalog.project-card-set {"project":"TLK","show":["id","labels","links"]} → succeeded; updated project TLK
-18. owner calls catalog.project-card-set {"project":"TLK","show":["colour"]} → rejected: invalid-input: show.0: Invalid option: expected one of "id"|"type"|"priority"|"status"|"actor"|"feature"|"location"|"labels"|"links"|"reactions"|"time-in-status"|"created"|"updated"
+18. owner calls catalog.project-card-set {"project":"TLK","show":["colour"]} → rejected: invalid-input: show.0: Invalid option: expected one of "id"|"type"|"priority"|"status"|"actor"|"feature"|"location"|"labels"|"links"|"reactions"|"due"|"time-in-status"|"created"|"updated"
 19. a1 calls catalog.project-card-set {"project":"TLK","show":[]} → rejected: not-allowed: a1 may not run catalog.project-card-set
 20. owner calls catalog.project-card-set {"project":"MNY","show":[]} → succeeded; updated project MNY
 21. owner calls catalog.project-card-set {"project":"NTS","show":null} → succeeded

@@ -41,6 +41,7 @@
   "type": "task",
   "priority": "none",
   "reactions": [],
+  "due": null,
   "links": [],
   "location": "p2",
   "locationName": "Laptop",
