@@ -2,7 +2,7 @@
 // and its conversation, all from toolkit parts.
 
 import { InlineMarkdown } from "@jaetask/toolkit/app/review";
-import { FileButton, PageBody, Thumbs } from "@jaetask/toolkit/suite";
+import { PageBody, Thumbs } from "@jaetask/toolkit/suite";
 import { Button } from "@jaetask/toolkit/ui/button";
 import { Checkbox } from "@jaetask/toolkit/ui/checkbox";
 import {
@@ -39,7 +39,7 @@ import {
   IconX,
 } from "@tabler/icons-react";
 import { useEffect, useRef, useState } from "react";
-import { Activity, ReactionRow } from "./activity.js";
+import { Activity, Attach, ReactionRow } from "./activity.js";
 import {
   type Comment,
   type Conversation,
@@ -300,16 +300,6 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
   const open = ticket.state === "open";
   const project = catalog.projects.find((p) => p.id === ticket.project);
   const actor = catalog.actors.find((a) => a.id === ticket.assignee);
-  const attach = (files: File[]) => {
-    for (const picked of files) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const data = String(reader.result).split(",")[1] ?? "";
-        void act("images.image-add", { ticket: id, name: picked.name, type: picked.type, data });
-      };
-      reader.readAsDataURL(picked);
-    }
-  };
   const entries = conversation?.entries ?? [];
   const comments = entries.filter((e) => e.type === "comment");
   const _changes = entries.length - comments.length;
@@ -370,15 +360,21 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
               <InlineMarkdown content={ticket.description || "No description."} renderLists />
             </div>
           )}
-          <ReactionRow
-            reactions={ticket.reactions}
-            onToggle={(emoji, active) =>
-              void act(active ? "tickets.ticket-reaction-add" : "tickets.ticket-reaction-remove", {
-                ticket: id,
-                emoji,
-              })
-            }
-          />
+          <div className="flex flex-wrap items-center gap-1.5">
+            <ReactionRow
+              reactions={ticket.reactions}
+              onToggle={(emoji, active) =>
+                void act(
+                  active ? "tickets.ticket-reaction-add" : "tickets.ticket-reaction-remove",
+                  {
+                    ticket: id,
+                    emoji,
+                  },
+                )
+              }
+            />
+            {open && <Attach ticket={id} />}
+          </div>
         </section>
 
         {(ticket.links.length > 0 || open) && (
@@ -440,15 +436,6 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
               items={thumbs}
               onRemove={(image) => void act("images.image-remove", { image })}
             />
-          )}
-          {open && (
-            <div>
-              <FileButton
-                label="Add an image"
-                accept="image/png,image/jpeg,image/gif,image/webp"
-                onFiles={attach}
-              />
-            </div>
           )}
         </section>
 
