@@ -410,6 +410,16 @@ try {
     await thread.locator(".comment").nth(1).waitFor();
     // "/h1" then Return picks Heading 1; it does not send "/h1" as a reply.
     await thread.locator('[aria-label="Leave a reply"]').click();
+    // A reply row is one line beside an avatar: the editor's handle is not drawn there.
+    await page.keyboard.type("x");
+    await thread.locator("form.write").hover();
+    const handle = await thread.locator("form.write").evaluate((form) => {
+      const found = form.querySelector(".drag-handle");
+      return found ? [getComputedStyle(found).display, found.getAttribute("style")] : null;
+    });
+    if (handle && handle[0] !== "none")
+      throw new Error(`the handle shows in a reply row: ${handle}`);
+    await page.keyboard.press("Backspace");
     await page.keyboard.type("/h1");
     await page.locator(".an-rich-md-slash-menu", { hasText: "Heading 1" }).waitFor();
     await page.keyboard.press("Enter");

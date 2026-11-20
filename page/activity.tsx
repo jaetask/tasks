@@ -353,8 +353,9 @@ function Write({
         tall
           ? // Room on the left for the editor's handle, which sits beside the line being written.
             "write grid gap-1 rounded-xl border bg-card py-3 pr-3 pl-9"
-          : // A reply is one short line beside an avatar: no handle there.
-            "write flex items-start gap-2 px-4 py-2 [&_.drag-handle]:hidden"
+          : // A reply is one short line beside an avatar: no handle there. The editor shows its
+            // handle with a style of its own, so hiding it has to outrank that.
+            "write flex items-start gap-2 px-4 py-2 [&_.drag-handle]:hidden!"
       }
       onSubmit={(e) => {
         e.preventDefault();
