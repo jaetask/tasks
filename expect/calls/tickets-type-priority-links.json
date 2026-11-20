@@ -1,0 +1,113 @@
+{
+  "steps": [
+    {
+      "call": "catalog.actor-rename",
+      "input": {
+        "actor": "owner",
+        "name": "Sam"
+      }
+    },
+    {
+      "call": "catalog.actor-create",
+      "input": {
+        "name": "Coder"
+      }
+    },
+    {
+      "call": "catalog.project-create",
+      "input": {
+        "name": "Talk",
+        "prefix": "TLK"
+      }
+    },
+    {
+      "call": "tickets.ticket-create",
+      "input": {
+        "project": "TLK",
+        "title": "Crash on send",
+        "type": "bug",
+        "priority": "high",
+        "links": ["https://example.com/reports/41"]
+      }
+    },
+    {
+      "call": "tickets.ticket-create",
+      "input": {
+        "project": "TLK",
+        "title": "Voice notes on the phone"
+      }
+    },
+    {
+      "as": "a1",
+      "call": "tickets.ticket-type-set",
+      "input": {
+        "ticket": "TLK-2",
+        "type": "improvement"
+      }
+    },
+    {
+      "as": "a1",
+      "call": "tickets.ticket-priority-set",
+      "input": {
+        "ticket": "TLK-2",
+        "priority": "medium"
+      }
+    },
+    {
+      "as": "a1",
+      "call": "tickets.ticket-link-add",
+      "input": {
+        "ticket": "TLK-2",
+        "url": "https://example.com/pull/7"
+      }
+    },
+    {
+      "as": "a1",
+      "call": "tickets.ticket-link-add",
+      "input": {
+        "ticket": "TLK-2",
+        "url": "https://example.com/pull/7"
+      }
+    },
+    {
+      "call": "tickets.ticket-link-add",
+      "input": {
+        "ticket": "TLK-2",
+        "url": "notes.txt"
+      }
+    },
+    {
+      "call": "tickets.ticket-type-set",
+      "input": {
+        "ticket": "TLK-2",
+        "type": "chore"
+      }
+    },
+    {
+      "call": "tickets.ticket-link-remove",
+      "input": {
+        "ticket": "TLK-1",
+        "link": "u2"
+      }
+    },
+    {
+      "call": "tickets.ticket-link-remove",
+      "input": {
+        "ticket": "TLK-1",
+        "link": "u1"
+      }
+    },
+    {
+      "call": "history.change-undo",
+      "input": {
+        "change": "h8"
+      }
+    },
+    {
+      "call": "tickets.ticket-find",
+      "input": {
+        "priority": "high"
+      }
+    }
+  ]
+}

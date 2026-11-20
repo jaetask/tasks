@@ -45,6 +45,9 @@
         "colour": "teal"
       }
     ],
+    "type": "task",
+    "priority": "none",
+    "links": [],
     "location": null,
     "locationName": "",
     "blocked": null,
@@ -83,6 +86,9 @@
         "colour": "pink"
       }
     ],
+    "type": "task",
+    "priority": "none",
+    "links": [],
     "location": null,
     "locationName": "",
     "blocked": null,
@@ -128,6 +134,9 @@
         "colour": "pink"
       }
     ],
+    "type": "task",
+    "priority": "none",
+    "links": [],
     "location": null,
     "locationName": "",
     "blocked": null,
@@ -173,6 +182,9 @@
         "colour": "pink"
       }
     ],
+    "type": "task",
+    "priority": "none",
+    "links": [],
     "location": null,
     "locationName": "",
     "blocked": null,
@@ -213,6 +225,9 @@
         "colour": "teal"
       }
     ],
+    "type": "task",
+    "priority": "none",
+    "links": [],
     "location": null,
     "locationName": "",
     "blocked": null,
@@ -247,6 +262,9 @@
     "assignee": "a2",
     "assigneeName": "Reviewer",
     "labels": [],
+    "type": "task",
+    "priority": "none",
+    "links": [],
     "location": null,
     "locationName": "",
     "blocked": "needs a sample file",
@@ -281,6 +299,9 @@
     "assignee": "a2",
     "assigneeName": "Reviewer",
     "labels": [],
+    "type": "task",
+    "priority": "none",
+    "links": [],
     "location": null,
     "locationName": "",
     "blocked": "needs a sample file",
@@ -321,6 +342,9 @@
         "colour": "teal"
       }
     ],
+    "type": "task",
+    "priority": "none",
+    "links": [],
     "location": null,
     "locationName": "",
     "blocked": null,

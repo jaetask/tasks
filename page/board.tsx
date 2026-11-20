@@ -32,8 +32,10 @@ import {
   type Feature,
   KINDS,
   type Kind,
+  PRIORITIES,
   type Project,
   type Ticket,
+  TYPES,
 } from "./api.js";
 import { useApp, useRead } from "./app.js";
 import { Nothing, Picker, projectEmoji } from "./local.js";
@@ -55,6 +57,8 @@ type Filters = {
   feature: string;
   location: string;
   label: string;
+  type: string;
+  priority: string;
   hideDone: boolean;
   hideEmpty: boolean;
 };
@@ -65,6 +69,8 @@ const ALL: Filters = {
   feature: "",
   location: "",
   label: "",
+  type: "",
+  priority: "",
   hideDone: false,
   hideEmpty: false,
 };
@@ -105,6 +111,8 @@ function narrowed(tickets: Ticket[], f: Filters): Ticket[] {
     .filter((t) => matches(f.feature, t.feature))
     .filter((t) => matches(f.location, t.location))
     .filter((t) => f.label === "" || t.labels.some((l) => l.id === f.label))
+    .filter((t) => f.type === "" || t.type === f.type)
+    .filter((t) => f.priority === "" || t.priority === f.priority)
     .filter((t) =>
       words.every((w) => `${t.id} ${t.title} ${t.description}`.toLowerCase().includes(w)),
     );
@@ -123,7 +131,13 @@ function FilterBar({
   right?: ReactNode;
 }) {
   const { catalog } = useApp();
-  const more = [filters.feature, filters.location, filters.label].filter(Boolean).length;
+  const more = [
+    filters.feature,
+    filters.location,
+    filters.label,
+    filters.type,
+    filters.priority,
+  ].filter(Boolean).length;
   const [open, setOpen] = useState(more > 0);
   return (
     <Collapsible open={open} onOpenChange={setOpen} className="grid gap-3 border-y py-3">
@@ -185,6 +199,24 @@ function FilterBar({
             ...catalog.labels.map((l) => ({ id: l.id, name: l.name })),
           ]}
         />
+        <Picker
+          label="Filter type"
+          value={filters.type}
+          onChange={(type) => set({ type })}
+          options={[
+            { id: "", name: "All types" },
+            ...TYPES.map((t) => ({ id: t, name: titleCase(t) })),
+          ]}
+        />
+        <Picker
+          label="Filter priority"
+          value={filters.priority}
+          onChange={(priority) => set({ priority })}
+          options={[
+            { id: "", name: "All priorities" },
+            ...PRIORITIES.map((p) => ({ id: p, name: titleCase(p) })),
+          ]}
+        />
       </CollapsibleContent>
     </Collapsible>
   );
@@ -206,6 +238,8 @@ function Tick({
     </Label>
   );
 }
+
+export const titleCase = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 const DRAG = "application/x-tasks-ticket";
 
@@ -231,8 +265,14 @@ export function TicketCard({ ticket, action }: { ticket: Ticket; action?: ReactN
       className="ticket rounded-xl border bg-card p-4 shadow-sm transition-shadow hover:shadow-md"
     >
       <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
-        <span>{ticket.id}</span>
-        {ticket.blocked && <span title={ticket.blocked}>Blocked</span>}
+        <span>{`${ticket.id} · ${titleCase(ticket.type)}`}</span>
+        <span>
+          {ticket.blocked
+            ? "Blocked"
+            : ticket.priority !== "none"
+              ? titleCase(ticket.priority)
+              : ""}
+        </span>
       </div>
       <Button
         variant="ghost"

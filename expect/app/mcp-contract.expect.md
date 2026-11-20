@@ -50,6 +50,10 @@
 | tickets__ticket-board-send |  | Put a backlog ticket on the board, in the first to-do column. |
 | tickets__ticket-feature-set |  | Put a ticket in a feature of its project, or in no feature with null. |
 | tickets__ticket-location-set |  | Set the location a ticket's work is done at, such as a machine, or none with null. |
+| tickets__ticket-type-set |  | Set what kind of work a ticket is: task, bug, improvement or specification. |
+| tickets__ticket-priority-set |  | Set a ticket's priority: none, urgent, high, medium or low. |
+| tickets__ticket-link-add |  | Add a link to a ticket: a web address that belongs to it, such as a pull request. |
+| tickets__ticket-link-remove |  | Remove a link from a ticket. |
 | tickets__ticket-label-add |  | Add a label to a ticket. |
 | tickets__ticket-label-remove |  | Remove a label from a ticket. |
 | tickets__ticket-block |  | Mark a ticket blocked, with a note saying why. It stays in its column; agents looking for work skip it. |

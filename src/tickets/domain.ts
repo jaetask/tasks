@@ -5,7 +5,17 @@ import { defineCard, defineDomain } from "@jaetask/open-agent-kit";
 import { z } from "zod";
 import { type Base, readAction, writeAction } from "../actions.js";
 import { type Catalog, OWNER } from "../catalog/catalog.js";
-import { Board, Feature, Find, Narrow, Overview, Ticket, type Tickets } from "./tickets.js";
+import {
+  Board,
+  Feature,
+  Find,
+  Narrow,
+  Overview,
+  Priority,
+  Ticket,
+  type Tickets,
+  Type,
+} from "./tickets.js";
 
 export type TicketsDeps = Base & {
   catalog: Catalog;
@@ -19,6 +29,11 @@ export type TicketsDeps = Base & {
 
 const id = z.string().describe("A ticket id, like TLK-529.");
 const one = z.object({ ticket: id });
+const url = z
+  .string()
+  .trim()
+  .max(2000)
+  .regex(/^https?:\/\/\S+$/, "a link is a web address that starts with http:// or https://");
 
 export const ticketList = defineCard({
   name: "tickets",
@@ -154,6 +169,9 @@ const ticketCreate = write({
     assignee: z.string().optional().describe("An actor id."),
     feature: z.string().optional().describe("The id of a feature of the project."),
     location: z.string().optional().describe("The id of the location its work is done at."),
+    type: Type.optional().describe("task if left out."),
+    priority: Priority.optional().describe("none if left out."),
+    links: z.array(url).max(50).optional(),
     backlog: z
       .boolean()
       .default(false)
@@ -268,6 +286,46 @@ const ticketLocationSet = write({
         : `removed the location of ${ticket}`,
     };
   },
+});
+
+const ticketTypeSet = write({
+  name: "ticket-type-set",
+  description: "Set what kind of work a ticket is: task, bug, improvement or specification.",
+  input: z.object({ ticket: id, type: Type }),
+  run: ({ ticket, type }, { tickets }) => ({
+    ticket: tickets.setType(ticket, type),
+    summary: `set the type of ${ticket} to ${type}`,
+  }),
+});
+
+const ticketPrioritySet = write({
+  name: "ticket-priority-set",
+  description: "Set a ticket's priority: none, urgent, high, medium or low.",
+  input: z.object({ ticket: id, priority: Priority }),
+  run: ({ ticket, priority }, { tickets }) => ({
+    ticket: tickets.setPriority(ticket, priority),
+    summary: `set the priority of ${ticket} to ${priority}`,
+  }),
+});
+
+const ticketLinkAdd = write({
+  name: "ticket-link-add",
+  description: "Add a link to a ticket: a web address that belongs to it, such as a pull request.",
+  input: z.object({ ticket: id, url }),
+  run: ({ ticket, url }, { tickets }) => ({
+    ticket: tickets.addLink(ticket, url),
+    summary: `added a link to ${ticket}: ${url}`,
+  }),
+});
+
+const ticketLinkRemove = write({
+  name: "ticket-link-remove",
+  description: "Remove a link from a ticket.",
+  input: z.object({ ticket: id, link: z.string().describe("The id of the link.") }),
+  run: ({ ticket, link }, { tickets }) => ({
+    ticket: tickets.removeLink(ticket, link),
+    summary: `removed a link from ${ticket}`,
+  }),
 });
 
 const backlogRead = read({
@@ -556,6 +614,10 @@ export const ticketsDomain = defineDomain<TicketsDeps>({
     ticketBoardSend,
     ticketFeatureSet,
     ticketLocationSet,
+    ticketTypeSet,
+    ticketPrioritySet,
+    ticketLinkAdd,
+    ticketLinkRemove,
     ticketLabelAdd,
     ticketLabelRemove,
     ticketBlock,

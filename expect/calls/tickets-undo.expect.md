@@ -49,6 +49,9 @@
       "colour": "teal"
     }
   ],
+  "type": "task",
+  "priority": "none",
+  "links": [],
   "location": null,
   "locationName": "",
   "blocked": null,

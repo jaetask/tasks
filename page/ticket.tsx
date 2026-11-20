@@ -30,6 +30,7 @@ import {
   IconArrowUp,
   IconChevronDown,
   IconChevronRight,
+  IconLink,
   IconNote,
   IconX,
 } from "@tabler/icons-react";
@@ -43,9 +44,11 @@ import {
   type InputRequest,
   type Kind,
   OWNER,
+  PRIORITIES,
   type Reply,
   type Ticket,
   type TicketStep,
+  TYPES,
   when,
 } from "./api.js";
 import { useApp, useRead } from "./app.js";
@@ -150,6 +153,8 @@ function useThumbs(images: Image[] | undefined) {
     .filter((i) => data[i.id])
     .map((i) => ({ id: i.id, src: data[i.id] as string, alt: i.name }));
 }
+
+const titleCase = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 const KIND_DOT: Record<Kind, string> = {
   todo: "bg-muted-foreground/50",
@@ -338,6 +343,7 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
   const [replyTo, setReplyTo] = useState<string | null>(null);
   const [tab, setTab] = useState<"comments" | "activity">("comments");
   const [handoff, setHandoff] = useState("");
+  const [link, setLink] = useState("");
   const [blocked, setBlocked] = useState<string | null>(null);
   if (!ticket) return <Nothing text={`No ticket has the id ${id}.`} />;
   const open = ticket.state === "open";
@@ -376,6 +382,57 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
             {ticket.description || "No description."}
           </p>
         </section>
+
+        {(ticket.links.length > 0 || open) && (
+          <section id="links" aria-label="Links" className="grid gap-1">
+            {ticket.links.map((l) => (
+              <div key={l.id} className="group flex items-center gap-2">
+                <IconLink size={14} aria-hidden className="shrink-0 text-muted-foreground" />
+                <a
+                  href={l.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="min-w-0 break-all underline underline-offset-2"
+                >
+                  {l.url}
+                </a>
+                {open && (
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    aria-label={`Remove the link ${l.url}`}
+                    className="opacity-0 focus-visible:opacity-100 group-hover:opacity-100"
+                    onClick={() =>
+                      void act("tickets.ticket-link-remove", { ticket: id, link: l.id })
+                    }
+                  >
+                    <IconX aria-hidden />
+                  </Button>
+                )}
+              </div>
+            ))}
+            {open && (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const url = link.trim();
+                  if (!url) return;
+                  void act("tickets.ticket-link-add", { ticket: id, url }).then(
+                    (done) => done && setLink(""),
+                  );
+                }}
+              >
+                <Input
+                  aria-label="New link"
+                  placeholder="Add a link"
+                  className="border-transparent shadow-none hover:border-input focus-visible:border-input"
+                  value={link}
+                  onChange={(e) => setLink(e.target.value)}
+                />
+              </form>
+            )}
+          </section>
+        )}
 
         <Steps ticket={id} open={open} />
 
@@ -659,6 +716,26 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
               )}
             </PopoverContent>
           </Popover>
+        </Property>
+        <Property name="Type">
+          <Picker
+            label="Type"
+            className={quiet}
+            value={ticket.type}
+            onChange={(type) => void act("tickets.ticket-type-set", { ticket: id, type })}
+            options={TYPES.map((t) => ({ id: t, name: titleCase(t) }))}
+          />
+        </Property>
+        <Property name="Priority">
+          <Picker
+            label="Priority"
+            className={quiet}
+            value={ticket.priority}
+            onChange={(priority) =>
+              void act("tickets.ticket-priority-set", { ticket: id, priority })
+            }
+            options={PRIORITIES.map((p) => ({ id: p, name: titleCase(p) }))}
+          />
         </Property>
         <Property name="Blocked">
           <form
