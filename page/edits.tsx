@@ -536,7 +536,9 @@ export function TicketNew({ project }: { project: Project }) {
   const features = useRead<Feature[]>("tickets.feature-find", { project: project.id }) ?? [];
   const [busy, setBusy] = useState(false);
   const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
+  // A ticket made from another's menu starts by naming it.
+  const related = query.get("related");
+  const [description, setDescription] = useState(related ? `Related to ${related}.` : "");
   const [feature, setFeature] = useState(query.get("feature") ?? "");
   // A ticket started from a column of a board view begins where that column is.
   const preset = {

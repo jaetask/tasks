@@ -69,6 +69,7 @@ import {
   StatusPicker,
   TypePicker,
 } from "./properties.js";
+import { TicketMenu } from "./ticket-menu.js";
 
 /** The images of a ticket with their data, read one by one as they are needed. */
 function useThumbs(images: Image[] | undefined) {
@@ -465,214 +466,218 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
         )}
       </div>
 
-      <aside id="place" aria-label="Properties" className="grid min-w-0 content-start gap-2">
-        <div className="mb-1 flex justify-start px-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                Actions
-                <IconChevronDown size={14} aria-hidden />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {open ? (
-                <>
-                  <DropdownMenuItem onSelect={() => go(`/t/${id}/edit`)}>
-                    Edit ticket
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onSelect={() =>
-                      void act(
-                        ticket.backlog
-                          ? "tickets.ticket-board-send"
-                          : "tickets.ticket-backlog-send",
-                        { ticket: id },
-                      )
-                    }
-                  >
-                    {ticket.backlog ? "Put on the board" : "Send to the backlog"}
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onSelect={() => void act("tickets.ticket-archive", { ticket: id })}
-                  >
-                    Archive
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onSelect={() => void act("tickets.ticket-cancel", { ticket: id })}
-                  >
-                    Cancel ticket
-                  </DropdownMenuItem>
-                </>
-              ) : (
-                <DropdownMenuItem
-                  onSelect={() => void act("tickets.ticket-restore", { ticket: id })}
-                >
-                  Restore
-                </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-        <h3 className="m-0 px-2 text-xs font-medium text-muted-foreground">Properties</h3>
-        <StatusPicker ticket={ticket}>
-          <RailRow
-            data-property="status"
-            icon={<StatusIcon kind={ticket.column.kind} backlog={ticket.backlog} />}
-          >
-            {open ? (ticket.backlog ? "Backlog" : ticket.column.name) : titleCase(ticket.state)}
-          </RailRow>
-        </StatusPicker>
-        <PriorityPicker ticket={ticket}>
-          <RailRow
-            data-property="priority"
-            muted={ticket.priority === "none"}
-            icon={<PriorityIcon priority={ticket.priority} />}
-          >
-            {ticket.priority === "none" ? "Set priority" : PRIORITY_NAME[ticket.priority]}
-          </RailRow>
-        </PriorityPicker>
-        <div className="group/row flex min-w-0 items-center">
-          <ActorPicker ticket={ticket} note={handoff} onAssigned={() => setHandoff("")}>
-            <RailRow
-              data-property="actor"
-              muted={!actor}
-              icon={
-                actor ? (
-                  <Face name={actor.name} emoji={actor.icon} />
+      <TicketMenu ticket={ticket}>
+        <aside id="place" aria-label="Properties" className="grid min-w-0 content-start gap-2">
+          <div className="mb-1 flex justify-start px-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                  Actions
+                  <IconChevronDown size={14} aria-hidden />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {open ? (
+                  <>
+                    <DropdownMenuItem onSelect={() => go(`/t/${id}/edit`)}>
+                      Edit ticket
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onSelect={() =>
+                        void act(
+                          ticket.backlog
+                            ? "tickets.ticket-board-send"
+                            : "tickets.ticket-backlog-send",
+                          { ticket: id },
+                        )
+                      }
+                    >
+                      {ticket.backlog ? "Put on the board" : "Send to the backlog"}
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onSelect={() => void act("tickets.ticket-archive", { ticket: id })}
+                    >
+                      Archive
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onSelect={() => void act("tickets.ticket-cancel", { ticket: id })}
+                    >
+                      Cancel ticket
+                    </DropdownMenuItem>
+                  </>
                 ) : (
-                  <IconUserOff size={16} aria-hidden />
-                )
-              }
-            >
-              {actor ? actor.name : "No actor"}
-            </RailRow>
-          </ActorPicker>
-          {actor && (
-            <GoTo
-              label="Go to actor"
-              onClick={() => {
-                setNarrow({ ...narrow, actor: actor.id });
-                go("/overview");
-              }}
-            />
-          )}
-        </div>
-        {open && (
-          <Input
-            aria-label="Handoff note"
-            placeholder="Handoff note for the next actor"
-            className={quiet}
-            value={handoff}
-            onChange={(e) => setHandoff(e.target.value)}
-          />
-        )}
-        {(catalog.locations.length > 0 || ticket.location) && (
-          <LocationPicker ticket={ticket}>
-            <RailRow
-              data-property="location"
-              muted={!ticket.location}
-              icon={<IconMapPin size={16} aria-hidden className="text-muted-foreground" />}
-            >
-              {ticket.locationName || "No location"}
-            </RailRow>
-          </LocationPicker>
-        )}
-        <div className="group/row flex min-w-0 items-center">
-          <FeaturePicker ticket={ticket}>
-            <RailRow
-              data-property="feature"
-              muted={!ticket.feature}
-              icon={<IconStack2 size={16} aria-hidden className="text-muted-foreground" />}
-            >
-              {ticket.featureName || "No feature"}
-            </RailRow>
-          </FeaturePicker>
-          {ticket.feature && (
-            <GoTo
-              label="Go to feature"
-              onClick={() =>
-                go(`/p/${ticket.project}/board?feature=${encodeURIComponent(ticket.feature ?? "")}`)
-              }
-            />
-          )}
-        </div>
-        <DuePicker ticket={ticket}>
-          <RailRow data-property="due" muted={!ticket.due} icon={<DueIcon due={ticket.due} />}>
-            {ticket.due ? dueLabel(ticket.due) : "Set due date"}
-          </RailRow>
-        </DuePicker>
-        <TypePicker ticket={ticket}>
-          <RailRow
-            data-property="type"
-            icon={<IconTag size={16} aria-hidden className="text-muted-foreground" />}
-          >
-            {titleCase(ticket.type)}
-          </RailRow>
-        </TypePicker>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            const text = (blocked ?? "").trim();
-            setBlocked(null);
-            void act(text ? "tickets.ticket-block" : "tickets.ticket-unblock", {
-              ticket: id,
-              ...(text ? { note: text } : {}),
-            });
-          }}
-        >
-          <Input
-            aria-label="Blocked"
-            placeholder="Not blocked"
-            className={quiet}
-            disabled={!open}
-            value={blocked ?? ticket.blocked ?? ""}
-            onChange={(e) => setBlocked(e.target.value)}
-            onBlur={(e) => {
-              if (blocked !== null && blocked.trim() !== (ticket.blocked ?? "")) {
-                e.currentTarget.form?.requestSubmit();
-              } else setBlocked(null);
-            }}
-          />
-        </form>
-        <h3 className="m-0 mt-3 px-2 text-xs font-medium text-muted-foreground">Labels</h3>
-        <div className="flex flex-wrap items-center gap-1.5 px-2">
-          {ticket.labels.map((l) => (
-            <span
-              key={l.id}
-              className="pill flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs"
-            >
-              <LabelDot colour={l.colour} />
-              {l.name}
-            </span>
-          ))}
-          <LabelsPicker ticket={ticket}>
-            <Button
-              variant="ghost"
-              aria-label="Change or add labels"
-              className="size-6 rounded-full p-0 text-muted-foreground"
-            >
-              <IconPlus size={14} aria-hidden />
-            </Button>
-          </LabelsPicker>
-        </div>
-        {!open && (
-          <div className="mt-2 flex flex-wrap gap-2">
-            <DeleteForGood
-              name={ticket.id}
-              what="This ticket, with its comments and images"
-              label="Delete forever"
-              onConfirm={() => {
-                void act("tickets.ticket-delete", { ticket: id }).then(gone);
-              }}
-            />
+                  <DropdownMenuItem
+                    onSelect={() => void act("tickets.ticket-restore", { ticket: id })}
+                  >
+                    Restore
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
-        )}
-        <div className="mt-3 grid gap-1 border-t pt-3 text-xs text-muted-foreground">
-          <span>{`Updated ${when(ticket.updatedAt)}`}</span>
-          <span>{`Created ${when(ticket.createdAt)}`}</span>
-        </div>
-      </aside>
+          <h3 className="m-0 px-2 text-xs font-medium text-muted-foreground">Properties</h3>
+          <StatusPicker ticket={ticket}>
+            <RailRow
+              data-property="status"
+              icon={<StatusIcon kind={ticket.column.kind} backlog={ticket.backlog} />}
+            >
+              {open ? (ticket.backlog ? "Backlog" : ticket.column.name) : titleCase(ticket.state)}
+            </RailRow>
+          </StatusPicker>
+          <PriorityPicker ticket={ticket}>
+            <RailRow
+              data-property="priority"
+              muted={ticket.priority === "none"}
+              icon={<PriorityIcon priority={ticket.priority} />}
+            >
+              {ticket.priority === "none" ? "Set priority" : PRIORITY_NAME[ticket.priority]}
+            </RailRow>
+          </PriorityPicker>
+          <div className="group/row flex min-w-0 items-center">
+            <ActorPicker ticket={ticket} note={handoff} onAssigned={() => setHandoff("")}>
+              <RailRow
+                data-property="actor"
+                muted={!actor}
+                icon={
+                  actor ? (
+                    <Face name={actor.name} emoji={actor.icon} />
+                  ) : (
+                    <IconUserOff size={16} aria-hidden />
+                  )
+                }
+              >
+                {actor ? actor.name : "No actor"}
+              </RailRow>
+            </ActorPicker>
+            {actor && (
+              <GoTo
+                label="Go to actor"
+                onClick={() => {
+                  setNarrow({ ...narrow, actor: actor.id });
+                  go("/overview");
+                }}
+              />
+            )}
+          </div>
+          {open && (
+            <Input
+              aria-label="Handoff note"
+              placeholder="Handoff note for the next actor"
+              className={quiet}
+              value={handoff}
+              onChange={(e) => setHandoff(e.target.value)}
+            />
+          )}
+          {(catalog.locations.length > 0 || ticket.location) && (
+            <LocationPicker ticket={ticket}>
+              <RailRow
+                data-property="location"
+                muted={!ticket.location}
+                icon={<IconMapPin size={16} aria-hidden className="text-muted-foreground" />}
+              >
+                {ticket.locationName || "No location"}
+              </RailRow>
+            </LocationPicker>
+          )}
+          <div className="group/row flex min-w-0 items-center">
+            <FeaturePicker ticket={ticket}>
+              <RailRow
+                data-property="feature"
+                muted={!ticket.feature}
+                icon={<IconStack2 size={16} aria-hidden className="text-muted-foreground" />}
+              >
+                {ticket.featureName || "No feature"}
+              </RailRow>
+            </FeaturePicker>
+            {ticket.feature && (
+              <GoTo
+                label="Go to feature"
+                onClick={() =>
+                  go(
+                    `/p/${ticket.project}/board?feature=${encodeURIComponent(ticket.feature ?? "")}`,
+                  )
+                }
+              />
+            )}
+          </div>
+          <DuePicker ticket={ticket}>
+            <RailRow data-property="due" muted={!ticket.due} icon={<DueIcon due={ticket.due} />}>
+              {ticket.due ? dueLabel(ticket.due) : "Set due date"}
+            </RailRow>
+          </DuePicker>
+          <TypePicker ticket={ticket}>
+            <RailRow
+              data-property="type"
+              icon={<IconTag size={16} aria-hidden className="text-muted-foreground" />}
+            >
+              {titleCase(ticket.type)}
+            </RailRow>
+          </TypePicker>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              const text = (blocked ?? "").trim();
+              setBlocked(null);
+              void act(text ? "tickets.ticket-block" : "tickets.ticket-unblock", {
+                ticket: id,
+                ...(text ? { note: text } : {}),
+              });
+            }}
+          >
+            <Input
+              aria-label="Blocked"
+              placeholder="Not blocked"
+              className={quiet}
+              disabled={!open}
+              value={blocked ?? ticket.blocked ?? ""}
+              onChange={(e) => setBlocked(e.target.value)}
+              onBlur={(e) => {
+                if (blocked !== null && blocked.trim() !== (ticket.blocked ?? "")) {
+                  e.currentTarget.form?.requestSubmit();
+                } else setBlocked(null);
+              }}
+            />
+          </form>
+          <h3 className="m-0 mt-3 px-2 text-xs font-medium text-muted-foreground">Labels</h3>
+          <div className="flex flex-wrap items-center gap-1.5 px-2">
+            {ticket.labels.map((l) => (
+              <span
+                key={l.id}
+                className="pill flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs"
+              >
+                <LabelDot colour={l.colour} />
+                {l.name}
+              </span>
+            ))}
+            <LabelsPicker ticket={ticket}>
+              <Button
+                variant="ghost"
+                aria-label="Change or add labels"
+                className="size-6 rounded-full p-0 text-muted-foreground"
+              >
+                <IconPlus size={14} aria-hidden />
+              </Button>
+            </LabelsPicker>
+          </div>
+          {!open && (
+            <div className="mt-2 flex flex-wrap gap-2">
+              <DeleteForGood
+                name={ticket.id}
+                what="This ticket, with its comments and images"
+                label="Delete forever"
+                onConfirm={() => {
+                  void act("tickets.ticket-delete", { ticket: id }).then(gone);
+                }}
+              />
+            </div>
+          )}
+          <div className="mt-3 grid gap-1 border-t pt-3 text-xs text-muted-foreground">
+            <span>{`Updated ${when(ticket.updatedAt)}`}</span>
+            <span>{`Created ${when(ticket.createdAt)}`}</span>
+          </div>
+        </aside>
+      </TicketMenu>
     </div>
   );
 }
