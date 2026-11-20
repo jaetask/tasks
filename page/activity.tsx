@@ -217,7 +217,8 @@ function CommentBody({
           </span>
         )}
       </div>
-      <div className="grid gap-2 pl-8">
+      {/* A comment's text starts under its avatar; a reply's lines up with its name. */}
+      <div className={`grid gap-2 ${root ? "" : "pl-8"}`}>
         {editing !== null ? (
           <form
             className="grid gap-2"
