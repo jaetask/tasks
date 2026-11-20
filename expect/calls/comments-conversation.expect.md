@@ -66,6 +66,7 @@
         "at": "2026-01-01T09:07:00.000Z",
         "editedAt": null,
         "removed": false,
+        "resolved": false,
         "reactions": [],
         "replies": [
           {
@@ -78,6 +79,7 @@
             "at": "2026-01-01T09:09:00.000Z",
             "editedAt": null,
             "removed": false,
+            "resolved": false,
             "reactions": [
               {
                 "emoji": "👀",
@@ -97,6 +99,7 @@
             "at": "2026-01-01T09:11:00.000Z",
             "editedAt": null,
             "removed": false,
+            "resolved": false,
             "reactions": []
           }
         ]
@@ -125,6 +128,7 @@
         "at": "2026-01-01T09:13:00.000Z",
         "editedAt": "2026-01-01T09:14:00.000Z",
         "removed": false,
+        "resolved": false,
         "reactions": [
           {
             "emoji": "👍",

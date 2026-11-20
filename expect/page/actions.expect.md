@@ -32,10 +32,14 @@
 | catalog.project-move | write |
 | catalog.project-restore | write |
 | comments.comment-add | write |
+| comments.comment-edit | write |
 | comments.comment-remove | write |
+| comments.comment-ticket-create | write |
 | comments.conversation-read | read |
 | comments.reaction-add | write |
 | comments.reaction-remove | write |
+| comments.thread-reopen | write |
+| comments.thread-resolve | write |
 | connections.connection-approve | write |
 | connections.connection-list | read |
 | connections.connection-revoke | write |

@@ -1,13 +1,6 @@
 // A ticket's page: what it is, where it is, its images, the questions on it
 // and its conversation, all from toolkit parts.
-import {
-  Comment as CommentPart,
-  FileButton,
-  PageBody,
-  Reactions,
-  Thread,
-  Thumbs,
-} from "@jaetask/toolkit/suite";
+import { FileButton, PageBody, Thumbs } from "@jaetask/toolkit/suite";
 import { Button } from "@jaetask/toolkit/ui/button";
 import { Checkbox } from "@jaetask/toolkit/ui/checkbox";
 import {
@@ -35,6 +28,7 @@ import {
   IconX,
 } from "@tabler/icons-react";
 import { type ReactNode, useEffect, useState } from "react";
+import { Activity } from "./activity.js";
 import {
   type Comment,
   type Conversation,
@@ -43,95 +37,15 @@ import {
   type Image,
   type InputRequest,
   type Kind,
-  OWNER,
   PRIORITIES,
-  type Reply,
   type Ticket,
   type TicketStep,
   TYPES,
   when,
 } from "./api.js";
 import { useApp, useRead } from "./app.js";
-import { ActorAvatar, DeleteForGood, Nothing, Picker, Say, TabBar } from "./local.js";
+import { DeleteForGood, Nothing, Picker } from "./local.js";
 import { RequestCard } from "./pages.js";
-
-const REACTIONS = ["👍", "👀", "✅"];
-
-function CommentView({
-  comment,
-  replies,
-  replyTo,
-  onReply,
-}: {
-  comment: Reply;
-  replies?: Reply[];
-  replyTo: string | null;
-  onReply?: (id: string | null) => void;
-}) {
-  const { act } = useApp();
-  const mine = (emoji: string) =>
-    comment.reactions.find((r) => r.emoji === emoji)?.actors.includes(OWNER) ?? false;
-  // Every reaction on the comment, then the usual ones nobody has used yet, at 0.
-  const items = [
-    ...comment.reactions.map((r) => ({
-      emoji: r.emoji,
-      count: r.actors.length,
-      mine: r.actors.includes(OWNER),
-    })),
-    ...REACTIONS.filter((e) => !comment.reactions.some((r) => r.emoji === e)).map((emoji) => ({
-      emoji,
-      count: 0,
-    })),
-  ];
-  return (
-    <CommentPart
-      author={comment.author === OWNER ? comment.authorName : `${comment.authorName} (agent)`}
-      avatar={<ActorAvatar id={comment.author} name={comment.authorName} />}
-      time={`${when(comment.at)}${comment.editedAt ? " · edited" : ""}`}
-      {...(comment.removed
-        ? {}
-        : {
-            reactions: (
-              <Reactions
-                items={items}
-                onToggle={(emoji) =>
-                  void act(mine(emoji) ? "comments.reaction-remove" : "comments.reaction-add", {
-                    comment: comment.id,
-                    emoji,
-                  })
-                }
-              />
-            ),
-            actions: (
-              <>
-                {onReply && (
-                  <Button
-                    variant="secondary"
-                    aria-pressed={replyTo === comment.id}
-                    onClick={() => onReply(replyTo === comment.id ? null : comment.id)}
-                  >
-                    {replyTo === comment.id ? "Replying…" : "Reply"}
-                  </Button>
-                )}
-                <Button
-                  variant="secondary"
-                  onClick={() => void act("comments.comment-remove", { comment: comment.id })}
-                >
-                  Remove
-                </Button>
-              </>
-            ),
-          })}
-      {...(replies && replies.length > 0
-        ? {
-            replies: replies.map((r) => <CommentView key={r.id} comment={r} replyTo={replyTo} />),
-          }
-        : {})}
-    >
-      {comment.removed ? "This comment was removed." : comment.text}
-    </CommentPart>
-  );
-}
 
 /** The images of a ticket with their data, read one by one as they are needed. */
 function useThumbs(images: Image[] | undefined) {
@@ -340,8 +254,8 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
     project: ticket?.project,
   });
   const thumbs = useThumbs(images);
-  const [replyTo, setReplyTo] = useState<string | null>(null);
-  const [tab, setTab] = useState<"comments" | "activity">("comments");
+  const [replyTo, _setReplyTo] = useState<string | null>(null);
+  const [_tab, _setTab] = useState<"comments" | "activity">("comments");
   const [handoff, setHandoff] = useState("");
   const [link, setLink] = useState("");
   const [blocked, setBlocked] = useState<string | null>(null);
@@ -360,8 +274,8 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
   };
   const entries = conversation?.entries ?? [];
   const comments = entries.filter((e) => e.type === "comment");
-  const changes = entries.length - comments.length;
-  const replying = comments.find((e) => e.type === "comment" && e.comment.id === replyTo) as
+  const _changes = entries.length - comments.length;
+  const _replying = comments.find((e) => e.type === "comment" && e.comment.id === replyTo) as
     | { comment: Comment }
     | undefined;
   const gone = () => (onGone ? onGone() : go("/archive"));
@@ -454,76 +368,7 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
           )}
         </section>
 
-        <section id="conversation" className="grid gap-3">
-          <TabBar
-            label="Conversation"
-            value={tab}
-            options={[
-              { id: "comments", name: `Comments (${ticket.comments})` },
-              { id: "activity", name: `Activity (${changes})` },
-            ]}
-            onChange={setTab}
-          />
-          {tab === "comments" ? (
-            <>
-              {comments.length > 0 ? (
-                <Thread label={`The conversation on ${ticket.id}`}>
-                  {comments.map((entry) =>
-                    entry.type === "comment" ? (
-                      <CommentView
-                        key={entry.comment.id}
-                        comment={entry.comment}
-                        replies={entry.comment.replies}
-                        replyTo={replyTo}
-                        onReply={setReplyTo}
-                      />
-                    ) : null,
-                  )}
-                </Thread>
-              ) : (
-                <p className="m-0 py-3 text-muted-foreground">No comments yet.</p>
-              )}
-              <Say
-                label={replying ? `Reply to ${replying.comment.authorName}` : "Write a comment"}
-                button="Send"
-                onSubmit={async (text) => {
-                  const to = replyTo;
-                  setReplyTo(null);
-                  await act("comments.comment-add", {
-                    ticket: id,
-                    text,
-                    ...(to ? { reply_to: to } : {}),
-                  });
-                }}
-              />
-            </>
-          ) : (
-            <div className="grid gap-3">
-              {entries.map((entry) =>
-                entry.type === "comment" ? null : (
-                  <div
-                    key={entry.change.id}
-                    className="activity flex items-start justify-between gap-3 border-l-2 pl-3"
-                  >
-                    <div>
-                      <p className="m-0">{`${entry.change.actorName} ${entry.change.summary}${entry.change.undoable ? "" : " (undone)"}`}</p>
-                      <p className="m-0 text-xs text-muted-foreground">{when(entry.change.at)}</p>
-                    </div>
-                    {entry.change.undoable && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => void act("history.change-undo", { change: entry.change.id })}
-                      >
-                        Undo
-                      </Button>
-                    )}
-                  </div>
-                ),
-              )}
-            </div>
-          )}
-        </section>
+        <Activity ticket={id} conversation={conversation} canWrite={open} />
 
         {requests && requests.length > 0 && (
           <Collapsible defaultOpen>

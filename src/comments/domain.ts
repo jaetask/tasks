@@ -5,11 +5,11 @@ import { z } from "zod";
 import { type Base, readAction, writeAction } from "../actions.js";
 import { OWNER } from "../catalog/catalog.js";
 import { Refusal } from "../refusal.js";
-import type { Tickets } from "../tickets/tickets.js";
+import { Ticket, type Tickets } from "../tickets/tickets.js";
 import { Comment, type Comments, Reply } from "./comments.js";
 
 export type CommentsDeps = Base & {
-  tickets: Pick<Tickets, "get">;
+  tickets: Pick<Tickets, "get" | "create">;
   comments: Comments;
   /** Tells the agents a new comment concerns: see the replies Domain. */
   said(comment: Reply, assignee: string | null, repliedTo: string | undefined): void;
@@ -153,9 +153,73 @@ const commentRemove = write({
   },
 });
 
+const threadResolve = write({
+  name: "thread-resolve",
+  description:
+    "Resolve a comment's thread: the comment and its replies are settled. It can be reopened.",
+  input: z.object({ comment: z.string() }),
+  run: ({ comment: id }, { comments }) => {
+    const comment = comments.resolve(id, true);
+    return { comment, summary: `resolved the thread of ${id} on ${comment.ticket}` };
+  },
+});
+
+const threadReopen = write({
+  name: "thread-reopen",
+  description: "Reopen a resolved thread.",
+  input: z.object({ comment: z.string() }),
+  run: ({ comment: id }, { comments }) => {
+    const comment = comments.resolve(id, false);
+    return { comment, summary: `reopened the thread of ${id} on ${comment.ticket}` };
+  },
+});
+
+const commentTicketCreate = writeAction<
+  z.ZodObject<{ comment: z.ZodString; title: z.ZodOptional<z.ZodString> }>,
+  typeof Ticket,
+  CommentsDeps
+>("comments", {
+  name: "comment-ticket-create",
+  description:
+    "Make a new ticket from a comment, in the same project: the comment is its description, with a line saying where it came from. It starts in the backlog.",
+  input: z.object({
+    comment: z.string(),
+    title: z
+      .string()
+      .trim()
+      .min(1)
+      .max(200)
+      .optional()
+      .describe("The comment's first line if left out."),
+  }),
+  output: Ticket,
+  card: commentChanged,
+  run: ({ comment: id, title }, context) => {
+    const { tickets, comments, principal, now, log } = context;
+    const comment = comments.get(id);
+    if (comment.removed) throw new Refusal("removed", `Comment ${id} was removed.`);
+    const from = tickets.get(comment.ticket);
+    const first = comment.text.split("\n").find((line) => line.trim()) ?? comment.text;
+    const made = tickets.create(principal.id, new Date(now()).toISOString(), {
+      project: from.project,
+      title: (title ?? first).trim().slice(0, 200),
+      description: `${comment.text}\n\nFrom a comment by ${comment.authorName} on ${comment.ticket} (${id}).`,
+      labels: [],
+      backlog: true,
+    });
+    log(
+      `made ${made.id} from the comment ${id} on ${comment.ticket}`,
+      { kind: "created", subject: "ticket", id: made.id },
+      made.id,
+    );
+    return made;
+  },
+});
+
 const reactionAdd = write({
   name: "reaction-add",
-  description: "React to a comment with an emoji.",
+  description:
+    "React to a comment or reply with an emoji. An actor can add several different emoji to one comment, each one once.",
   input: z.object({ comment: z.string(), emoji }),
   run: ({ comment: id, emoji }, { comments, actor }) => {
     const comment = comments.react(id, actor, emoji);
@@ -178,6 +242,16 @@ export const commentsDomain = defineDomain<CommentsDeps>({
   version: "1.0.0",
   about:
     "The conversation on a ticket: comments, replies and reactions, with a line for each change to the ticket.",
-  actions: [conversationRead, commentAdd, commentEdit, commentRemove, reactionAdd, reactionRemove],
+  actions: [
+    conversationRead,
+    commentAdd,
+    commentEdit,
+    commentRemove,
+    threadResolve,
+    threadReopen,
+    commentTicketCreate,
+    reactionAdd,
+    reactionRemove,
+  ],
   cards: [commentChanged],
 });

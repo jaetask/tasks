@@ -69,6 +69,7 @@ export type Reply = {
   at: string;
   editedAt: string | null;
   removed: boolean;
+  resolved: boolean;
   reactions: Reaction[];
 };
 export type Comment = Reply & { replies: Reply[] };
