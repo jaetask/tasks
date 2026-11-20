@@ -1,7 +1,7 @@
 // A project's board and backlog: working surfaces that use the full width.
 // The board groups the same tickets four ways: by column, by feature, by
 // actor and by location. Dragging a ticket changes what the view groups by.
-import { EditLink, Link, PageBody, PrimaryLink } from "@jaetask/toolkit/suite";
+import { EditLink, Link, PageBody, PrimaryLink, ProjectIcon } from "@jaetask/toolkit/suite";
 import { Button } from "@jaetask/toolkit/ui/button";
 import { Checkbox } from "@jaetask/toolkit/ui/checkbox";
 import {
@@ -51,7 +51,7 @@ import {
   TYPES,
 } from "./api.js";
 import { useApp, useRead } from "./app.js";
-import { Nothing, Picker, projectEmoji } from "./local.js";
+import { Nothing, Picker, projectEmoji, projectLook } from "./local.js";
 import { LabelDot, PriorityIcon, StatusIcon } from "./pickers.js";
 import {
   ActorPicker,
@@ -357,9 +357,12 @@ export function TicketCard({
   ticket,
   action,
   show,
+  across,
 }: {
   ticket: Ticket;
   action?: ReactNode;
+  /** True on a screen that mixes projects: the card then names its project, as a pill to its board. */
+  across?: boolean;
   /** The properties to show. The ticket's project decides if left out. */
   show?: readonly string[];
 }) {
@@ -478,15 +481,23 @@ export function TicketCard({
             </ActorPicker>
           </div>
         )}
-        {has("feature") && (
+        {has("feature") && ticket.featureName && (
           <FeaturePicker ticket={ticket}>
             <Chip className="justify-start whitespace-normal text-left text-muted-foreground">
-              {[project?.name ?? ticket.project, ticket.featureName].filter(Boolean).join(" / ")}
+              {ticket.featureName}
             </Chip>
           </FeaturePicker>
         )}
-        {pills && (
+        {(pills || (across && project)) && (
           <div className="flex flex-wrap items-center gap-1.5">
+            {across && project && (
+              <Chip asChild className={PILL}>
+                <Link href={`/p/${project.id}/board`} aria-label={`The board of ${project.name}`}>
+                  <ProjectIcon {...projectLook(project)} size={12} />
+                  {project.name}
+                </Link>
+              </Chip>
+            )}
             {has("location") && ticket.locationName && (
               <LocationPicker ticket={ticket}>
                 <Chip className={PILL}>

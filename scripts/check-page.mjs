@@ -460,6 +460,14 @@ try {
     await page.getByRole("menuitem", { name: "Move right" }).waitFor();
     await page.keyboard.press("Escape");
   });
+  await step("on the Overview a card names its project, as a pill to its board", async () => {
+    await open("/");
+    await page.getByRole("link", { name: "The board of Talk" }).first().click();
+    await page.locator(".lane", { hasText: "To do" }).waitFor();
+    await page.waitForFunction(() => window.location.hash.includes("/p/TLK/board"));
+    // A project's own board does not repeat the project on its cards.
+    await until(() => !document.querySelector('.ticket a[aria-label="The board of Talk"]'));
+  });
   await step("a right click on a card opens its menu: blocked and due date", async () => {
     const card = page.locator(".ticket", { hasText: "Show the recording length" });
     await card.click({ button: "right" });
