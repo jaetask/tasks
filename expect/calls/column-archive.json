@@ -1,0 +1,75 @@
+{
+  "steps": [
+    {
+      "call": "catalog.actor-rename",
+      "input": {
+        "actor": "owner",
+        "name": "Sam"
+      }
+    },
+    {
+      "call": "catalog.actor-create",
+      "input": {
+        "name": "Coder"
+      }
+    },
+    {
+      "call": "catalog.project-create",
+      "input": {
+        "name": "Talk",
+        "prefix": "TLK"
+      }
+    },
+    {
+      "call": "tickets.ticket-create",
+      "input": {
+        "project": "TLK",
+        "title": "Voice notes on the phone"
+      }
+    },
+    {
+      "call": "tickets.ticket-create",
+      "input": {
+        "project": "TLK",
+        "title": "Crash on send"
+      }
+    },
+    {
+      "as": "a1",
+      "call": "tickets.column-archive",
+      "input": {
+        "column": "c1"
+      }
+    },
+    {
+      "call": "tickets.ticket-find",
+      "input": {
+        "project": "TLK"
+      }
+    },
+    {
+      "call": "tickets.column-archive",
+      "input": {
+        "column": "c1"
+      }
+    },
+    {
+      "call": "tickets.column-archive",
+      "input": {
+        "column": "c99"
+      }
+    },
+    {
+      "call": "history.change-undo",
+      "input": {
+        "change": "h6"
+      }
+    },
+    {
+      "call": "tickets.ticket-find",
+      "input": {
+        "project": "TLK"
+      }
+    }
+  ]
+}

@@ -23,6 +23,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@jaetask/toolkit/ui/dropdown-menu";
 import { Input } from "@jaetask/toolkit/ui/input";
@@ -763,7 +764,18 @@ export function ordered(tickets: Ticket[], ordering: Project["ordering"]): Ticke
 }
 
 /** A column's "..." menu on the status view: its place on the board, and the way to its settings. */
-function ColumnMenu({ project, column, name }: { project: Project; column: string; name: string }) {
+function ColumnMenu({
+  project,
+  column,
+  name,
+  count,
+}: {
+  project: Project;
+  column: string;
+  name: string;
+  /** How many tickets the column holds; with none there is nothing to archive. */
+  count: number;
+}) {
   const { act } = useApp();
   const at = project.columns.findIndex((c) => c.id === column);
   const move = (before: string | undefined) =>
@@ -775,7 +787,7 @@ function ColumnMenu({ project, column, name }: { project: Project; column: strin
           variant="ghost"
           size="icon-xs"
           aria-label={`Column ${name}`}
-          className="opacity-0 focus-visible:opacity-100 group-hover/lane:opacity-100 data-[state=open]:opacity-100"
+          className="text-muted-foreground"
         >
           <IconDots aria-hidden />
         </Button>
@@ -792,6 +804,13 @@ function ColumnMenu({ project, column, name }: { project: Project; column: strin
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link href={`/p/${project.id}/columns`}>Rename or change kind</Link>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          disabled={count === 0}
+          onSelect={() => void act("tickets.column-archive", { column })}
+        >
+          Archive all
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -952,7 +971,16 @@ export function BoardPage({ project }: { project: Project }) {
               {...(g.kind ? { icon: <StatusIcon kind={g.kind} /> } : {})}
               count={g.tickets.length}
               {...(view === "status"
-                ? { menu: <ColumnMenu project={project} column={g.id} name={g.title} /> }
+                ? {
+                    menu: (
+                      <ColumnMenu
+                        project={project}
+                        column={g.id}
+                        name={g.title}
+                        count={g.tickets.length}
+                      />
+                    ),
+                  }
                 : {})}
               addTo={`/p/${project.id}/new?${g.start}`}
               onDrop={(ticket) => void g.drop(ticket)}

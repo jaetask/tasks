@@ -47,6 +47,7 @@
 | tickets.ticket-block | write | ticket-changed | Mark a ticket blocked, with a note saying why. It stays in its column; agents looking for work skip it. |
 | tickets.ticket-unblock | write | ticket-changed | Mark a ticket no longer blocked. |
 | tickets.ticket-archive | write | ticket-changed | Archive a ticket. It leaves the board and keeps its column; the owner can restore it. |
+| tickets.column-archive | write | ticket-changed | Archive every ticket in one column of a board, such as everything in Done. They leave the board and keep their column; the owner can restore them, or undo this as one change. |
 | tickets.ticket-cancel | write | ticket-changed | Cancel a ticket. It goes to the Archive as canceled; the owner can restore it. |
 | tickets.ticket-restore | write | ticket-changed | Restore an archived or canceled ticket to the column it was in. Only the owner can. |
 | tickets.ticket-delete | write | ticket-changed | Delete a ticket for good, with its comments and images. It cannot be undone. Only the owner can. |
@@ -201,6 +202,7 @@ Tools:
 - tickets__ticket-block (changes): Mark a ticket blocked, with a note saying why. It stays in its column; agents looking for work skip it.
 - tickets__ticket-unblock (changes): Mark a ticket no longer blocked.
 - tickets__ticket-archive (changes): Archive a ticket. It leaves the board and keeps its column; the owner can restore it.
+- tickets__column-archive (changes): Archive every ticket in one column of a board, such as everything in Done. They leave the board and keep their column; the owner can restore them, or undo this as one change.
 - tickets__ticket-cancel (changes): Cancel a ticket. It goes to the Archive as canceled; the owner can restore it.
 - tickets__ticket-restore (changes): Restore an archived or canceled ticket to the column it was in. Only the owner can.
 - tickets__ticket-delete (changes): Delete a ticket for good, with its comments and images. It cannot be undone. Only the owner can.
@@ -1134,6 +1136,24 @@ A tool that changes something after the person says yes waits for them; tell the
   },
   "required": [
     "ticket"
+  ]
+}
+```
+
+#### tickets.column-archive
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "column": {
+      "type": "string",
+      "description": "A column id on a project's board."
+    }
+  },
+  "required": [
+    "column"
   ]
 }
 ```

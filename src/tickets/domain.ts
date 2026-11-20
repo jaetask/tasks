@@ -5,6 +5,7 @@ import { defineCard, defineDomain } from "@jaetask/open-agent-kit";
 import { z } from "zod";
 import { type Base, readAction, writeAction } from "../actions.js";
 import { type Catalog, OWNER } from "../catalog/catalog.js";
+import { Refusal } from "../refusal.js";
 import {
   Board,
   Evidence,
@@ -619,6 +620,35 @@ const ticketArchive = write({
   }),
 });
 
+const columnArchive = writeAction<
+  z.ZodObject<{ column: z.ZodString }>,
+  z.ZodObject<{ column: z.ZodString; archived: z.ZodArray<z.ZodString> }>,
+  TicketsDeps
+>("tickets", {
+  name: "column-archive",
+  description:
+    "Archive every ticket in one column of a board, such as everything in Done. They leave the board and keep their column; the owner can restore them, or undo this as one change.",
+  input: z.object({ column: z.string().describe("A column id on a project's board.") }),
+  output: z.object({
+    column: z.string(),
+    archived: z.array(z.string()).describe("The ids of the tickets it archived."),
+  }),
+  card: ticketChanged,
+  run: ({ column: id }, { tickets, catalog, log }) => {
+    const column = catalog.column(id);
+    const inside = tickets.board(column.project).columns.find((c) => c.id === id)?.tickets ?? [];
+    if (inside.length === 0) {
+      throw new Refusal("nothing-there", `${column.name} has no tickets to archive.`);
+    }
+    for (const ticket of inside) tickets.setState(ticket.id, "archived");
+    log(
+      `archived ${inside.length} ${inside.length === 1 ? "ticket" : "tickets"} in ${column.name} of ${column.project}`,
+      { kind: "updated", subject: "column", id },
+    );
+    return { column: id, archived: inside.map((t) => t.id) };
+  },
+});
+
 const ticketCancel = write({
   name: "ticket-cancel",
   description: "Cancel a ticket. It goes to the Archive as canceled; the owner can restore it.",
@@ -706,6 +736,7 @@ export const ticketsDomain = defineDomain<TicketsDeps>({
     ticketBlock,
     ticketUnblock,
     ticketArchive,
+    columnArchive,
     ticketCancel,
     ticketRestore,
     ticketDelete,
