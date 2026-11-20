@@ -8,6 +8,17 @@ import { nextId, nextNumber } from "../ids.js";
 import type { Rows } from "../journal.js";
 import { Refusal } from "../refusal.js";
 
+export const TYPES = ["task", "bug", "improvement", "specification"] as const;
+export const Type = z.enum(TYPES).describe("What kind of work it is.");
+export type Type = z.infer<typeof Type>;
+
+export const PRIORITIES = ["none", "urgent", "high", "medium", "low"] as const;
+export const Priority = z.enum(PRIORITIES);
+export type Priority = z.infer<typeof Priority>;
+
+export const Link = z.object({ id: z.string(), url: z.string() });
+export type Link = z.infer<typeof Link>;
+
 export const STATES = ["open", "archived", "canceled"] as const;
 export const State = z.enum(STATES);
 export type State = z.infer<typeof State>;
@@ -34,6 +45,9 @@ export const Ticket = z.object({
   assignee: z.string().nullable().describe("The actor id it is assigned to, or null."),
   assigneeName: z.string(),
   labels: z.array(Label),
+  type: Type,
+  priority: Priority,
+  links: z.array(Link).describe("Web addresses that belong to it, such as a pull request."),
   location: z.string().nullable().describe("The id of the location its work is done at, or null."),
   locationName: z.string(),
   blocked: z.string().nullable().describe("Why it is blocked, or null when it is not."),
@@ -91,6 +105,8 @@ export const Find = z.object({
     .describe("A feature id, or null for tickets in no feature."),
   text: z.string().optional().describe("Words to look for in the title and description."),
   blocked: z.boolean().optional(),
+  type: Type.optional(),
+  priority: Priority.optional(),
   backlog: z.boolean().optional().describe("True for the backlog only, false for the board only."),
   state: State.optional().describe("open if left out."),
 });
@@ -114,6 +130,9 @@ export type Tickets = {
       assignee?: string | undefined;
       feature?: string | undefined;
       location?: string | undefined;
+      type?: Type | undefined;
+      priority?: Priority | undefined;
+      links?: string[] | undefined;
       backlog?: boolean | undefined;
     },
   ): Ticket;
@@ -142,6 +161,10 @@ export type Tickets = {
   /** Moves an open ticket to the first column of a kind on its board. */
   moveToKind(id: string, kind: Kind): Ticket;
   assign(id: string, actor: string | null): Ticket;
+  setType(id: string, type: Type): Ticket;
+  setPriority(id: string, priority: Priority): Ticket;
+  addLink(id: string, url: string): Ticket;
+  removeLink(id: string, link: string): Ticket;
   /** Gives a ticket a location, or none with null. */
   setLocation(id: string, location: string | null): Ticket;
   addLabel(id: string, label: string): Ticket;
@@ -169,6 +192,15 @@ export function migrateTickets(db: DatabaseSync): void {
   if (!columns.some((c) => c.name === "backlog")) {
     db.exec("ALTER TABLE tickets ADD COLUMN backlog INTEGER NOT NULL DEFAULT 0");
   }
+  if (!columns.some((c) => c.name === "type")) {
+    db.exec("ALTER TABLE tickets ADD COLUMN type TEXT NOT NULL DEFAULT 'task'");
+  }
+  if (!columns.some((c) => c.name === "priority")) {
+    db.exec("ALTER TABLE tickets ADD COLUMN priority TEXT NOT NULL DEFAULT 'none'");
+  }
+  db.exec(
+    "CREATE TABLE IF NOT EXISTS ticket_links (id TEXT PRIMARY KEY, ticket TEXT NOT NULL REFERENCES tickets (id), url TEXT NOT NULL)",
+  );
   if (!columns.some((c) => c.name === "location")) {
     db.exec("ALTER TABLE tickets ADD COLUMN location TEXT REFERENCES locations (id)");
   }
@@ -187,6 +219,8 @@ type TicketRow = {
   feature: string | null;
   assignee: string | null;
   location: string | null;
+  type: Type;
+  priority: Priority;
   blocked: string | null;
   state: State;
   backlog: number;
@@ -265,6 +299,11 @@ export function sqliteTickets(
       assignee: r.assignee,
       assigneeName: r.assignee ? catalog.actor(r.assignee).name : "",
       labels,
+      type: r.type,
+      priority: r.priority,
+      links: db
+        .prepare("SELECT id, url FROM ticket_links WHERE ticket = ? ORDER BY rowid")
+        .all(r.id) as Link[],
       location: r.location,
       locationName: r.location ? catalog.location(r.location).name : "",
       blocked: r.blocked,
@@ -321,6 +360,14 @@ export function sqliteTickets(
     catalog.label(label);
     const id = `${ticket}:${label}`;
     if (!rows.get("ticket_labels", id)) rows.insert("ticket_labels", { id, ticket, label });
+  };
+
+  const link = (ticket: string, url: string) => {
+    const has = db
+      .prepare("SELECT id FROM ticket_links WHERE ticket = ? AND url = ?")
+      .get(ticket, url);
+    if (has) throw new Refusal("link-there", `${ticket} already has this link.`);
+    rows.insert("ticket_links", { id: nextId(db, "u"), ticket, url });
   };
 
   const narrowed = (all: TicketRow[], narrow: Narrow = {}) => {
@@ -383,6 +430,8 @@ export function sqliteTickets(
         .filter((t) => filter.assignee === undefined || t.assignee === filter.assignee)
         .filter((t) => filter.feature === undefined || t.feature === filter.feature)
         .filter((t) => filter.backlog === undefined || (t.backlog === 1) === filter.backlog)
+        .filter((t) => filter.type === undefined || t.type === filter.type)
+        .filter((t) => filter.priority === undefined || t.priority === filter.priority)
         .filter((t) => filter.blocked === undefined || (t.blocked !== null) === filter.blocked)
         .filter((t) => words.every((w) => `${t.title} ${t.description}`.toLowerCase().includes(w)))
         .map(toTicket)
@@ -414,6 +463,8 @@ export function sqliteTickets(
         feature: ticket.feature ?? null,
         assignee: ticket.assignee ?? null,
         location: ticket.location ?? null,
+        type: ticket.type ?? "task",
+        priority: ticket.priority ?? "none",
         blocked: null,
         state: "open",
         backlog: ticket.backlog ? 1 : 0,
@@ -421,6 +472,7 @@ export function sqliteTickets(
         created_by: by,
       });
       for (const label of ticket.labels) attach(id, label);
+      for (const url of ticket.links ?? []) link(id, url);
       return get(id);
     },
     backlog: (projectId, narrow) => {
@@ -522,6 +574,30 @@ export function sqliteTickets(
       rows.update("tickets", id, { assignee: actor });
       return get(id);
     },
+    setType: (id, type) => {
+      open(id);
+      rows.update("tickets", id, { type });
+      return get(id);
+    },
+    setPriority: (id, priority) => {
+      open(id);
+      rows.update("tickets", id, { priority });
+      return get(id);
+    },
+    addLink: (id, url) => {
+      open(id);
+      link(id, url);
+      return get(id);
+    },
+    removeLink: (id, linkId) => {
+      open(id);
+      const found = rows.get("ticket_links", linkId) as { ticket: string } | undefined;
+      if (!found || found.ticket !== id) {
+        throw new Refusal("unknown-link", `${id} has no link with id ${linkId}.`);
+      }
+      rows.remove("ticket_links", linkId);
+      return get(id);
+    },
     setLocation: (id, location) => {
       open(id);
       if (location !== null) activeLocation(location);
@@ -561,6 +637,7 @@ export function sqliteTickets(
     purge: (id) => {
       row(id);
       db.prepare("DELETE FROM ticket_labels WHERE ticket = ?").run(id);
+      db.prepare("DELETE FROM ticket_links WHERE ticket = ?").run(id);
       db.prepare("DELETE FROM tickets WHERE id = ?").run(id);
     },
   };

@@ -90,8 +90,12 @@
 | tickets.ticket-find | read |
 | tickets.ticket-label-add | write |
 | tickets.ticket-label-remove | write |
+| tickets.ticket-link-add | write |
+| tickets.ticket-link-remove | write |
 | tickets.ticket-location-set | write |
 | tickets.ticket-move | write |
+| tickets.ticket-priority-set | write |
 | tickets.ticket-read | read |
 | tickets.ticket-restore | write |
+| tickets.ticket-type-set | write |
 | tickets.ticket-unblock | write |

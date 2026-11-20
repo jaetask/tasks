@@ -32,6 +32,9 @@ export type Ticket = {
   column: Column;
   assignee: string | null;
   assigneeName: string;
+  type: "task" | "bug" | "improvement" | "specification";
+  priority: "none" | "urgent" | "high" | "medium" | "low";
+  links: { id: string; url: string }[];
   location: string | null;
   locationName: string;
   labels: Label[];
@@ -208,3 +211,6 @@ export function refusal(outcome: Outcome): string | null {
 
 export const when = (at: string) =>
   new Date(at).toLocaleString([], { dateStyle: "medium", timeStyle: "short" });
+
+export const TYPES = ["task", "bug", "improvement", "specification"] as const;
+export const PRIORITIES = ["none", "urgent", "high", "medium", "low"] as const;
