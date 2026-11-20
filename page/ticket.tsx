@@ -476,8 +476,8 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
         )}
       </div>
 
-      <aside id="place" aria-label="Properties" className="grid content-start gap-2">
-        <div className="mb-1 flex justify-end">
+      <aside id="place" aria-label="Properties" className="grid min-w-0 content-start gap-2">
+        <div className="mb-1 flex justify-start px-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">
@@ -573,7 +573,7 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
             {ticket.priority === "none" ? "Set priority" : PRIORITY_NAME[ticket.priority]}
           </RailRow>
         </PropertyPicker>
-        <div className="group/row flex items-center">
+        <div className="group/row flex min-w-0 items-center">
           <PropertyPicker
             label="Actor"
             placeholder="Assign to..."
@@ -659,7 +659,7 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
             </RailRow>
           </PropertyPicker>
         )}
-        <div className="group/row flex items-center">
+        <div className="group/row flex min-w-0 items-center">
           <PropertyPicker
             label="Feature"
             placeholder="Set feature to..."

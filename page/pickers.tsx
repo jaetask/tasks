@@ -233,7 +233,7 @@ export function RailRow({
   return (
     <Button
       variant="ghost"
-      className={`h-8 w-full justify-start gap-2 px-2 font-normal ${muted ? "text-muted-foreground" : ""}`}
+      className={`h-8 w-full min-w-0 justify-start gap-2 overflow-hidden px-2 font-normal ${muted ? "text-muted-foreground" : ""}`}
       {...rest}
     >
       {icon}
