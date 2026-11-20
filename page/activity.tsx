@@ -146,11 +146,14 @@ function CommentBody({
   root,
   replies,
   canWrite,
+  joined,
 }: {
   comment: Reply;
   root?: Comment;
   replies?: Reply[];
   canWrite: boolean;
+  /** True for a reply that another reply follows. */
+  joined?: boolean;
 }) {
   const { act, go, path } = useApp();
   const [editing, setEditing] = useState<string | null>(null);
@@ -163,7 +166,11 @@ function CommentBody({
       .map((c) => `**${c.authorName}** (${when(c.at)})\n\n${c.text}`)
       .join("\n\n---\n\n");
   return (
-    <div id={`comment-${comment.id}`} className="comment group/comment grid gap-2 px-4 py-3">
+    <div
+      id={`comment-${comment.id}`}
+      // Between two replies the line starts under the words, not at the card's edge.
+      className={`comment group/comment grid gap-2 px-4 py-3 ${joined ? "relative border-b-0 after:absolute after:right-0 after:bottom-0 after:left-12 after:border-b" : ""}`}
+    >
       <div className="flex items-center gap-2">
         <Who id={comment.author} name={comment.authorName} />
         <span className="font-medium">{comment.authorName}</span>
@@ -409,8 +416,13 @@ function ThreadCard({ comment, canWrite }: { comment: Comment; canWrite: boolean
   return (
     <div className="thread divide-y rounded-xl border bg-card">
       <CommentBody comment={comment} root={comment} replies={comment.replies} canWrite={canWrite} />
-      {comment.replies.map((r) => (
-        <CommentBody key={r.id} comment={r} canWrite={canWrite} />
+      {comment.replies.map((r, i) => (
+        <CommentBody
+          key={r.id}
+          comment={r}
+          canWrite={canWrite}
+          joined={i < comment.replies.length - 1}
+        />
       ))}
       {canWrite && !comment.resolved && (
         <Write

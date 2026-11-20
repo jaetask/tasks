@@ -277,13 +277,16 @@ function Signed({ path, onSignOut }: { path: string; onSignOut: () => void }) {
     async <T,>(action: string, input: unknown): Promise<T | null> => {
       const outcome: Outcome = await call(action, input);
       const refused = refusal(outcome);
-      if (refused !== null) toast({ variant: "destructive", description: refused });
+      if (refused !== null) toast({ variant: "destructive", description: refused, duration: 6000 });
       else if (outcome.card?.html && outcome.changes?.some((c) => c.kind === "deleted")) {
         // Only a deletion is announced; any other change shows where it was made, and a
         // notification for each would bury the ones that matter.
         // The Card arrives as HTML already escaped by the App's cardHtml.
-        // biome-ignore lint/security/noDangerouslySetInnerHtml: escaped by the App
-        toast({ description: <span dangerouslySetInnerHTML={{ __html: outcome.card.html }} /> });
+        toast({
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: escaped by the App
+          description: <span dangerouslySetInnerHTML={{ __html: outcome.card.html }} />,
+          duration: 4000,
+        });
       }
       bump();
       return refused === null ? (outcome.output as T) : null;
@@ -296,7 +299,7 @@ function Signed({ path, onSignOut }: { path: string; onSignOut: () => void }) {
       const answer = await uploadFile(ticket, file).catch(() => ({ error: "The upload failed." }));
       const refused = "error" in answer ? answer.error : refusal(answer);
       if (refused !== null)
-        toast({ variant: "destructive", description: `${file.name}: ${refused}` });
+        toast({ variant: "destructive", description: `${file.name}: ${refused}`, duration: 6000 });
       bump();
       return refused === null ? ((answer as Outcome).output as TicketFile) : null;
     },

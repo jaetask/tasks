@@ -390,6 +390,13 @@ try {
       .fill("Good. Ask for review when the lock screen works.");
     await thread.locator('[aria-label="Leave a reply"]').press("Control+Enter");
     await thread.locator(".comment").nth(1).waitFor();
+    await thread
+      .locator('[aria-label="Leave a reply"]')
+      .fill("And tell me which phones you tried.");
+    await thread.locator('[aria-label="Leave a reply"]').press("Control+Enter");
+    await thread.locator(".comment").nth(2).waitFor();
+    await thread.scrollIntoViewIfNeeded();
+    await thread.screenshot({ path: "docs/img/thread.png" });
     // Resolving a thread folds it to one line; Show opens it again.
     await thread.getByRole("button", { name: "Comment actions" }).first().click();
     await page.getByRole("menuitem", { name: "Resolve thread" }).click();
