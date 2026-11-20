@@ -27,6 +27,8 @@ export type Column = z.infer<typeof Column>;
 export const Project = z.object({
   id: z.string(),
   name: z.string(),
+  icon: z.string().describe("An emoji shown beside the project's name. Empty for none."),
+  colour: Colour,
   archived: z.boolean(),
   columns: z.array(Column),
 });
@@ -63,8 +65,13 @@ export type Catalog = {
   renameActor(id: string, name: string): Actor;
   archiveActor(id: string, archived: boolean): Actor;
   createProject(name: string, prefix: string): Project;
-  renameProject(id: string, name: string): Project;
   archiveProject(id: string, archived: boolean): Project;
+  editProject(
+    id: string,
+    patch: { name?: string | undefined; icon?: string | undefined; colour?: Colour | undefined },
+  ): Project;
+  /** Moves a project to sit before `before` in the list, or to the end. */
+  moveProject(id: string, before?: string): Project[];
   /** Adds a column before `before`, or at the end. */
   addColumn(project: string, name: string, kind: Kind, before?: string): Column;
   renameColumn(id: string, name: string): Column;
@@ -92,6 +99,14 @@ export function migrateCatalog(db: DatabaseSync): void {
   db.exec(
     "CREATE TABLE IF NOT EXISTS projects (id TEXT PRIMARY KEY, name TEXT NOT NULL, position INTEGER NOT NULL, archived INTEGER NOT NULL DEFAULT 0)",
   );
+  // Added after the first version: a database made before it gets the columns here.
+  const columns = db.prepare("PRAGMA table_info(projects)").all() as { name: string }[];
+  if (!columns.some((c) => c.name === "icon")) {
+    db.exec("ALTER TABLE projects ADD COLUMN icon TEXT NOT NULL DEFAULT ''");
+  }
+  if (!columns.some((c) => c.name === "colour")) {
+    db.exec("ALTER TABLE projects ADD COLUMN colour TEXT NOT NULL DEFAULT 'teal'");
+  }
   db.exec(
     "CREATE TABLE IF NOT EXISTS columns (id TEXT PRIMARY KEY, project TEXT NOT NULL REFERENCES projects (id), name TEXT NOT NULL, kind TEXT NOT NULL, position INTEGER NOT NULL)",
   );
@@ -102,7 +117,14 @@ export function migrateCatalog(db: DatabaseSync): void {
 }
 
 type ActorRow = { id: string; name: string; archived: number };
-type ProjectRow = { id: string; name: string; position: number; archived: number };
+type ProjectRow = {
+  id: string;
+  name: string;
+  icon: string;
+  colour: Colour;
+  position: number;
+  archived: number;
+};
 type ColumnRow = { id: string; project: string; name: string; kind: Kind; position: number };
 type LabelRow = { id: string; name: string; colour: Colour; removed: number };
 
@@ -124,6 +146,8 @@ export function sqliteCatalog(db: DatabaseSync, rows: Rows): Catalog {
   const toProject = (r: ProjectRow): Project => ({
     id: r.id,
     name: r.name,
+    icon: r.icon,
+    colour: r.colour,
     archived: r.archived === 1,
     columns: columnRows(r.id).map(toColumn),
   });
@@ -234,10 +258,26 @@ export function sqliteCatalog(db: DatabaseSync, rows: Rows): Catalog {
       }
       return project(prefix);
     },
-    renameProject: (id, name) => {
+    editProject: (id, patch) => {
       project(id);
-      rows.update("projects", id, { name });
+      rows.update("projects", id, {
+        ...(patch.name === undefined ? {} : { name: patch.name }),
+        ...(patch.icon === undefined ? {} : { icon: patch.icon }),
+        ...(patch.colour === undefined ? {} : { colour: patch.colour }),
+      });
       return project(id);
+    },
+    moveProject: (id, before) => {
+      project(id);
+      const rest = projectRows()
+        .map((p) => p.id)
+        .filter((p) => p !== id);
+      const at = before === undefined ? rest.length : rest.indexOf(before);
+      if (at < 0) throw new Refusal("unknown-project", `No project has id ${before}.`);
+      for (const [i, p] of [...rest.slice(0, at), id, ...rest.slice(at)].entries()) {
+        rows.update("projects", p, { position: i + 1 });
+      }
+      return projectRows().map(toProject);
     },
     archiveProject: (id, archived) => {
       project(id);

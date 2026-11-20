@@ -91,15 +91,20 @@ try {
     await page.click("#setup-form button");
     await page.waitForSelector("text=Create your first project");
   });
-  await step("create a project; its board has four columns", async () => {
+  await step("create a project; the Overview shows the four kinds", async () => {
     await page.fill('[aria-label="Project name"]', "Talk");
     await page.fill('[aria-label="Prefix"]', "tlk");
     await page.click("text=Create project");
     await page.waitForSelector(".column");
     if ((await count(".column")) !== 4) throw new Error("not four columns");
   });
+  await step("the project's board has its four columns", async () => {
+    await page.click('.side-row a[href="#/board/TLK"]');
+    await page.waitForSelector(".column-head >> text=Review");
+    if ((await count(".column")) !== 4) throw new Error("not four columns");
+  });
   await step("settings: add an actor and two labels", async () => {
-    await page.click('a[data-view="settings"]');
+    await page.click('a[href="#/settings"]');
     await page.waitForSelector("text=Actors");
     await page.fill('[aria-label="New actor\'s name, such as Coder"]', "Coder");
     await page.click("text=Add actor");
@@ -113,7 +118,7 @@ try {
     await page.waitForSelector(".label.red");
   });
   await step("add two tickets on the board", async () => {
-    await page.click('a[data-view="board"]');
+    await page.click('.side-row a[href="#/board/TLK"]');
     await page.waitForSelector(".column");
     for (const [i, title] of ["Voice notes on the phone", "Fix the crash on send"].entries()) {
       await page.fill('[aria-label="New ticket"]', title);
@@ -161,7 +166,7 @@ try {
     const asked = await (
       await post("/pair", { host: "Coding agent", effects: ["read", "write"] })
     ).json();
-    await page.click('a[data-view="connections"]');
+    await page.click('a[href="#/connections"]');
     await page.waitForSelector("text=Coding agent");
     await shot("connections");
     await page.click("text=Approve");
@@ -169,7 +174,7 @@ try {
     key = (await (await post(`/pair/${asked.id}/claim`, { claim: asked.claim })).json()).token;
   });
   await step("the agent's work shows on the board as it happens", async () => {
-    await page.click('a[data-view="board"]');
+    await page.click('.side-row a[href="#/board/TLK"]');
     await page.waitForSelector(".column");
     await agent("tickets__ticket-claim", { ticket: "TLK-1" });
     await agent("comments__comment-add", {
@@ -185,6 +190,23 @@ try {
     await page.waitForSelector(".card.blocked");
   });
   await shot("board");
+  await step(
+    "the Overview lines up every project's tickets by kind; search narrows it",
+    async () => {
+      await page.click('a[href="#/overview"]');
+      await page.waitForSelector(".column-head >> text=waiting");
+      if ((await count(".card")) !== 3) throw new Error("not three tickets");
+      await page.fill('[aria-label="Search tickets"]', "crash");
+      await page.press('[aria-label="Search tickets"]', "Enter");
+      await until(() => document.querySelectorAll(".card").length === 1);
+      await shot("overview");
+      await page.fill('[aria-label="Search tickets"]', "");
+      await page.press('[aria-label="Search tickets"]', "Enter");
+      await until(() => document.querySelectorAll(".card").length === 3);
+      await page.click('.side-row a[href="#/board/TLK"]');
+      await page.waitForSelector(".column-head >> text=Review");
+    },
+  );
   await step("the ticket shows the agent's comment and its changes", async () => {
     await page.click("text=Voice notes on the phone");
     await page.waitForSelector(".agent");
@@ -228,7 +250,7 @@ try {
     await page.waitForSelector(".column-head");
   });
   await step("inbox: capture an item; with no steps it lands as received", async () => {
-    await page.click('a[data-view="inbox"]');
+    await page.click('a[href="#/inbox"]');
     await page.waitForSelector("text=No steps yet");
     await page.fill(
       '[aria-label="A new idea or request"]',
@@ -267,25 +289,25 @@ try {
     await page.waitForSelector("text=Open TLK-4");
   });
   await step("archive a ticket, then restore it from the Archive", async () => {
-    await page.click('a[data-view="board"]');
+    await page.click('.side-row a[href="#/board/TLK"]');
     await page.waitForSelector(".column");
     await page.click("text=Show the recording length");
     await page.waitForSelector("#ticket[open]");
     await page.click("#tk-actions >> text=Archive");
     await page.waitForSelector("#tk-actions >> text=Restore");
     await page.click("#tk-close");
-    await page.click('a[data-view="archive"]');
+    await page.click('a[href="#/archive"]');
     await page.waitForSelector("td >> text=Show the recording length");
     await page.click("td >> text=Restore");
     await page.waitForSelector("text=Nothing here");
   });
   await step("the Changes screen lists who did what", async () => {
-    await page.click('a[data-view="changes"]');
+    await page.click('a[href="#/changes"]');
     await page.waitForSelector("text=restored TLK-3");
     await page.waitForSelector("td >> text=Coder");
   });
   await step("revoke the agent; it is cut off", async () => {
-    await page.click('a[data-view="connections"]');
+    await page.click('a[href="#/connections"]');
     await page.click("text=Revoke");
     await page.waitForSelector("td >> text=revoked");
     const cut = await agent("tickets__work-find", {}).then(
@@ -296,7 +318,8 @@ try {
   });
   await step("at phone width the page does not scroll sideways", async () => {
     await page.setViewportSize({ width: 390, height: 800 });
-    await page.click('a[data-view="board"]');
+    await page.click("#menu");
+    await page.click('.side-row a[href="#/board/TLK"]');
     await page.waitForSelector(".column");
     const wide = await page.evaluate(
       () => document.documentElement.scrollWidth > window.innerWidth + 1,

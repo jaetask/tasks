@@ -1,7 +1,8 @@
 // Expect tests: each .json file in a suite folder is an input; its approved
 // output sits beside it as name.expect.md. Run `npm run expect -- --update`
 // to write new output, then read it before committing.
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import { contract } from "@jaetask/open-agent-kit";
 import { snap, table } from "@jaetask/snap";
 import { domains } from "../src/domains.js";
@@ -32,11 +33,11 @@ const failed = await snap([
     render: runInbox,
   },
   {
-    // Input: { "script": path }. Output: every Action the page's script
-    // calls, and whether Tasks has it.
+    // Input: { "folder": path }. Output: every Action the page's scripts
+    // call, and whether Tasks has it.
     dir: "expect/page",
     render: (input) => {
-      const { script } = JSON.parse(input) as { script: string };
+      const { folder } = JSON.parse(input) as { folder: string };
       const provided = domains();
       const effects = new Map(
         provided.flatMap(({ domain }) =>
@@ -44,9 +45,11 @@ const failed = await snap([
         ),
       );
       const names = provided.map((p) => p.domain.name).join("|");
-      const called = readFileSync(script, "utf8").matchAll(
-        new RegExp(`"((?:${names})\\.[a-z-]+)"`, "g"),
-      );
+      const scripts = readdirSync(folder)
+        .filter((file) => file.endsWith(".js"))
+        .map((file) => readFileSync(join(folder, file), "utf8"))
+        .join("\n");
+      const called = scripts.matchAll(new RegExp(`"((?:${names})\\.[a-z-]+)"`, "g"));
       const unique = [...new Set([...called].map((m) => m[1] as string))].sort();
       return table(
         ["action the page calls", "effect"],

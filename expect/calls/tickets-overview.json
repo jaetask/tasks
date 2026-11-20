@@ -1,0 +1,32 @@
+{
+  "steps": [
+    { "call": "catalog.actor-create", "input": { "name": "Coder" } },
+    { "call": "catalog.project-create", "input": { "name": "Talk", "prefix": "TLK" } },
+    { "call": "catalog.project-create", "input": { "name": "Money", "prefix": "MNY" } },
+    {
+      "call": "catalog.column-add",
+      "input": { "project": "MNY", "name": "Sign-off", "kind": "waiting" }
+    },
+    { "call": "tickets.ticket-create", "input": { "project": "TLK", "title": "Voice notes" } },
+    {
+      "call": "tickets.ticket-create",
+      "input": {
+        "project": "TLK",
+        "title": "Crash on send",
+        "description": "A voice note crashes the app."
+      }
+    },
+    { "call": "tickets.ticket-create", "input": { "project": "MNY", "title": "Export to CSV" } },
+    { "call": "tickets.ticket-create", "input": { "project": "MNY", "title": "Archived one" } },
+    { "as": "a1", "call": "tickets.ticket-claim", "input": { "ticket": "TLK-2" } },
+    { "as": "a1", "call": "tickets.ticket-move", "input": { "ticket": "MNY-1", "column": "c9" } },
+    { "as": "a1", "call": "tickets.ticket-archive", "input": { "ticket": "MNY-2" } },
+    { "as": "a1", "call": "tickets.overview-read" },
+    { "as": "a1", "call": "tickets.overview-read", "input": { "text": "voice" } },
+    { "as": "a1", "call": "tickets.overview-read", "input": { "assignee": "a1" } },
+    { "as": "a1", "call": "tickets.board-read", "input": { "project": "TLK", "assignee": null } },
+    { "as": "a1", "call": "tickets.board-read", "input": { "project": "TLK", "text": "tlk-2" } },
+    { "call": "catalog.project-archive", "input": { "project": "MNY" } },
+    { "as": "a1", "call": "tickets.overview-read" }
+  ]
+}

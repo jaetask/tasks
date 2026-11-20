@@ -19,7 +19,8 @@
 | tickets.work-find | read | tickets | Find work to do: open tickets in to-do columns that are not blocked and are assigned to you or to nobody, oldest first. |
 | tickets.ticket-find | read | tickets | Find tickets, oldest first. Every filter is optional; a column's kind says what the column means. |
 | tickets.ticket-read | read | ticket | Read one ticket. |
-| tickets.board-read | read |  | Read a project's board: its columns in order, each with its open tickets. |
+| tickets.board-read | read |  | Read a project's board: its columns in order, each with its open tickets. Can be narrowed by words or by who a ticket is assigned to. |
+| tickets.overview-read | read |  | Read the open tickets of every project, lined up by column kind: to do, doing, waiting, done. Can be narrowed like a board. |
 | tickets.ticket-create | write | ticket-changed | Create a ticket. It starts in the project's first to-do column unless you name a column. |
 | tickets.ticket-claim | write | ticket-changed | Claim a ticket: assign it to yourself and move it to the first doing column. |
 | tickets.ticket-move | write | ticket-changed | Move a ticket to any column of its board. |
@@ -119,7 +120,8 @@ Tools:
 - tickets__work-find (reads): Find work to do: open tickets in to-do columns that are not blocked and are assigned to you or to nobody, oldest first.
 - tickets__ticket-find (reads): Find tickets, oldest first. Every filter is optional; a column's kind says what the column means.
 - tickets__ticket-read (reads): Read one ticket.
-- tickets__board-read (reads): Read a project's board: its columns in order, each with its open tickets.
+- tickets__board-read (reads): Read a project's board: its columns in order, each with its open tickets. Can be narrowed by words or by who a ticket is assigned to.
+- tickets__overview-read (reads): Read the open tickets of every project, lined up by column kind: to do, doing, waiting, done. Can be narrowed like a board.
 - tickets__ticket-create (changes): Create a ticket. It starts in the project's first to-do column unless you name a column.
 - tickets__ticket-claim (changes): Claim a ticket: assign it to yourself and move it to the first doing column.
 - tickets__ticket-move (changes): Move a ticket to any column of its board.
@@ -230,6 +232,17 @@ A tool that changes something after the person says yes waits for them; tell the
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "properties": {
+    "text": {
+      "description": "Words to look for in the id, title and description.",
+      "type": "string"
+    },
+    "assignee": {
+      "description": "An actor id, or null for tickets assigned to nobody.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
     "project": {
       "type": "string",
       "description": "A project id, like TLK."
@@ -238,6 +251,28 @@ A tool that changes something after the person says yes waits for them; tell the
   "required": [
     "project"
   ]
+}
+```
+
+#### tickets.overview-read
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "text": {
+      "description": "Words to look for in the id, title and description.",
+      "type": "string"
+    },
+    "assignee": {
+      "description": "An actor id, or null for tickets assigned to nobody.",
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  }
 }
 ```
 

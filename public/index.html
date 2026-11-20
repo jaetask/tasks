@@ -10,17 +10,13 @@
 <script type="module" src="app.js"></script>
 </head>
 <body>
+<aside id="side" class="side" hidden></aside>
+
 <header class="bar">
   <div class="bar-inner">
-    <span class="brand">Tasks</span>
-    <nav id="nav" class="nav" aria-label="Screens" hidden>
-      <a href="#/board" data-view="board">Board</a>
-      <a href="#/inbox" data-view="inbox">Inbox</a>
-      <a href="#/archive" data-view="archive">Archive</a>
-      <a href="#/changes" data-view="changes">Changes</a>
-      <a href="#/connections" data-view="connections">Connections<span id="waiting" class="count" hidden></span></a>
-      <a href="#/settings" data-view="settings">Settings</a>
-    </nav>
+    <button type="button" id="menu" class="menu" hidden>Menu</button>
+    <span class="brand bar-brand">Tasks</span>
+    <span class="grow"></span>
     <button type="button" id="sign-out" class="link" hidden>Sign out</button>
   </div>
 </header>

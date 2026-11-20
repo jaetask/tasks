@@ -111,16 +111,50 @@ const projectCreate = write({
   },
 });
 
-const projectRename = write({
-  name: "project-rename",
-  description: "Rename a project. Its prefix and ticket ids stay the same.",
-  input: z.object({ project: z.string(), name }),
+const projectEdit = write({
+  name: "project-edit",
+  description:
+    "Change a project's name, its icon (an emoji, or empty for none) or its colour. Its prefix and ticket ids stay the same.",
+  input: z.object({
+    project: z.string(),
+    name: name.optional(),
+    icon: z.string().trim().max(16).optional(),
+    colour: Colour.optional(),
+  }),
   output: Project,
-  run: ({ project: id, name }, { catalog, log }) => {
-    const before = catalog.project(id).name;
-    const project = catalog.renameProject(id, name);
-    log(`renamed project ${before} to ${name}`, { kind: "updated", subject: "project", id });
+  run: ({ project: id, ...patch }, { catalog, log }) => {
+    const before = catalog.project(id);
+    const project = catalog.editProject(id, patch);
+    const renamed = patch.name !== undefined && patch.name !== before.name;
+    log(
+      renamed
+        ? `renamed project ${before.name} to ${project.name}`
+        : `changed how project ${project.name} looks`,
+      { kind: "updated", subject: "project", id },
+    );
     return project;
+  },
+});
+
+const projectMove = write({
+  name: "project-move",
+  description: "Move a project to another place in the list of projects.",
+  input: z.object({
+    project: z.string(),
+    before: z
+      .string()
+      .optional()
+      .describe("The id of the project to put it before. Last if left out."),
+  }),
+  output: z.array(Project),
+  run: ({ project: id, before }, { catalog, log }) => {
+    const projects = catalog.moveProject(id, before);
+    log(`moved project ${catalog.project(id).name} in the list`, {
+      kind: "updated",
+      subject: "project",
+      id,
+    });
+    return projects;
   },
 });
 
@@ -295,7 +329,8 @@ export const catalogDomain = defineDomain<CatalogDeps>({
     actorArchive,
     actorRestore,
     projectCreate,
-    projectRename,
+    projectEdit,
+    projectMove,
     projectArchive,
     projectRestore,
     columnAdd,

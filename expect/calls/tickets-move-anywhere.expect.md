@@ -186,10 +186,10 @@
 
 ### Projects
 
-| id | name | archived | columns |
-| --- | --- | --- | --- |
-| TLK | Talk |  | c1 To do (todo) · c4 Done (done) |
-| MNY | Money |  | c5 To do (todo) · c6 Doing (doing) · c7 Review (waiting) · c8 Done (done) |
+| id | name | icon | archived | columns |
+| --- | --- | --- | --- | --- |
+| TLK | Talk | teal |  | c1 To do (todo) · c4 Done (done) |
+| MNY | Money | teal |  | c5 To do (todo) · c6 Doing (doing) · c7 Review (waiting) · c8 Done (done) |
 
 ### Labels
 

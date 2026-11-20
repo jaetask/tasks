@@ -4,7 +4,7 @@
     { "call": "catalog.project-create", "input": { "name": "Talk two", "prefix": "TLK" } },
     { "call": "catalog.project-create", "input": { "name": "Lower", "prefix": "tlk" } },
     { "call": "catalog.project-create", "input": { "name": "  ", "prefix": "EMP" } },
-    { "call": "catalog.project-rename", "input": { "project": "NOPE", "name": "x" } },
+    { "call": "catalog.project-edit", "input": { "project": "NOPE", "name": "x" } },
     { "call": "catalog.actor-create", "input": { "name": "Coder" } },
     { "call": "catalog.actor-create", "input": { "name": "coder" } },
     { "call": "catalog.actor-archive", "input": { "actor": "owner" } },
@@ -20,7 +20,7 @@
       "input": { "project": "TLK", "name": "Later", "kind": "someday" }
     },
     {
-      "call": "catalog.project-rename",
+      "call": "catalog.project-edit",
       "id": "c1",
       "input": { "project": "TLK", "name": "Changed" }
     }

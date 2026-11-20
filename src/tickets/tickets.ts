@@ -3,7 +3,7 @@
 // column, and archived or canceled without losing its column.
 import type { DatabaseSync } from "node:sqlite";
 import { z } from "zod";
-import { type Catalog, Column, Kind, Label } from "../catalog/catalog.js";
+import { type Catalog, Column, KINDS, Kind, Label } from "../catalog/catalog.js";
 import { nextNumber } from "../ids.js";
 import type { Rows } from "../journal.js";
 import { Refusal } from "../refusal.js";
@@ -36,6 +36,22 @@ export const Board = z.object({
 });
 export type Board = z.infer<typeof Board>;
 
+export const Overview = z.object({
+  kinds: z.array(z.object({ kind: Kind, tickets: z.array(Ticket) })),
+});
+export type Overview = z.infer<typeof Overview>;
+
+/** Narrows a board or the overview to some of its tickets. */
+export const Narrow = z.object({
+  text: z.string().optional().describe("Words to look for in the id, title and description."),
+  assignee: z
+    .string()
+    .nullable()
+    .optional()
+    .describe("An actor id, or null for tickets assigned to nobody."),
+});
+export type Narrow = z.infer<typeof Narrow>;
+
 export const Find = z.object({
   project: z.string().optional(),
   kind: Kind.optional(),
@@ -53,7 +69,9 @@ export type Find = z.infer<typeof Find>;
 
 export type Tickets = {
   get(id: string): Ticket;
-  board(project: string): Board;
+  board(project: string, narrow?: Narrow): Board;
+  /** The open tickets of every project that is not archived, lined up by column kind. */
+  overview(narrow?: Narrow): Overview;
   find(filter: Find): Ticket[];
   create(
     by: string,
@@ -167,13 +185,42 @@ export function sqliteTickets(
     if (!rows.get("ticket_labels", id)) rows.insert("ticket_labels", { id, ticket, label });
   };
 
+  const narrowed = (all: TicketRow[], narrow: Narrow = {}) => {
+    const words = (narrow.text ?? "").toLowerCase().split(/\s+/).filter(Boolean);
+    return all
+      .filter((t) => narrow.assignee === undefined || t.assignee === narrow.assignee)
+      .filter((t) =>
+        words.every((w) => `${t.id} ${t.title} ${t.description}`.toLowerCase().includes(w)),
+      );
+  };
+
   return {
     get,
-    board: (projectId) => {
+    overview: (narrow) => {
+      const active = catalog
+        .read()
+        .projects.filter((p) => !p.archived)
+        .map((p) => p.id);
+      const all = narrowed(
+        db
+          .prepare("SELECT * FROM tickets WHERE state = 'open' ORDER BY created_at, number")
+          .all() as TicketRow[],
+        narrow,
+      )
+        .filter((t) => active.includes(t.project))
+        .map(toTicket);
+      return {
+        kinds: KINDS.map((kind) => ({ kind, tickets: all.filter((t) => t.column.kind === kind) })),
+      };
+    },
+    board: (projectId, narrow) => {
       const project = catalog.project(projectId);
-      const tickets = db
-        .prepare("SELECT * FROM tickets WHERE project = ? AND state = 'open' ORDER BY number")
-        .all(projectId) as TicketRow[];
+      const tickets = narrowed(
+        db
+          .prepare("SELECT * FROM tickets WHERE project = ? AND state = 'open' ORDER BY number")
+          .all(projectId) as TicketRow[],
+        narrow,
+      );
       return {
         project: { id: project.id, name: project.name },
         columns: project.columns.map((c) => ({

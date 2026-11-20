@@ -84,29 +84,102 @@ p {
   font-weight: 700;
   font-size: 1.1rem;
 }
-.nav {
-  display: flex;
-  gap: 4px;
-  flex: 1;
-  overflow-x: auto;
+/* the sidebar: a plain list beside every screen */
+body {
+  padding-left: 220px;
 }
-.nav a {
+body:has(.side[hidden]) {
+  padding-left: 0;
+}
+.side {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: 220px;
+  background: var(--panel);
+  border-right: 1px solid var(--line);
+  padding: 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  z-index: 8;
+}
+.side nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.side-bottom {
+  margin-top: auto;
+  border-top: 1px solid var(--line);
+  padding-top: 8px;
+}
+.side a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   color: var(--muted);
   text-decoration: none;
   padding: 6px 10px;
   border-radius: 6px;
   font-weight: 500;
-  white-space: nowrap;
 }
-.nav a:hover,
-.nav a:focus-visible {
+.side a:hover,
+.side a:focus-visible {
   background: var(--sunk);
   color: var(--ink);
   outline: none;
 }
-.nav a.on {
+.side a.on {
   background: var(--teal-soft);
   color: var(--teal);
+}
+.side-heading {
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  padding: 10px 10px 2px;
+}
+.side-row {
+  display: flex;
+  align-items: center;
+}
+.side-sub {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-left: 30px;
+}
+.project-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  flex: none;
+}
+.menu,
+.bar-brand {
+  display: none;
+}
+@media (max-width: 760px) {
+  body {
+    padding-left: 0;
+  }
+  .side {
+    display: none;
+    width: min(280px, 86vw);
+    box-shadow: 4px 0 16px rgba(0, 0, 0, 0.15);
+  }
+  .side.open {
+    display: flex;
+  }
+  .menu,
+  .bar-brand {
+    display: inline-block;
+  }
 }
 .count {
   display: inline-block;

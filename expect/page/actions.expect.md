@@ -24,7 +24,8 @@
 | catalog.label-rename | write |
 | catalog.project-archive | write |
 | catalog.project-create | write |
-| catalog.project-rename | write |
+| catalog.project-edit | write |
+| catalog.project-move | write |
 | catalog.project-restore | write |
 | comments.comment-add | write |
 | comments.comment-remove | write |
@@ -54,6 +55,7 @@
 | inbox.step-move | write |
 | inbox.step-remove | write |
 | tickets.board-read | read |
+| tickets.overview-read | read |
 | tickets.ticket-archive | write |
 | tickets.ticket-assign | write |
 | tickets.ticket-block | write |

@@ -1,7 +1,7 @@
 {
   "steps": [
     { "call": "catalog.project-create", "input": { "name": "Talk", "prefix": "TLK" } },
-    { "call": "catalog.project-rename", "input": { "project": "TLK", "name": "Talk app" } },
+    { "call": "catalog.project-edit", "input": { "project": "TLK", "name": "Talk app" } },
     { "call": "catalog.column-remove", "input": { "column": "c3" } },
     { "call": "catalog.label-create", "input": { "name": "bug", "colour": "red" } },
     { "call": "catalog.label-remove", "input": { "label": "l1" } },

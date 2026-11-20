@@ -63,10 +63,11 @@ export function renderData(db: DatabaseSync): string[] {
     "### Projects",
     catalog.projects.length
       ? table(
-          ["id", "name", "archived", "columns"],
+          ["id", "name", "icon", "archived", "columns"],
           catalog.projects.map((p) => [
             p.id,
             p.name,
+            `${p.icon} ${p.colour}`.trim(),
             p.archived ? "yes" : "",
             p.columns.map((c) => `${c.id} ${c.name} (${c.kind})`).join(" · "),
           ]),

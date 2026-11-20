@@ -35,7 +35,8 @@
 | catalog__actor-archive |  | Archive an actor. It can no longer act; what it did stays visible. |
 | catalog__actor-restore |  | Restore an archived actor. |
 | catalog__project-create |  | Create a project. Its board starts with the columns To do, Doing, Review and Done. |
-| catalog__project-rename |  | Rename a project. Its prefix and ticket ids stay the same. |
+| catalog__project-edit |  | Change a project's name, its icon (an emoji, or empty for none) or its colour. Its prefix and ticket ids stay the same. |
+| catalog__project-move |  | Move a project to another place in the list of projects. |
 | catalog__project-archive |  | Archive a project. Its tickets are kept and it can be restored. |
 | catalog__project-restore |  | Restore an archived project. |
 | catalog__column-add |  | Add a column to a project's board. |
@@ -50,7 +51,8 @@
 | tickets__work-find | yes | Find work to do: open tickets in to-do columns that are not blocked and are assigned to you or to nobody, oldest first. |
 | tickets__ticket-find | yes | Find tickets, oldest first. Every filter is optional; a column's kind says what the column means. |
 | tickets__ticket-read | yes | Read one ticket. |
-| tickets__board-read | yes | Read a project's board: its columns in order, each with its open tickets. |
+| tickets__board-read | yes | Read a project's board: its columns in order, each with its open tickets. Can be narrowed by words or by who a ticket is assigned to. |
+| tickets__overview-read | yes | Read the open tickets of every project, lined up by column kind: to do, doing, waiting, done. Can be narrowed like a board. |
 | tickets__ticket-create |  | Create a ticket. It starts in the project's first to-do column unless you name a column. |
 | tickets__ticket-claim |  | Claim a ticket: assign it to yourself and move it to the first doing column. |
 | tickets__ticket-move |  | Move a ticket to any column of its board. |

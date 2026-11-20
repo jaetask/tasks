@@ -1,16 +1,20 @@
 // Tasks' page. Plain script, no framework, no build step. Everything the
 // page reads or changes goes through POST /api/calls: the same Call pipeline
 // agents use. Text from the App is set as text; Cards arrive as escaped HTML.
-const $ = (id) => document.getElementById(id);
+import { $, button, fill, h, lineForm, select } from "./kit.js";
+import { drawSidebar } from "./shell.js";
+
 const OWNER = "owner";
 const KINDS = { todo: "to do", doing: "doing", waiting: "waiting", done: "done" };
 const COLOURS = ["teal", "plum", "red", "amber", "green", "grey"];
 const REACTIONS = ["👍", "👀", "✅"];
 
 const state = {
-  view: "board",
+  view: "overview",
   catalog: null,
   project: null,
+  text: "",
+  actor: "",
   editingColumns: false,
   ticket: null,
   editingTicket: false,
@@ -20,65 +24,6 @@ const state = {
   editingStep: null,
 };
 const imageData = new Map();
-
-// ---- small helpers ----
-
-function h(tag, props = {}, ...children) {
-  const node = document.createElement(tag);
-  for (const [key, value] of Object.entries(props)) {
-    if (value === undefined || value === false) continue;
-    if (key === "class") node.className = value;
-    else if (key === "text") node.textContent = value;
-    else if (key.startsWith("on")) node.addEventListener(key.slice(2), value);
-    else if (key in node) node[key] = value;
-    else node.setAttribute(key, value);
-  }
-  node.append(...children.flat().filter((c) => c !== null && c !== undefined && c !== false));
-  return node;
-}
-
-// Replaces an element's children, leaving out the empty ones.
-const fill = (id, ...children) =>
-  $(id).replaceChildren(
-    ...children.flat().filter((c) => c !== null && c !== undefined && c !== false && c !== ""),
-  );
-
-const button = (text, onclick, className = "") =>
-  h("button", { type: "button", class: className, text, onclick });
-
-function select(options, value, onchange, label) {
-  return h(
-    "select",
-    { onchange: (e) => onchange(e.target.value), "aria-label": label },
-    options.map(([v, text]) => h("option", { value: v, text, selected: v === value })),
-  );
-}
-
-// A one-line form: a text input and a button.
-function lineForm(placeholder, label, onsubmit, value = "") {
-  const input = h("input", {
-    type: "text",
-    placeholder,
-    value,
-    maxLength: 200,
-    "aria-label": placeholder,
-  });
-  return h(
-    "form",
-    {
-      class: "row grow",
-      onsubmit: (e) => {
-        e.preventDefault();
-        const text = input.value.trim();
-        // Emptied at once, so the page knows the owner is done typing here.
-        input.value = "";
-        if (text) onsubmit(text);
-      },
-    },
-    input,
-    h("button", { type: "submit", text: label }),
-  );
-}
 
 const when = (at) => new Date(at).toLocaleString([], { dateStyle: "medium", timeStyle: "short" });
 const actorName = (id) => state.catalog.actors.find((a) => a.id === id)?.name || id;
@@ -263,12 +208,95 @@ function columnView(column, index, columns) {
   return node;
 }
 
+// What the board and the overview are narrowed to, as the Actions take it.
+const narrow = () => ({
+  ...(state.text ? { text: state.text } : {}),
+  ...(state.actor === "" ? {} : { assignee: state.actor === "nobody" ? null : state.actor }),
+});
+
+// A search box and an actor filter, shared by the board and the overview.
+function narrowControls() {
+  const search = h("input", {
+    type: "text",
+    placeholder: "Search tickets",
+    value: state.text,
+    "aria-label": "Search tickets",
+  });
+  search.addEventListener("change", () => {
+    state.text = search.value.trim();
+    refresh();
+  });
+  const actors = state.catalog.actors.filter((a) => !a.archived);
+  return [
+    search,
+    select(
+      [["", "Anyone"], ["nobody", "Nobody"], ...actors.map((a) => [a.id, a.name])],
+      state.actor,
+      (actor) => {
+        state.actor = actor;
+        refresh();
+      },
+      "Assigned to",
+    ),
+  ];
+}
+
+async function overviewView() {
+  const projects = state.catalog.projects.filter((p) => !p.archived);
+  if (projects.length === 0) {
+    return [h("div", { class: "stack" }, newProjectPanel("Create your first project"))];
+  }
+  const overview = await read("tickets.overview-read", narrow());
+  if (!overview) return [];
+  // Dropping a ticket on a kind moves it to its own board's first column of that kind.
+  const drop = (kind) => (e) => {
+    e.preventDefault();
+    const id = e.dataTransfer.getData("text/plain");
+    const project = projects.find((p) => id.startsWith(`${p.id}-`));
+    const column = project?.columns.find((c) => c.kind === kind);
+    if (!id) return;
+    if (column) act("tickets.ticket-move", { ticket: id, column: column.id });
+    else showResult(`That ticket's board has no ${KINDS[kind]} column.`, true);
+  };
+  return [
+    h(
+      "div",
+      { class: "board-head" },
+      h("h2", { class: "grow", text: "Overview" }),
+      narrowControls(),
+    ),
+    h(
+      "div",
+      { class: "board" },
+      overview.kinds.map(({ kind, tickets }) =>
+        h(
+          "section",
+          {
+            class: "column",
+            "aria-label": KINDS[kind],
+            ondragover: (e) => e.preventDefault(),
+            ondrop: drop(kind),
+          },
+          h(
+            "div",
+            { class: "column-head" },
+            h("h3", { text: KINDS[kind] }),
+            h("span", { class: `kind ${kind}`, text: String(tickets.length) }),
+          ),
+          tickets.map(ticketCard),
+          tickets.length === 0 && h("span", { class: "caption", text: "No tickets." }),
+        ),
+      ),
+    ),
+  ];
+}
+
 async function boardView() {
   const projects = state.catalog.projects.filter((p) => !p.archived);
-  if (!projects.some((p) => p.id === state.project)) state.project = projects[0]?.id ?? null;
   if (!state.project)
     return [h("div", { class: "stack" }, newProjectPanel("Create your first project"))];
-  const board = await read("tickets.board-read", { project: state.project });
+  const project = projects.find((p) => p.id === state.project);
+  const board = await read("tickets.board-read", { project: state.project, ...narrow() });
   if (!board) return [];
   const missing = Object.keys(KINDS).filter((k) => !board.columns.some((c) => c.kind === k));
   const warn = {
@@ -282,21 +310,8 @@ async function boardView() {
     h(
       "div",
       { class: "board-head" },
-      h(
-        "div",
-        { class: "tabs" },
-        projects.map((p) =>
-          h("button", {
-            type: "button",
-            text: p.name,
-            "aria-pressed": String(p.id === state.project),
-            onclick: () => {
-              state.project = p.id;
-              refresh();
-            },
-          }),
-        ),
-      ),
+      h("h2", { class: "grow", text: `${project.icon} ${project.name} · Board`.trim() }),
+      narrowControls(),
       lineForm("New ticket", "Add", (title) =>
         act("tickets.ticket-create", { project: state.project, title }),
       ),
@@ -1422,7 +1437,19 @@ async function settingsView() {
               {},
               h("span", { class: "mono", text: p.id }),
               rename("Name", p.name, (name) =>
-                act("catalog.project-rename", { project: p.id, name }),
+                act("catalog.project-edit", { project: p.id, name }),
+              ),
+              lineForm(
+                "Icon, an emoji",
+                "Set icon",
+                (icon) => act("catalog.project-edit", { project: p.id, icon }),
+                p.icon,
+              ),
+              select(
+                COLOURS.map((c) => [c, c]),
+                p.colour,
+                (colour) => act("catalog.project-edit", { project: p.id, colour }),
+                "Colour",
               ),
               p.archived
                 ? button("Restore", () => act("catalog.project-restore", { project: p.id }))
@@ -1478,6 +1505,7 @@ async function settingsView() {
 // ---- the page ----
 
 const VIEWS = {
+  overview: overviewView,
   board: boardView,
   archive: archiveView,
   inbox: inboxView,
@@ -1486,8 +1514,11 @@ const VIEWS = {
   settings: settingsView,
 };
 
+// The screens that show one project; their address ends in the project's id.
+const PROJECT_VIEWS = ["board"];
+
 function showSignIn() {
-  for (const id of ["view", "setup", "nav", "sign-out"]) $(id).hidden = true;
+  for (const id of ["view", "setup", "side", "menu", "sign-out"]) $(id).hidden = true;
   closeTicket();
   $("sign-in").hidden = false;
 }
@@ -1516,19 +1547,26 @@ async function refresh({ gentle = false } = {}) {
   $("sign-out").hidden = false;
   const named = catalog.actors.find((a) => a.id === OWNER)?.name !== "";
   $("setup").hidden = named;
-  $("nav").hidden = !named;
+  $("side").hidden = !named;
+  $("menu").hidden = !named;
   $("view").hidden = !named;
   if (!named) return;
-  const view = location.hash.replace("#/", "");
-  state.view = view in VIEWS ? view : "board";
-  for (const link of $("nav").querySelectorAll("a")) {
-    link.classList.toggle("on", link.dataset.view === state.view);
+  // The address says which screen, and for a project's screens which project.
+  const [view, project] = location.hash.replace("#/", "").split("/");
+  const active = catalog.projects.filter((p) => !p.archived);
+  state.view = view in VIEWS ? view : "overview";
+  if (PROJECT_VIEWS.includes(state.view)) {
+    state.project = active.some((p) => p.id === project) ? project : (active[0]?.id ?? null);
   }
   const nodes = await VIEWS[state.view]();
   const connections = (await read("connections.connection-list")) ?? [];
-  const asking = connections.filter((c) => c.state === "pairing").length;
-  $("waiting").hidden = asking === 0;
-  $("waiting").textContent = String(asking);
+  drawSidebar({
+    projects: active,
+    view: state.view,
+    project: PROJECT_VIEWS.includes(state.view) ? state.project : null,
+    counts: { connections: connections.filter((c) => c.state === "pairing").length },
+    moveProject: (id, before) => act("catalog.project-move", { project: id, before }),
+  });
   if (gentle && typing()) {
     waitingToRefresh = true;
     return;
@@ -1604,3 +1642,6 @@ if (session.signedIn) {
 } else {
   showSignIn();
 }
+
+// At phone width the sidebar is a drawer: Menu opens it, and going anywhere closes it.
+$("menu").addEventListener("click", () => $("side").classList.toggle("open"));

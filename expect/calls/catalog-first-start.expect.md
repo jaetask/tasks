@@ -48,6 +48,8 @@
     {
       "id": "TLK",
       "name": "Talk",
+      "icon": "",
+      "colour": "teal",
       "archived": false,
       "columns": [
         {
@@ -93,9 +95,9 @@
 
 ### Projects
 
-| id | name | archived | columns |
-| --- | --- | --- | --- |
-| TLK | Talk |  | c1 To do (todo) · c2 Doing (doing) · c3 Review (waiting) · c4 Done (done) |
+| id | name | icon | archived | columns |
+| --- | --- | --- | --- | --- |
+| TLK | Talk | teal |  | c1 To do (todo) · c2 Doing (doing) · c3 Review (waiting) · c4 Done (done) |
 
 ### Labels
 

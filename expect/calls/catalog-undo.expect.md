@@ -9,7 +9,7 @@
 ### Steps
 
 1. owner calls catalog.project-create {"name":"Talk","prefix":"TLK"} → succeeded; created project TLK
-2. owner calls catalog.project-rename {"project":"TLK","name":"Talk app"} → succeeded; updated project TLK
+2. owner calls catalog.project-edit {"project":"TLK","name":"Talk app"} → succeeded; updated project TLK
 3. owner calls catalog.column-remove {"column":"c3"} → succeeded; deleted column c3
 4. owner calls catalog.label-create {"name":"bug","colour":"red"} → succeeded; created label l1
 5. owner calls catalog.label-remove {"label":"l1"} → succeeded; deleted label l1
@@ -72,9 +72,9 @@
 
 ### Projects
 
-| id | name | archived | columns |
-| --- | --- | --- | --- |
-| TLK | Talk app |  | c1 To do (todo) · c2 Working (doing) · c3 Review (waiting) · c4 Done (done) |
+| id | name | icon | archived | columns |
+| --- | --- | --- | --- | --- |
+| TLK | Talk app | teal |  | c1 To do (todo) · c2 Working (doing) · c3 Review (waiting) · c4 Done (done) |
 
 ### Labels
 
@@ -99,7 +99,7 @@ None.
 | id | at | actor | action | summary | ticket | undone by |
 | --- | --- | --- | --- | --- | --- | --- |
 | h1 | 09:01 | owner | catalog.project-create | created project Talk (TLK) |  |  |
-| h2 | 09:02 | owner | catalog.project-rename | renamed project Talk to Talk app |  |  |
+| h2 | 09:02 | owner | catalog.project-edit | renamed project Talk to Talk app |  |  |
 | h3 | 09:03 | owner | catalog.column-remove | removed column Review from TLK; its tickets moved to Doing |  | h7 |
 | h4 | 09:04 | owner | catalog.label-create | created label bug |  |  |
 | h5 | 09:05 | owner | catalog.label-remove | removed label bug |  | h6 |

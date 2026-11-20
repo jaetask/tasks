@@ -22,7 +22,8 @@
 | catalog.actor-archive | write | catalog-changed | Archive an actor. It can no longer act; what it did stays visible. |
 | catalog.actor-restore | write | catalog-changed | Restore an archived actor. |
 | catalog.project-create | write | catalog-changed | Create a project. Its board starts with the columns To do, Doing, Review and Done. |
-| catalog.project-rename | write | catalog-changed | Rename a project. Its prefix and ticket ids stay the same. |
+| catalog.project-edit | write | catalog-changed | Change a project's name, its icon (an emoji, or empty for none) or its colour. Its prefix and ticket ids stay the same. |
+| catalog.project-move | write | catalog-changed | Move a project to another place in the list of projects. |
 | catalog.project-archive | write | catalog-changed | Archive a project. Its tickets are kept and it can be restored. |
 | catalog.project-restore | write | catalog-changed | Restore an archived project. |
 | catalog.column-add | write | catalog-changed | Add a column to a project's board. |
@@ -61,7 +62,8 @@ Tools:
 - catalog__actor-archive (changes): Archive an actor. It can no longer act; what it did stays visible.
 - catalog__actor-restore (changes): Restore an archived actor.
 - catalog__project-create (changes): Create a project. Its board starts with the columns To do, Doing, Review and Done.
-- catalog__project-rename (changes): Rename a project. Its prefix and ticket ids stay the same.
+- catalog__project-edit (changes): Change a project's name, its icon (an emoji, or empty for none) or its colour. Its prefix and ticket ids stay the same.
+- catalog__project-move (changes): Move a project to another place in the list of projects.
 - catalog__project-archive (changes): Archive a project. Its tickets are kept and it can be restored.
 - catalog__project-restore (changes): Restore an archived project.
 - catalog__column-add (changes): Add a column to a project's board.
@@ -189,7 +191,7 @@ A tool that changes something after the person says yes waits for them; tell the
 }
 ```
 
-#### catalog.project-rename
+#### catalog.project-edit
 
 ```json
 {
@@ -203,11 +205,46 @@ A tool that changes something after the person says yes waits for them; tell the
       "type": "string",
       "minLength": 1,
       "maxLength": 60
+    },
+    "icon": {
+      "type": "string",
+      "maxLength": 16
+    },
+    "colour": {
+      "type": "string",
+      "enum": [
+        "teal",
+        "plum",
+        "red",
+        "amber",
+        "green",
+        "grey"
+      ]
     }
   },
   "required": [
-    "project",
-    "name"
+    "project"
+  ]
+}
+```
+
+#### catalog.project-move
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string"
+    },
+    "before": {
+      "description": "The id of the project to put it before. Last if left out.",
+      "type": "string"
+    }
+  },
+  "required": [
+    "project"
   ]
 }
 ```

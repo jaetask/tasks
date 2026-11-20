@@ -32,10 +32,10 @@
 
 ### Projects
 
-| id | name | archived | columns |
-| --- | --- | --- | --- |
-| TLK | Talk |  | c1 To do (todo) · c2 Doing (doing) · c3 Code review (waiting) · c6 Sign-off (done) · c4 Done (done) |
-| MNY | Money |  | c10 Done (done) |
+| id | name | icon | archived | columns |
+| --- | --- | --- | --- | --- |
+| TLK | Talk | teal |  | c1 To do (todo) · c2 Doing (doing) · c3 Code review (waiting) · c6 Sign-off (done) · c4 Done (done) |
+| MNY | Money | teal |  | c10 Done (done) |
 
 ### Labels
 

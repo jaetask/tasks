@@ -5,7 +5,7 @@ import { defineCard, defineDomain } from "@jaetask/open-agent-kit";
 import { z } from "zod";
 import { type Base, readAction, writeAction } from "../actions.js";
 import { type Catalog, OWNER } from "../catalog/catalog.js";
-import { Board, Find, Ticket, type Tickets } from "./tickets.js";
+import { Board, Find, Narrow, Overview, Ticket, type Tickets } from "./tickets.js";
 
 export type TicketsDeps = Base & {
   catalog: Catalog;
@@ -91,10 +91,20 @@ function write<Input extends z.ZodType>(definition: {
 
 const boardRead = read({
   name: "board-read",
-  description: "Read a project's board: its columns in order, each with its open tickets.",
-  input: z.object({ project: z.string().describe("A project id, like TLK.") }),
+  description:
+    "Read a project's board: its columns in order, each with its open tickets. Can be narrowed by words or by who a ticket is assigned to.",
+  input: Narrow.extend({ project: z.string().describe("A project id, like TLK.") }),
   output: Board,
-  run: ({ project }, { tickets }) => tickets.board(project),
+  run: ({ project, ...narrow }, { tickets }) => tickets.board(project, narrow),
+});
+
+const overviewRead = read({
+  name: "overview-read",
+  description:
+    "Read the open tickets of every project, lined up by column kind: to do, doing, waiting, done. Can be narrowed like a board.",
+  input: Narrow,
+  output: Overview,
+  run: (narrow, { tickets }) => tickets.overview(narrow),
 });
 
 const ticketRead = read({
@@ -343,6 +353,7 @@ export const ticketsDomain = defineDomain<TicketsDeps>({
     ticketFind,
     ticketRead,
     boardRead,
+    overviewRead,
     ticketCreate,
     ticketClaim,
     ticketMove,
