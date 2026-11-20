@@ -2,6 +2,7 @@
 // rows; a comment is a card that holds its replies and a row to add one.
 
 import { InlineMarkdown } from "@jaetask/toolkit/app/review";
+import { AddReactionButton, CommentReactionChips } from "@jaetask/toolkit/suite";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,7 +22,6 @@ import {
   DropdownMenuTrigger,
 } from "@jaetask/toolkit/ui/dropdown-menu";
 import { Input } from "@jaetask/toolkit/ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "@jaetask/toolkit/ui/popover";
 import { Textarea } from "@jaetask/toolkit/ui/textarea";
 import {
   IconArrowUp,
@@ -29,7 +29,6 @@ import {
   IconCopy,
   IconDots,
   IconLink,
-  IconMoodPlus,
   IconPaperclip,
   IconPencil,
   IconPlus,
@@ -38,8 +37,6 @@ import {
 import { type ReactNode, useRef, useState } from "react";
 import { type Comment, type Conversation, OWNER, type Reply, type Ticket, when } from "./api.js";
 import { useApp } from "./app.js";
-
-const USUAL = ["👍", "👀", "✅"];
 
 /** How long ago, in the shortest form: now, 5m ago, 3h ago, 18d ago. */
 export function ago(at: string): string {
@@ -102,60 +99,29 @@ function Attach({ ticket }: { ticket: string }) {
   );
 }
 
-/** The reactions under a comment: a chip for each emoji with its count, then a button to add one. */
-function ReactionRow({ comment, used }: { comment: Reply; used: string[] }) {
-  const { act } = useApp();
-  const [adding, setAdding] = useState(false);
-  const toggle = (emoji: string) => {
-    const mine = comment.reactions.find((r) => r.emoji === emoji)?.actors.includes(OWNER) ?? false;
-    void act(mine ? "comments.reaction-remove" : "comments.reaction-add", {
-      comment: comment.id,
-      emoji,
-    });
-  };
-  const offered = [...new Set([...used, ...USUAL])];
+/** The reactions under a comment or a description: a pill for each emoji, then the add button. */
+export function ReactionRow({
+  reactions,
+  onToggle,
+}: {
+  reactions: { emoji: string; actors: string[] }[];
+  /** Adds the owner's reaction when `active`, takes it back when not. */
+  onToggle: (emoji: string, active: boolean) => void;
+}) {
+  const mine = (emoji: string) =>
+    reactions.find((r) => r.emoji === emoji)?.actors.includes(OWNER) ?? false;
   return (
     <div className="reactions flex flex-wrap items-center gap-1.5">
-      {comment.reactions.map((r) => (
-        <Button
-          key={r.emoji}
-          variant="outline"
-          aria-pressed={r.actors.includes(OWNER)}
-          aria-label={`${r.emoji} ${r.actors.length}`}
-          className={`reaction h-6 gap-1 rounded-full px-2 text-xs font-normal ${r.actors.includes(OWNER) ? "border-primary/40 bg-accent" : ""}`}
-          onClick={() => toggle(r.emoji)}
-        >
-          <span>{r.emoji}</span>
-          <span className="text-muted-foreground">{r.actors.length}</span>
-        </Button>
-      ))}
-      <Popover open={adding} onOpenChange={setAdding}>
-        <PopoverTrigger asChild>
-          <Button
-            variant="ghost"
-            aria-label="Add a reaction"
-            className={`size-6 rounded-full p-0 text-muted-foreground ${comment.reactions.length === 0 ? "opacity-0 focus-visible:opacity-100 group-hover/comment:opacity-100" : ""}`}
-          >
-            <IconMoodPlus size={16} aria-hidden />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent align="start" className="flex w-auto max-w-64 flex-wrap gap-1 p-2">
-          {offered.map((emoji) => (
-            <Button
-              key={emoji}
-              variant="ghost"
-              aria-label={`React with ${emoji}`}
-              className="size-8 p-0 text-base"
-              onClick={() => {
-                setAdding(false);
-                toggle(emoji);
-              }}
-            >
-              {emoji}
-            </Button>
-          ))}
-        </PopoverContent>
-      </Popover>
+      <CommentReactionChips
+        canReact
+        reactions={reactions.map((r) => ({
+          reaction: r.emoji,
+          count: r.actors.length,
+          reactedByMe: r.actors.includes(OWNER),
+        }))}
+        onToggle={onToggle}
+      />
+      <AddReactionButton onSelect={(emoji) => onToggle(emoji, !mine(emoji))} />
     </div>
   );
 }
@@ -164,13 +130,11 @@ function CommentBody({
   comment,
   root,
   replies,
-  used,
   canWrite,
 }: {
   comment: Reply;
   root?: Comment;
   replies?: Reply[];
-  used: string[];
   canWrite: boolean;
 }) {
   const { act, go, path } = useApp();
@@ -290,7 +254,17 @@ function CommentBody({
             )}
           </div>
         )}
-        {!comment.removed && <ReactionRow comment={comment} used={used} />}
+        {!comment.removed && (
+          <ReactionRow
+            reactions={comment.reactions}
+            onToggle={(emoji, active) =>
+              void act(active ? "comments.reaction-add" : "comments.reaction-remove", {
+                comment: comment.id,
+                emoji,
+              })
+            }
+          />
+        )}
       </div>
       <AlertDialog open={deleting} onOpenChange={setDeleting}>
         <AlertDialogContent>
@@ -391,15 +365,7 @@ function Write({
   );
 }
 
-function ThreadCard({
-  comment,
-  used,
-  canWrite,
-}: {
-  comment: Comment;
-  used: string[];
-  canWrite: boolean;
-}) {
+function ThreadCard({ comment, canWrite }: { comment: Comment; canWrite: boolean }) {
   const { act } = useApp();
   const [shown, setShown] = useState(false);
   if (comment.resolved && !shown) {
@@ -420,15 +386,9 @@ function ThreadCard({
   }
   return (
     <div className="thread divide-y rounded-xl border bg-card">
-      <CommentBody
-        comment={comment}
-        root={comment}
-        replies={comment.replies}
-        used={used}
-        canWrite={canWrite}
-      />
+      <CommentBody comment={comment} root={comment} replies={comment.replies} canWrite={canWrite} />
       {comment.replies.map((r) => (
-        <CommentBody key={r.id} comment={r} used={used} canWrite={canWrite} />
+        <CommentBody key={r.id} comment={r} canWrite={canWrite} />
       ))}
       {canWrite && !comment.resolved && (
         <Write
@@ -462,27 +422,12 @@ export function Activity({
 }) {
   const { act } = useApp();
   const entries = conversation?.entries ?? [];
-  // The emoji already used on this ticket come first when adding a reaction.
-  const used = [
-    ...new Set(
-      entries.flatMap((e) =>
-        e.type === "comment"
-          ? [e.comment, ...e.comment.replies].flatMap((c) => c.reactions.map((r) => r.emoji))
-          : [],
-      ),
-    ),
-  ];
   return (
     <section id="conversation" aria-label="Activity" className="grid gap-3">
       <h3 className="m-0 text-sm font-medium">Activity</h3>
       {entries.map((entry) =>
         entry.type === "comment" ? (
-          <ThreadCard
-            key={entry.comment.id}
-            comment={entry.comment}
-            used={used}
-            canWrite={canWrite}
-          />
+          <ThreadCard key={entry.comment.id} comment={entry.comment} canWrite={canWrite} />
         ) : (
           <div
             key={entry.change.id}
