@@ -351,6 +351,9 @@ const NAMED: Record<string, string> = {
   pink: "#c99b94", // toolkit-guard-allow
 };
 
+/** The swatch of a named colour, as hex. */
+export const namedColour = (name: string) => NAMED[name] ?? name;
+
 /** A project's colour as hex, and its icon name, whatever form they were stored in. */
 export const projectLook = (project: { icon: string; colour: string }) => ({
   projectIcon: (PROJECT_ICONS as readonly string[]).includes(project.icon)

@@ -1,6 +1,7 @@
 // The edit pages. Every one is the toolkit's EditFrame: Back at the top,
 // labelled rows, then Cancel and Save, which both return to where you were.
 import {
+  ColourSwatches,
   DEFAULT_PROJECT_COLOUR,
   EditFrame,
   ProjectIconPicker,
@@ -13,6 +14,8 @@ import { Textarea } from "@jaetask/toolkit/ui/textarea";
 import { type ReactNode, useState } from "react";
 import {
   type Actor,
+  COLOURS,
+  type Colour,
   type Column,
   type Connection,
   type Feature,
@@ -26,7 +29,7 @@ import {
 } from "./api.js";
 import { useApp, useRead } from "./app.js";
 import { CONDITIONS } from "./inbox.js";
-import { Choice, Choices, Picker, projectLook } from "./local.js";
+import { Choice, Choices, namedColour, Picker, projectLook } from "./local.js";
 
 /** Runs the changes of a Save; goes back only if none was refused. */
 function useSave(back: string) {
@@ -404,6 +407,7 @@ export function LabelEdit({ id }: { id: string | null }) {
   const { busy, save } = useSave(back);
   const label = catalog.labels.find((l) => l.id === id) as Label | undefined;
   const [name, setName] = useState(label?.name ?? "");
+  const [colour, setColour] = useState<Colour>(label?.colour ?? "blue");
   return (
     <EditFrame
       title={label ? `Edit the label ${label.name}` : "New label"}
@@ -413,9 +417,13 @@ export function LabelEdit({ id }: { id: string | null }) {
       saveLabel={label ? "Save" : "Add label"}
       onSave={() =>
         save(async () => {
-          if (!label) return (await act("catalog.label-create", { name, colour: "blue" })) !== null;
+          if (!label) return (await act("catalog.label-create", { name, colour })) !== null;
           if (name !== label.name) {
             if ((await act("catalog.label-rename", { label: label.id, name })) === null)
+              return false;
+          }
+          if (colour !== label.colour) {
+            if ((await act("catalog.label-colour-set", { label: label.id, colour })) === null)
               return false;
           }
           return true;
@@ -440,6 +448,15 @@ export function LabelEdit({ id }: { id: string | null }) {
     >
       <Row title="Name" line="Shown on tickets." htmlFor="name">
         <Input id="name" value={name} onChange={(e) => setName(e.target.value)} maxLength={60} />
+      </Row>
+      <Row title="Colour" line="The dot beside the label's name.">
+        <ColourSwatches
+          label="Label colour"
+          value={namedColour(colour)}
+          colours={COLOURS.map((c) => ({ name: c, value: namedColour(c) }))}
+          custom={false}
+          onChange={(hex) => setColour(COLOURS.find((c) => namedColour(c) === hex) ?? colour)}
+        />
       </Row>
     </EditFrame>
   );

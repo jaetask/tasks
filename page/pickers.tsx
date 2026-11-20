@@ -27,6 +27,7 @@ import {
 } from "@tabler/icons-react";
 import { type ReactNode, useEffect, useState } from "react";
 import type { Colour, Kind } from "./api.js";
+import { namedColour } from "./local.js";
 
 /** The small circle that says what a column means. A backlog ticket has the dotted one. */
 export function StatusIcon({ kind, backlog }: { kind: Kind; backlog?: boolean }) {
@@ -62,18 +63,14 @@ export function PriorityIcon({ priority }: { priority: keyof typeof PRIORITY_NAM
   return <IconLineDashed {...look} />;
 }
 
-const DOT: Record<Colour, string> = {
-  blue: "bg-blue-500",
-  teal: "bg-teal-500",
-  green: "bg-green-500",
-  amber: "bg-amber-500",
-  purple: "bg-purple-500",
-  pink: "bg-pink-500",
-};
-/** A label's tiny colour dot. */
+/** A label's tiny colour dot, in the colour its swatch shows. */
 export function LabelDot({ colour }: { colour: Colour }) {
   return (
-    <span aria-hidden className={`inline-block size-2 shrink-0 rounded-full ${DOT[colour]}`} />
+    <span
+      aria-hidden
+      className="inline-block size-2 shrink-0 rounded-full"
+      style={{ backgroundColor: namedColour(colour) }}
+    />
   );
 }
 

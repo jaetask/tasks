@@ -179,6 +179,8 @@ try {
     await page.locator("#labels").getByText("voice").waitFor();
     await link("New label").click();
     await page.fill("#name", "bug");
+    // A label's colour is chosen from swatches, never by name.
+    await button("green label colour").click();
     await button("Add label").click();
     await page.locator("#labels").getByText("bug").waitFor();
     await link("New location").click();
