@@ -117,8 +117,15 @@ try {
     await page.fill("#prefix", "mny");
     await button("Create project").click();
     await see("Each has its own board");
+    await open("/p/MNY/board");
+    await page.waitForSelector(".tk-column");
     await open("/p/TLK/board");
     await page.waitForSelector(".tk-column");
+    // Both projects have been visited, so both are open, each with its own screens.
+    await until(() => document.querySelectorAll('.tk-side a[href$="/intake"]').length === 2);
+    await shot("sidebar");
+    await button("Collapse Money").click();
+    await until(() => document.querySelectorAll('.tk-side a[href$="/intake"]').length === 1);
     await button("Expand Money").click();
     await until(() => document.querySelectorAll('.tk-side a[href$="/intake"]').length === 2);
     await open("/p/MNY/edit");

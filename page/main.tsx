@@ -94,6 +94,31 @@ const ICONS = {
   changes: icon("M12 7v5l3 2M4 12a8 8 0 1 0 3-6.2M4 4v4h4"),
 };
 
+// The projects this browser has been to, so that each stays open in the
+// sidebar beside the others. Remembered in this browser only.
+const VISITED = "tasks.projects.visited";
+function useVisited(here: string | undefined): string[] {
+  const [visited, setVisited] = useState<string[]>(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem(VISITED) ?? "[]");
+      return Array.isArray(stored) ? stored.filter((id) => typeof id === "string") : [];
+    } catch {
+      return [];
+    }
+  });
+  useEffect(() => {
+    if (!here || visited.includes(here)) return;
+    const next = [...visited, here];
+    setVisited(next);
+    try {
+      localStorage.setItem(VISITED, JSON.stringify(next));
+    } catch {
+      // Without storage the sidebar still works; it forgets on reload.
+    }
+  }, [here, visited]);
+  return here && !visited.includes(here) ? [...visited, here] : visited;
+}
+
 // ---------- Signing in, and the first start ----------
 
 function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
@@ -260,6 +285,7 @@ function Shell({ path, onSignOut }: { path: string; onSignOut: () => void }) {
   const here = top === "p" ? parts[1] : undefined;
   const screen = parts[2] ?? "board";
   const active = catalog.projects.filter((p) => !p.archived);
+  const visited = useVisited(here);
   const groups: Group[] = [
     {
       label: "Projects",
@@ -283,7 +309,8 @@ function Shell({ path, onSignOut }: { path: string; onSignOut: () => void }) {
         label: p.name,
         avatar: <Avatar name={p.name} colour={p.colour} {...(p.icon ? { emoji: p.icon } : {})} />,
         current: here === p.id,
-        defaultOpen: here === p.id,
+        // A project you have been to stays open until you close it.
+        defaultOpen: visited.includes(p.id),
         children: (
           <SideSection label={p.id}>
             {(
