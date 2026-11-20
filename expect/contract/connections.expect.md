@@ -76,10 +76,6 @@
     {
       "label": "May",
       "path": "may"
-    },
-    {
-      "label": "Refused",
-      "path": "refused.message"
     }
   ]
 }

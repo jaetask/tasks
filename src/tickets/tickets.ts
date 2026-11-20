@@ -23,6 +23,8 @@ export const Ticket = z.object({
   labels: z.array(Label),
   blocked: z.string().nullable().describe("Why it is blocked, or null when it is not."),
   state: State,
+  comments: z.number().describe("How many comments it has."),
+  images: z.number().describe("How many images it has."),
   createdAt: z.string(),
   createdBy: z.string(),
 });
@@ -104,7 +106,15 @@ type TicketRow = {
   created_by: string;
 };
 
-export function sqliteTickets(db: DatabaseSync, rows: Rows, catalog: Catalog): Tickets {
+/** How many comments and images a ticket has. Other Domains keep them. */
+export type Counts = (ticket: string) => { comments: number; images: number };
+
+export function sqliteTickets(
+  db: DatabaseSync,
+  rows: Rows,
+  catalog: Catalog,
+  counts: Counts,
+): Tickets {
   const toTicket = (r: TicketRow): Ticket => {
     const { project: _, ...column } = catalog.column(r.column_id);
     const labels = db
@@ -123,6 +133,7 @@ export function sqliteTickets(db: DatabaseSync, rows: Rows, catalog: Catalog): T
       labels,
       blocked: r.blocked,
       state: r.state,
+      ...counts(r.id),
       createdAt: r.created_at,
       createdBy: r.created_by,
     };

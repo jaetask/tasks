@@ -39,7 +39,8 @@
         "at": "2026-01-01T09:05:00.000Z",
         "actor": "owner",
         "actorName": "Sam",
-        "summary": "created TLK-1 in To do: Voice notes on the phone"
+        "summary": "created TLK-1 in To do: Voice notes on the phone",
+        "undoable": true
       }
     },
     {
@@ -49,7 +50,8 @@
         "at": "2026-01-01T09:06:00.000Z",
         "actor": "a1",
         "actorName": "Coder",
-        "summary": "claimed TLK-1 and moved it to Doing"
+        "summary": "claimed TLK-1 and moved it to Doing",
+        "undoable": true
       }
     },
     {
@@ -107,7 +109,8 @@
         "at": "2026-01-01T09:12:00.000Z",
         "actor": "a1",
         "actorName": "Coder",
-        "summary": "asked for review of TLK-1; it is in Review"
+        "summary": "asked for review of TLK-1; it is in Review",
+        "undoable": true
       }
     },
     {

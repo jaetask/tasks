@@ -67,10 +67,6 @@
     {
       "label": "Id",
       "path": "id"
-    },
-    {
-      "label": "Refused",
-      "path": "refused.message"
     }
   ]
 }

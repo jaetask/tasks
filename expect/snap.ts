@@ -1,8 +1,9 @@
 // Expect tests: each .json file in a suite folder is an input; its approved
 // output sits beside it as name.expect.md. Run `npm run expect -- --update`
 // to write new output, then read it before committing.
+import { readFileSync } from "node:fs";
 import { contract } from "@jaetask/open-agent-kit";
-import { snap } from "@jaetask/snap";
+import { snap, table } from "@jaetask/snap";
 import { domains } from "../src/domains.js";
 import { runApp } from "./app.js";
 import { renderScript } from "./calls.js";
@@ -23,6 +24,29 @@ const failed = await snap([
     // Input: a Call script. Output: each step's Outcome, then the data.
     dir: "expect/calls",
     render: renderScript,
+  },
+  {
+    // Input: { "script": path }. Output: every Action the page's script
+    // calls, and whether Tasks has it.
+    dir: "expect/page",
+    render: (input) => {
+      const { script } = JSON.parse(input) as { script: string };
+      const provided = domains();
+      const effects = new Map(
+        provided.flatMap(({ domain }) =>
+          domain.actions.map((a) => [`${domain.name}.${a.name}`, a.effect as string]),
+        ),
+      );
+      const names = provided.map((p) => p.domain.name).join("|");
+      const called = readFileSync(script, "utf8").matchAll(
+        new RegExp(`"((?:${names})\\.[a-z-]+)"`, "g"),
+      );
+      const unique = [...new Set([...called].map((m) => m[1] as string))].sort();
+      return table(
+        ["action the page calls", "effect"],
+        unique.map((name) => [name, effects.get(name) ?? "NOT AN ACTION"]),
+      );
+    },
   },
   {
     // Tasks as a running App over real HTTP and MCP.

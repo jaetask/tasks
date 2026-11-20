@@ -76,7 +76,8 @@
         "at": "2026-01-01T09:05:00.000Z",
         "actor": "owner",
         "actorName": "Sam",
-        "summary": "created TLK-1 in To do: Voice notes on the phone"
+        "summary": "created TLK-1 in To do: Voice notes on the phone",
+        "undoable": true
       }
     },
     {
@@ -86,7 +87,8 @@
         "at": "2026-01-01T09:06:00.000Z",
         "actor": "a1",
         "actorName": "Coder",
-        "summary": "attached the image record-button.png to TLK-1"
+        "summary": "attached the image record-button.png to TLK-1",
+        "undoable": true
       }
     },
     {
@@ -96,7 +98,8 @@
         "at": "2026-01-01T09:07:00.000Z",
         "actor": "a1",
         "actorName": "Coder",
-        "summary": "attached the image lock-screen.png to TLK-1"
+        "summary": "attached the image lock-screen.png to TLK-1",
+        "undoable": true
       }
     },
     {
@@ -106,7 +109,8 @@
         "at": "2026-01-01T09:11:00.000Z",
         "actor": "a1",
         "actorName": "Coder",
-        "summary": "removed the image record-button.png from TLK-1"
+        "summary": "removed the image record-button.png from TLK-1",
+        "undoable": false
       }
     },
     {
@@ -116,7 +120,8 @@
         "at": "2026-01-01T09:13:00.000Z",
         "actor": "owner",
         "actorName": "Sam",
-        "summary": "undid: removed the image record-button.png from TLK-1"
+        "summary": "undid: removed the image record-button.png from TLK-1",
+        "undoable": true
       }
     },
     {
@@ -126,7 +131,8 @@
         "at": "2026-01-01T09:14:00.000Z",
         "actor": "owner",
         "actorName": "Sam",
-        "summary": "removed the image lock-screen.png from TLK-1"
+        "summary": "removed the image lock-screen.png from TLK-1",
+        "undoable": true
       }
     }
   ]

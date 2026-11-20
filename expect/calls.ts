@@ -43,7 +43,7 @@ export function renderData(db: DatabaseSync): string[] {
   const journal = openJournal(db, () => START);
   const repository = sqliteCatalog(db, journal.rows);
   const catalog = repository.read();
-  const tickets = sqliteTickets(db, journal.rows, repository);
+  const tickets = sqliteTickets(db, journal.rows, repository, () => ({ comments: 0, images: 0 }));
   const all = (["open", "archived", "canceled"] as const).flatMap((state) =>
     tickets.find({ state }),
   );

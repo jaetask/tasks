@@ -6,6 +6,7 @@ COPY --chown=node:node package.json package-lock.json ./
 RUN npm ci --ignore-scripts
 COPY --chown=node:node tsconfig.json tsconfig.build.json ./
 COPY --chown=node:node src ./src
+COPY --chown=node:node public ./public
 RUN npm run build && npm prune --omit=dev --ignore-scripts && npm cache clean --force
 ENV HOST=0.0.0.0 PORT=8081 DATA_DIR=/data NODE_ENV=production
 RUN mkdir -p /data && chown node:node /data

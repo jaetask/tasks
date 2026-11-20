@@ -44,10 +44,13 @@ function open(db: DatabaseSync, now: () => number) {
       return found && !found.archived ? found.name : undefined;
     },
   };
-  const tickets = sqliteTickets(db, journal.rows, catalog);
   const nameOf = (id: string) => catalog.read().actors.find((a) => a.id === id)?.name || id;
   const comments = sqliteComments(db, journal.rows, nameOf);
   const images = sqliteImages(db, journal.rows);
+  const tickets = sqliteTickets(db, journal.rows, catalog, (ticket) => ({
+    comments: comments.count(ticket),
+    images: images.list(ticket).length,
+  }));
   return { ...base, catalog, tickets, comments, images, nameOf, now };
 }
 

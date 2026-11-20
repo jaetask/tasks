@@ -1,0 +1,27 @@
+{
+  "steps": [
+    { "get": "/" },
+    { "get": "/app.js" },
+    { "get": "/style.css" },
+    { "get": "/index.html" },
+    { "get": "/../package.json" },
+    { "get": "/nothing.js" },
+    { "raw": { "method": "GET", "path": "/api/session" } },
+    { "page": { "call": "tickets.board-read", "input": { "project": "TLK" } } },
+    { "raw": { "method": "GET", "path": "/events" } },
+    { "sign_in": "expect-setup-secret" },
+    { "raw": { "method": "GET", "path": "/api/session", "session": true } },
+    { "page": { "call": "catalog.actor-rename", "input": { "actor": "owner", "name": "Sam" } } },
+    { "page": { "call": "catalog.project-create", "input": { "name": "Talk", "prefix": "TLK" } } },
+    {
+      "page": {
+        "call": "tickets.ticket-create",
+        "input": { "project": "TLK", "title": "Voice notes on the phone" }
+      }
+    },
+    {
+      "page": { "call": "comments.comment-add", "input": { "ticket": "TLK-1", "text": "First." } }
+    },
+    { "page": { "call": "tickets.board-read", "input": { "project": "TLK" } } }
+  ]
+}

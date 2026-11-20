@@ -3,6 +3,7 @@
 //   KIT_CONNECT (other Apps' MCP endpoints, comma-separated).
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { createTasks } from "./app.js";
 
 const env = process.env;
@@ -13,6 +14,7 @@ const app = await createTasks({
   file: join(dataDir, "app.db"),
   setupSecret: env.KIT_SETUP_SECRET,
   connect: (env.KIT_CONNECT ?? "").split(",").filter(Boolean),
+  page: fileURLToPath(new URL("../public", import.meta.url)),
 });
 
 const url = await app.listen(Number(env.PORT ?? 8081), env.HOST ?? "127.0.0.1");

@@ -59,7 +59,6 @@ export const connectionChanged = defineCard({
       { label: "State", path: "state" },
       { label: "Actor", path: "actorName" },
       { label: "May", path: "may" },
-      { label: "Refused", path: "refused.message" },
     ],
   },
 });

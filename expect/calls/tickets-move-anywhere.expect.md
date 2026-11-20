@@ -55,6 +55,8 @@
           "labels": [],
           "blocked": null,
           "state": "open",
+          "comments": 0,
+          "images": 0,
           "createdAt": "2026-01-01T09:04:00.000Z",
           "createdBy": "owner"
         },
@@ -73,6 +75,8 @@
           "labels": [],
           "blocked": null,
           "state": "open",
+          "comments": 0,
+          "images": 0,
           "createdAt": "2026-01-01T09:05:00.000Z",
           "createdBy": "owner"
         }
@@ -124,6 +128,8 @@
           "labels": [],
           "blocked": null,
           "state": "open",
+          "comments": 0,
+          "images": 0,
           "createdAt": "2026-01-01T09:04:00.000Z",
           "createdBy": "owner"
         }
@@ -149,6 +155,8 @@
           "labels": [],
           "blocked": null,
           "state": "open",
+          "comments": 0,
+          "images": 0,
           "createdAt": "2026-01-01T09:05:00.000Z",
           "createdBy": "owner"
         }

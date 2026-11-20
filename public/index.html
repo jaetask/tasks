@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Tasks</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="style.css">
+<script type="module" src="app.js"></script>
+</head>
+<body>
+<header class="bar">
+  <div class="bar-inner">
+    <span class="brand">Tasks</span>
+    <nav id="nav" class="nav" aria-label="Screens" hidden>
+      <a href="#/board" data-view="board">Board</a>
+      <a href="#/archive" data-view="archive">Archive</a>
+      <a href="#/changes" data-view="changes">Changes</a>
+      <a href="#/connections" data-view="connections">Connections<span id="waiting" class="count" hidden></span></a>
+      <a href="#/settings" data-view="settings">Settings</a>
+    </nav>
+    <button type="button" id="sign-out" class="link" hidden>Sign out</button>
+  </div>
+</header>
+
+<main>
+  <section id="sign-in" class="panel narrow" hidden>
+    <h1>Sign in</h1>
+    <p class="muted">Enter the setup secret Tasks printed when it first started.</p>
+    <form id="sign-in-form" class="row">
+      <input id="secret" type="password" autocomplete="current-password" placeholder="Setup secret" aria-label="Setup secret" required>
+      <button type="submit" class="primary">Sign in</button>
+    </form>
+    <p id="sign-in-error" class="error" hidden></p>
+  </section>
+
+  <section id="setup" class="panel narrow" hidden>
+    <h1>What is your name?</h1>
+    <p class="muted">Your changes show under this name. Your agents get their own names when they connect.</p>
+    <form id="setup-form" class="row">
+      <input id="owner-name" type="text" placeholder="Your name" aria-label="Your name" required maxlength="60">
+      <button type="submit" class="primary">Start</button>
+    </form>
+  </section>
+
+  <section id="view" hidden></section>
+</main>
+
+<dialog id="ticket" class="ticket" aria-label="Ticket">
+  <div class="ticket-top">
+    <span id="tk-where" class="caption"></span>
+    <button type="button" id="tk-close" class="link">Close</button>
+  </div>
+  <div id="tk-head"></div>
+  <div id="tk-labels" class="labels"></div>
+  <div id="tk-body"></div>
+  <div id="tk-images" class="thumbs"></div>
+  <div id="tk-actions" class="row wrap"></div>
+  <div id="tk-thread" class="thread"></div>
+  <form id="tk-form" class="row">
+    <input id="tk-text" type="text" placeholder="Write a comment" aria-label="Write a comment" maxlength="10000">
+    <button type="submit" class="primary">Send</button>
+  </form>
+</dialog>
+
+<div id="result" class="result" role="status" popover="manual"></div>
+</body>
+</html>

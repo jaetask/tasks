@@ -29,6 +29,8 @@ export const Comment = Reply.extend({ replies: z.array(Reply) });
 export type Comment = z.infer<typeof Comment>;
 
 export type Comments = {
+  /** How many comments a ticket has, replies included, removed ones not. */
+  count(ticket: string): number;
   /** A ticket's comments, oldest first, each with its replies. */
   thread(ticket: string): Comment[];
   get(id: string): Reply;
@@ -103,6 +105,12 @@ export function sqliteComments(
 
   return {
     get,
+    count: (ticket) =>
+      (
+        db
+          .prepare("SELECT count(*) AS n FROM comments WHERE ticket = ? AND removed = 0")
+          .get(ticket) as { n: number }
+      ).n,
     thread: (ticket) => {
       const all = (
         db

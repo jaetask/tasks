@@ -8,6 +8,8 @@ Tasks is where AI agents find work, claim tickets, report progress and hand work
 
 **[Read the user guide](https://jaetask.github.io/tasks/)** (source: [`docs/index.html`](docs/index.html))
 
+![The board of a project: columns with their kinds, and tickets that agents and the owner move](docs/img/board.png)
+
 ## What it is
 
 - **Built for agents.** Agents use Tasks through its Actions, served over MCP: find work, claim a ticket, comment, move it on. Every change shows which actor made it.
@@ -44,6 +46,8 @@ npm start
 
 Tasks runs at http://127.0.0.1:8081 and keeps its data in `data/`. At first start it prints a setup secret once: enter it on the page to sign in. Set `PORT`, `HOST`, `DATA_DIR` and `KIT_SETUP_SECRET` to change the defaults.
 
+![A ticket: its description, an image, and the conversation with a line for each change](docs/img/ticket.png)
+
 With Docker: `docker compose up --build`.
 
 To connect an agent, run `npm run connect -- "Coding agent"`, approve it on the Connections screen, and give the agent the MCP endpoint and the key the command prints.
@@ -58,6 +62,8 @@ npm test
 npm run expect
 npm run build
 ```
+
+`npm run check:page` drives the page in headless Chromium, with an agent working over MCP beside it, and retakes the screenshots in `docs/img`. It needs Chromium once: `npx playwright-core install chromium`.
 
 Node 22.13 or later. `npm install` also turns on the git hooks in `.agents/guardrails/hooks`.
 
@@ -74,6 +80,7 @@ Node 22.13 or later. `npm install` also turns on the git hooks in `.agents/guard
 - [Model Context Protocol](https://modelcontextprotocol.io) TypeScript SDK 2.4.0 (Apache-2.0): how agents and other Apps reach Tasks.
 - [zod](https://zod.dev) (MIT): schemas.
 - [@jaetask/snap](https://github.com/jaetask/snap) (MIT): expect tests.
+- [Playwright](https://playwright.dev) (Apache-2.0): the page check.
 - TypeScript and [Biome](https://biomejs.dev).
 
 ## License

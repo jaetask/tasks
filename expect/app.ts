@@ -4,6 +4,7 @@
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import type { Outcome } from "@jaetask/open-agent-kit";
 import type { App } from "@jaetask/open-agent-kit/app";
 import { CALL_ID } from "@jaetask/open-agent-kit/mcp";
@@ -21,6 +22,7 @@ type Step =
   | { contracts: string } // the agent lists the Contract resources
   | { mcp: { as: string; tool: string; arguments?: unknown; id?: string } }
   | { raw: { method: string; path: string; body?: unknown; session?: boolean } }
+  | { get: string } // a file of the page
   | { restart: true };
 
 const tick = () => new Promise((resolve) => setTimeout(resolve, 5));
@@ -99,6 +101,7 @@ export async function runApp(input: string): Promise<string> {
       file: join(dir, "app.db"),
       now: () => clock,
       setupSecret: "expect-setup-secret",
+      page: fileURLToPath(new URL("../public", import.meta.url)),
       log: () => {},
       sweepEvery: 0,
       syncEvery: 0,
@@ -215,6 +218,20 @@ export async function runApp(input: string): Promise<string> {
           result = `no answer: ${(error as Error).message.split("\n")[0]}`;
         }
         out.push(`${n} ${as} calls ${tool}${shown} over MCP → ${named(result)}`);
+      } else if ("get" in step) {
+        const response = await fetch(`${url}${step.get}`);
+        const body = await response.text();
+        const policy = response.headers.get("content-security-policy") ?? "";
+        const facts = response.ok
+          ? [
+              response.headers.get("content-type"),
+              body.length > 0 ? "not empty" : "empty",
+              policy.includes("script-src 'self'")
+                ? "scripts from this App only"
+                : "no script policy",
+            ]
+          : [body];
+        out.push(`${n} GET ${step.get} → HTTP ${response.status}: ${facts.join("; ")}`);
       } else if ("raw" in step) {
         const r = step.raw;
         const response = await fetch(`${url}${withIds(r.path)}`, {

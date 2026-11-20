@@ -22,6 +22,7 @@ const Line = z.object({
   actor: z.string(),
   actorName: z.string(),
   summary: z.string(),
+  undoable: z.boolean().describe("False once it was undone, or when it cannot be."),
 });
 
 const Conversation = z.object({
@@ -91,10 +92,10 @@ const conversationRead = readAction({
     const done = journal
       .list({ ticket, limit: 500 })
       .filter((c) => !c.action.startsWith("comments."))
-      .map(({ id, at, actor, summary }) => ({
+      .map(({ id, at, actor, summary, undoable }) => ({
         type: "change" as const,
         at,
-        change: { id, at, actor, actorName: nameOf(actor), summary },
+        change: { id, at, actor, actorName: nameOf(actor), summary, undoable },
       }));
     const entries = [...done, ...said]
       .sort((a, b) => a.at.localeCompare(b.at))

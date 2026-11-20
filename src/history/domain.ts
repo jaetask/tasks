@@ -42,7 +42,6 @@ export const changeUndone = defineCard({
     fields: [
       { label: "Change", path: "summary" },
       { label: "Id", path: "id" },
-      { label: "Refused", path: "refused.message" },
     ],
   },
 });
