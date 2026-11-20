@@ -834,10 +834,13 @@ export function BoardPage({ project }: { project: Project }) {
   // A favourite feature in the sidebar opens the board narrowed to it.
   const { query } = useApp();
   const asked = query.get("feature");
-  // biome-ignore lint/correctness/useExhaustiveDependencies: only when the address asks for a feature
+  // The arrow beside a ticket's location opens the board narrowed to it.
+  const where = query.get("location");
+  // biome-ignore lint/correctness/useExhaustiveDependencies: only when the address asks for one
   useEffect(() => {
     if (asked && asked !== filters.feature) set({ feature: asked });
-  }, [asked]);
+    if (where && where !== filters.location) set({ location: where });
+  }, [asked, where]);
 
   const all = narrowed(
     (board?.columns ?? []).flatMap((c) => c.tickets),

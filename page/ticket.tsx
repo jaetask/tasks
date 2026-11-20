@@ -570,15 +570,27 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
             />
           )}
           {(catalog.locations.length > 0 || ticket.location) && (
-            <LocationPicker ticket={ticket}>
-              <RailRow
-                data-property="location"
-                muted={!ticket.location}
-                icon={<IconMapPin size={16} aria-hidden className="text-muted-foreground" />}
-              >
-                {ticket.locationName || "No location"}
-              </RailRow>
-            </LocationPicker>
+            <div className="group/row flex items-center gap-1">
+              <LocationPicker ticket={ticket}>
+                <RailRow
+                  data-property="location"
+                  muted={!ticket.location}
+                  icon={<IconMapPin size={16} aria-hidden className="text-muted-foreground" />}
+                >
+                  {ticket.locationName || "No location"}
+                </RailRow>
+              </LocationPicker>
+              {ticket.location && (
+                <GoTo
+                  label="Go to location"
+                  onClick={() =>
+                    go(
+                      `/p/${ticket.project}/board?location=${encodeURIComponent(ticket.location ?? "")}`,
+                    )
+                  }
+                />
+              )}
+            </div>
           )}
           <div className="group/row flex min-w-0 items-center">
             <FeaturePicker ticket={ticket}>
