@@ -62,11 +62,17 @@ function open(db: DatabaseSync, now: () => number) {
   const comments = sqliteComments(db, journal.rows, nameOf);
   const images = sqliteImages(db, journal.rows);
   const inputs = sqliteInputs(db, journal.rows, nameOf);
-  const tickets = sqliteTickets(db, journal.rows, catalog, (ticket) => ({
-    comments: comments.count(ticket),
-    images: images.list(ticket).length,
-    awaiting: inputs.awaiting(ticket),
-  }));
+  const tickets = sqliteTickets(
+    db,
+    journal.rows,
+    catalog,
+    (ticket) => ({
+      comments: comments.count(ticket),
+      images: images.list(ticket).length,
+      awaiting: inputs.awaiting(ticket),
+    }),
+    now,
+  );
   const replies = sqliteReplies(db, journal.rows, nameOf);
   const steps = sqliteSteps(db, journal.rows, nameOf);
   return { ...base, catalog, tickets, comments, images, inputs, replies, steps, nameOf, now };

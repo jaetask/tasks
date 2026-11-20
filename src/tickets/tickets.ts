@@ -50,6 +50,10 @@ export const Ticket = z.object({
   reactions: z
     .array(z.object({ emoji: z.string(), actors: z.array(z.string()) }))
     .describe("Reactions to the ticket itself, each emoji with the ids of the actors who gave it."),
+  due: z
+    .string()
+    .nullable()
+    .describe("The day it is due, as YYYY-MM-DD, or null when it has no due date."),
   links: z.array(Link).describe("Web addresses that belong to it, such as a pull request."),
   location: z.string().nullable().describe("The id of the location its work is done at, or null."),
   locationName: z.string(),
@@ -111,6 +115,12 @@ export const Find = z.object({
   blocked: z.boolean().optional(),
   type: Type.optional(),
   priority: Priority.optional(),
+  due: z
+    .enum(["overdue", "today", "week", "none", "any"])
+    .optional()
+    .describe(
+      "overdue: due before today. today: due today. week: due within seven days. none: no due date. any: has one.",
+    ),
   backlog: z.boolean().optional().describe("True for the backlog only, false for the board only."),
   state: State.optional().describe("open if left out."),
 });
@@ -165,6 +175,8 @@ export type Tickets = {
   /** Moves an open ticket to the first column of a kind on its board. */
   moveToKind(id: string, kind: Kind): Ticket;
   assign(id: string, actor: string | null): Ticket;
+  /** Sets the day a ticket is due, or none with null. */
+  setDue(id: string, due: string | null): Ticket;
   setType(id: string, type: Type): Ticket;
   setPriority(id: string, priority: Priority): Ticket;
   /** Adds an actor's reaction to a ticket. The same emoji again changes nothing. */
@@ -199,6 +211,9 @@ export function migrateTickets(db: DatabaseSync): void {
   if (!columns.some((c) => c.name === "backlog")) {
     db.exec("ALTER TABLE tickets ADD COLUMN backlog INTEGER NOT NULL DEFAULT 0");
   }
+  if (!columns.some((c) => c.name === "due")) {
+    db.exec("ALTER TABLE tickets ADD COLUMN due TEXT");
+  }
   if (!columns.some((c) => c.name === "type")) {
     db.exec("ALTER TABLE tickets ADD COLUMN type TEXT NOT NULL DEFAULT 'task'");
   }
@@ -231,6 +246,7 @@ type TicketRow = {
   location: string | null;
   type: Type;
   priority: Priority;
+  due: string | null;
   blocked: string | null;
   state: State;
   backlog: number;
@@ -246,6 +262,7 @@ export function sqliteTickets(
   rows: Rows,
   catalog: Catalog,
   counts: Counts,
+  now: () => number = Date.now,
 ): Tickets {
   type FeatureRow = {
     id: string;
@@ -320,6 +337,7 @@ export function sqliteTickets(
       labels,
       type: r.type,
       priority: r.priority,
+      due: r.due,
       reactions: reactionsOf(r.id),
       links: db
         .prepare("SELECT id, url FROM ticket_links WHERE ticket = ? ORDER BY rowid")
@@ -459,6 +477,17 @@ export function sqliteTickets(
         .filter((t) => filter.assignee === undefined || t.assignee === filter.assignee)
         .filter((t) => filter.feature === undefined || t.feature === filter.feature)
         .filter((t) => filter.backlog === undefined || (t.backlog === 1) === filter.backlog)
+        .filter((t) => {
+          if (filter.due === undefined) return true;
+          const today = new Date(now()).toISOString().slice(0, 10);
+          const week = new Date(now() + 7 * 86_400_000).toISOString().slice(0, 10);
+          if (filter.due === "none") return t.due === null;
+          if (t.due === null) return false;
+          if (filter.due === "overdue") return t.due < today;
+          if (filter.due === "today") return t.due === today;
+          if (filter.due === "week") return t.due >= today && t.due <= week;
+          return true;
+        })
         .filter((t) => filter.type === undefined || t.type === filter.type)
         .filter((t) => filter.priority === undefined || t.priority === filter.priority)
         .filter((t) => filter.blocked === undefined || (t.blocked !== null) === filter.blocked)
@@ -601,6 +630,11 @@ export function sqliteTickets(
       open(id);
       if (actor !== null) activeActor(actor);
       rows.update("tickets", id, { assignee: actor });
+      return get(id);
+    },
+    setDue: (id, due) => {
+      open(id);
+      rows.update("tickets", id, { due });
       return get(id);
     },
     setType: (id, type) => {

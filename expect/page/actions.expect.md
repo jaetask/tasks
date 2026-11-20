@@ -90,6 +90,7 @@
 | tickets.ticket-cancel | write |
 | tickets.ticket-create | write |
 | tickets.ticket-delete | write |
+| tickets.ticket-due-set | write |
 | tickets.ticket-edit | write |
 | tickets.ticket-feature-set | write |
 | tickets.ticket-find | read |

@@ -1,0 +1,106 @@
+{
+  "steps": [
+    {
+      "call": "catalog.actor-rename",
+      "input": {
+        "actor": "owner",
+        "name": "Sam"
+      }
+    },
+    {
+      "call": "catalog.actor-create",
+      "input": {
+        "name": "Coder"
+      }
+    },
+    {
+      "call": "catalog.project-create",
+      "input": {
+        "name": "Talk",
+        "prefix": "TLK"
+      }
+    },
+    {
+      "call": "tickets.ticket-create",
+      "input": {
+        "project": "TLK",
+        "title": "Voice notes on the phone"
+      }
+    },
+    {
+      "call": "tickets.ticket-create",
+      "input": {
+        "project": "TLK",
+        "title": "Crash on send"
+      }
+    },
+    {
+      "call": "tickets.ticket-create",
+      "input": {
+        "project": "TLK",
+        "title": "Write the guide"
+      }
+    },
+    {
+      "as": "a1",
+      "call": "tickets.ticket-due-set",
+      "input": {
+        "ticket": "TLK-1",
+        "due": "2026-01-01"
+      }
+    },
+    {
+      "call": "tickets.ticket-due-set",
+      "input": {
+        "ticket": "TLK-2",
+        "due": "2025-12-20"
+      }
+    },
+    {
+      "call": "tickets.ticket-due-set",
+      "input": {
+        "ticket": "TLK-3",
+        "due": "2026-01-05"
+      }
+    },
+    {
+      "call": "tickets.ticket-due-set",
+      "input": {
+        "ticket": "TLK-3",
+        "due": "next friday"
+      }
+    },
+    {
+      "call": "tickets.ticket-due-set",
+      "input": {
+        "ticket": "TLK-9",
+        "due": "2026-01-05"
+      }
+    },
+    {
+      "call": "tickets.ticket-find",
+      "input": {
+        "due": "overdue"
+      }
+    },
+    {
+      "call": "tickets.ticket-due-set",
+      "input": {
+        "ticket": "TLK-2",
+        "due": null
+      }
+    },
+    {
+      "call": "history.change-undo",
+      "input": {
+        "change": "h10"
+      }
+    },
+    {
+      "call": "tickets.ticket-find",
+      "input": {
+        "due": "week"
+      }
+    }
+  ]
+}

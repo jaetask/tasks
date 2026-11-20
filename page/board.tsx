@@ -48,6 +48,10 @@ import { Nothing, Picker, projectEmoji } from "./local.js";
 import { LabelDot, PriorityIcon, StatusIcon } from "./pickers.js";
 import {
   ActorPicker,
+  DueIcon,
+  DuePicker,
+  dueLabel,
+  dueState,
   FeaturePicker,
   LabelsPicker,
   LocationPicker,
@@ -75,6 +79,7 @@ type Filters = {
   label: string;
   type: string;
   priority: string;
+  due: string;
   hideDone: boolean;
   hideEmpty: boolean;
 };
@@ -87,6 +92,7 @@ const ALL: Filters = {
   label: "",
   type: "",
   priority: "",
+  due: "",
   hideDone: false,
   hideEmpty: false,
 };
@@ -129,6 +135,13 @@ function narrowed(tickets: Ticket[], f: Filters): Ticket[] {
     .filter((t) => f.label === "" || t.labels.some((l) => l.id === f.label))
     .filter((t) => f.type === "" || t.type === f.type)
     .filter((t) => f.priority === "" || t.priority === f.priority)
+    .filter((t) => {
+      if (f.due === "") return true;
+      if (f.due === "none") return t.due === null;
+      if (t.due === null) return false;
+      const state = dueState(t.due);
+      return f.due === "any" || (f.due === "overdue" ? state === "overdue" : state !== "overdue");
+    })
     .filter((t) =>
       words.every((w) => `${t.id} ${t.title} ${t.description}`.toLowerCase().includes(w)),
     );
@@ -153,6 +166,7 @@ function FilterBar({
     filters.label,
     filters.type,
     filters.priority,
+    filters.due,
   ].filter(Boolean).length;
   const [open, setOpen] = useState(more > 0);
   return (
@@ -231,6 +245,18 @@ function FilterBar({
           options={[
             { id: "", name: "All priorities" },
             ...PRIORITIES.map((p) => ({ id: p, name: titleCase(p) })),
+          ]}
+        />
+        <Picker
+          label="Filter due date"
+          value={filters.due}
+          onChange={(due) => set({ due })}
+          options={[
+            { id: "", name: "Any due date" },
+            { id: "overdue", name: "Overdue" },
+            { id: "upcoming", name: "Not overdue" },
+            { id: "any", name: "Has a due date" },
+            { id: "none", name: "No due date" },
           ]}
         />
       </CollapsibleContent>
@@ -357,6 +383,7 @@ export function TicketCard({
     (has("labels") && ticket.labels.length > 0) ||
     (has("links") && ticket.links.length > 0) ||
     (has("reactions") && ticket.reactions.length > 0) ||
+    (has("due") && ticket.due !== null) ||
     has("time-in-status");
   const bare = shown.size === 0;
   return (
@@ -476,6 +503,14 @@ export function TicketCard({
                 </a>
               </Chip>
             ))}
+          {has("due") && ticket.due && (
+            <DuePicker ticket={ticket} armed={hovered}>
+              <Chip className={PILL}>
+                <DueIcon due={ticket.due} size={12} />
+                {dueLabel(ticket.due)}
+              </Chip>
+            </DuePicker>
+          )}
           {has("time-in-status") && (
             <span className={PILL} title={new Date(ticket.columnSince).toLocaleString()}>
               <IconStopwatch size={12} aria-hidden />
@@ -626,6 +661,7 @@ const CARD_PROPERTIES: [string, string][] = [
   ["labels", "Labels"],
   ["links", "Links"],
   ["reactions", "Reactions"],
+  ["due", "Due date"],
   ["time-in-status", "Time in status"],
   ["created", "Created"],
   ["updated", "Updated"],

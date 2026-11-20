@@ -248,6 +248,14 @@ try {
   await step("give it a location in its properties, and a step", async () => {
     await pick('[data-property="location"]', "Studio");
     await page.locator('[data-property="location"]', { hasText: "Studio" }).waitFor();
+    // A due date typed in words.
+    await page.locator('[data-property="due"]').click();
+    await page.fill('[aria-label="Due date"]', "tomorrow");
+    await page
+      .getByRole("option", { name: /Tomorrow/ })
+      .first()
+      .click();
+    await page.locator('[data-property="due"]', { hasText: "Tomorrow" }).waitFor();
     await page.fill('[aria-label="New step"]', "Record with the screen locked");
     await page.press('[aria-label="New step"]', "Enter");
     await page.getByRole("checkbox", { name: "Record with the screen locked" }).click();
