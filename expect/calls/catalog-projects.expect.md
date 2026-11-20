@@ -29,7 +29,9 @@
 19. a1 calls catalog.project-card-set {"project":"TLK","show":[]} → rejected: not-allowed: a1 may not run catalog.project-card-set
 20. owner calls catalog.project-card-set {"project":"MNY","show":[]} → succeeded; updated project MNY
 21. owner calls catalog.project-card-set {"project":"NTS","show":null} → succeeded
-22. owner calls catalog.catalog-read → succeeded:
+22. owner calls catalog.project-ordering-set {"project":"TLK","ordering":"priority"} → succeeded; updated project TLK
+23. owner calls catalog.project-ordering-set {"project":"TLK","ordering":"manual"} → rejected: invalid-input: ordering: Invalid option: expected one of "created"|"priority"|"due"|"updated"
+24. owner calls catalog.catalog-read → succeeded:
 
 ```json
 {
@@ -77,7 +79,8 @@
           "kind": "done"
         }
       ],
-      "card": []
+      "card": [],
+      "ordering": "created"
     },
     {
       "id": "TLK",
@@ -111,7 +114,8 @@
         "id",
         "labels",
         "links"
-      ]
+      ],
+      "ordering": "priority"
     },
     {
       "id": "NTS",
@@ -149,7 +153,8 @@
         "actor",
         "feature",
         "updated"
-      ]
+      ],
+      "ordering": "created"
     }
   ],
   "labels": []
@@ -225,3 +230,4 @@ None.
 | h11 | 09:13 | owner | catalog.project-edit | changed how project Money looks |  |  |
 | h12 | 09:17 | owner | catalog.project-card-set | chose what cards show on the board of Talk |  |  |
 | h13 | 09:20 | owner | catalog.project-card-set | chose what cards show on the board of Money |  |  |
+| h14 | 09:22 | owner | catalog.project-ordering-set | ordered the cards of Talk by priority |  |  |

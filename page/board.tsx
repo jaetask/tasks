@@ -10,6 +10,12 @@ import {
   CollapsibleTrigger,
 } from "@jaetask/toolkit/ui/collapsible";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@jaetask/toolkit/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@jaetask/toolkit/ui/dropdown-menu";
 import { Input } from "@jaetask/toolkit/ui/input";
 import { Label } from "@jaetask/toolkit/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@jaetask/toolkit/ui/popover";
@@ -24,6 +30,7 @@ import {
   IconAdjustmentsHorizontal,
   IconChevronDown,
   IconCircleCheck,
+  IconDots,
   IconLink,
   IconMapPin,
   IconPlus,
@@ -553,9 +560,12 @@ export function Lane({
   icon,
   count,
   addTo,
+  menu,
   onDrop,
   children,
 }: {
+  /** The lane's "..." menu, when it has one. */
+  menu?: ReactNode;
   id: string;
   title: string;
   icon?: ReactNode;
@@ -590,6 +600,7 @@ export function Lane({
         <h2 className="flex items-center gap-2 text-sm font-medium">
           {icon}
           {title}
+          <span className="text-xs font-normal text-muted-foreground">{count}</span>
         </h2>
         <span className="flex items-center gap-1">
           {addTo && (
@@ -604,7 +615,7 @@ export function Lane({
               </Link>
             </Button>
           )}
-          <span className="text-xs text-muted-foreground">{count}</span>
+          {menu}
         </span>
       </div>
       <div className="grid gap-3">
@@ -699,6 +710,18 @@ function Display({ project }: { project: Project }) {
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
+        <div className="flex items-center justify-between gap-3 border-t pt-3">
+          <span className="text-xs font-medium text-muted-foreground">Ordering</span>
+          <Picker
+            label="Ordering"
+            value={project.ordering}
+            options={ORDERINGS}
+            className="h-8 w-36"
+            onChange={(ordering) =>
+              void act("catalog.project-ordering-set", { project: project.id, ordering })
+            }
+          />
+        </div>
         <div className="flex justify-end">
           <Button
             variant="link"
@@ -713,6 +736,64 @@ function Display({ project }: { project: Project }) {
         </div>
       </PopoverContent>
     </Popover>
+  );
+}
+
+const ORDERINGS = [
+  { id: "created", name: "Created" },
+  { id: "priority", name: "Priority" },
+  { id: "due", name: "Due date" },
+  { id: "updated", name: "Updated" },
+];
+const RANK: Record<string, number> = { urgent: 0, high: 1, medium: 2, low: 3, none: 4 };
+/** Tickets in a project's chosen order. Ties, and "created", keep the order they came in. */
+function ordered(tickets: Ticket[], ordering: Project["ordering"]): Ticket[] {
+  if (ordering === "created") return tickets;
+  const key = (t: Ticket): number | string =>
+    ordering === "priority"
+      ? (RANK[t.priority] ?? 4)
+      : ordering === "due"
+        ? (t.due ?? "9999")
+        : -Date.parse(t.updatedAt);
+  return [...tickets].sort((a, b) => {
+    const [x, y] = [key(a), key(b)];
+    return x < y ? -1 : x > y ? 1 : 0;
+  });
+}
+
+/** A column's "..." menu on the status view: its place on the board, and the way to its settings. */
+function ColumnMenu({ project, column, name }: { project: Project; column: string; name: string }) {
+  const { act } = useApp();
+  const at = project.columns.findIndex((c) => c.id === column);
+  const move = (before: string | undefined) =>
+    void act("catalog.column-move", { column, ...(before ? { before } : {}) });
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon-xs"
+          aria-label={`Column ${name}`}
+          className="opacity-0 focus-visible:opacity-100 group-hover/lane:opacity-100 data-[state=open]:opacity-100"
+        >
+          <IconDots aria-hidden />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem disabled={at <= 0} onSelect={() => move(project.columns[at - 1]?.id)}>
+          Move left
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          disabled={at < 0 || at >= project.columns.length - 1}
+          onSelect={() => move(project.columns[at + 2]?.id)}
+        >
+          Move right
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href={`/p/${project.id}/columns`}>Rename or change kind</Link>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
@@ -751,7 +832,10 @@ export function BoardPage({ project }: { project: Project }) {
   const shown =
     filters.hideDone && view !== "status" ? all.filter((t) => t.column.kind !== "done") : all;
   const by = (key: (t: Ticket) => string | null, id: string | null) =>
-    shown.filter((t) => key(t) === id);
+    ordered(
+      shown.filter((t) => key(t) === id),
+      project.ordering,
+    );
 
   let groups: Group[];
   if (view === "features") {
@@ -889,6 +973,9 @@ export function BoardPage({ project }: { project: Project }) {
               title={g.title}
               {...(g.kind ? { icon: <StatusIcon kind={g.kind} /> } : {})}
               count={g.tickets.length}
+              {...(view === "status"
+                ? { menu: <ColumnMenu project={project} column={g.id} name={g.title} /> }
+                : {})}
               addTo={`/p/${project.id}/new?${g.start}`}
               onDrop={(ticket) => void g.drop(ticket)}
             >
@@ -913,7 +1000,7 @@ export function BacklogPage({ project }: { project: Project }) {
   const [filters, set] = useFilters(`tasks.backlog.${project.id}`);
   const features = useRead<Feature[]>("tickets.feature-find", { project: project.id }) ?? [];
   const backlog = useRead<Ticket[]>("tickets.backlog-read", { project: project.id });
-  const tickets = narrowed(backlog ?? [], filters);
+  const tickets = ordered(narrowed(backlog ?? [], filters), project.ordering);
   return (
     <PageBody
       wide

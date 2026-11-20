@@ -91,6 +91,11 @@ export const DEFAULT_CARD: readonly CardProperty[] = [
   "updated",
 ];
 
+// How the cards of a board's column are ordered.
+export const ORDERINGS = ["created", "priority", "due", "updated"] as const;
+export const Ordering = z.enum(ORDERINGS);
+export type Ordering = z.infer<typeof Ordering>;
+
 export const Actor = z.object({
   id: z.string(),
   name: z.string(),
@@ -116,6 +121,9 @@ export const Project = z.object({
   card: z
     .array(CardProperty)
     .describe("What a ticket's card shows on this project's board and backlog, besides its title."),
+  ordering: Ordering.describe(
+    "How the cards of a column are ordered: created (oldest first), priority (most urgent first), due (soonest first) or updated (latest first).",
+  ),
 });
 export type Project = z.infer<typeof Project>;
 
@@ -167,6 +175,8 @@ export type Catalog = {
   ): Project;
   /** Sets what a ticket's card shows on a project's board, or the usual set with null. */
   setCard(id: string, show: CardProperty[] | null): Project;
+  /** Sets how the cards of a project's columns are ordered. */
+  setOrdering(id: string, ordering: Ordering): Project;
   /** Moves a project to sit before `before` in the list, or to the end. */
   moveProject(id: string, before?: string): Project[];
   /** Adds a column before `before`, or at the end. */
@@ -215,6 +225,9 @@ export function migrateCatalog(db: DatabaseSync): void {
   if (!columns.some((c) => c.name === "card")) {
     db.exec("ALTER TABLE projects ADD COLUMN card TEXT");
   }
+  if (!columns.some((c) => c.name === "ordering")) {
+    db.exec("ALTER TABLE projects ADD COLUMN ordering TEXT NOT NULL DEFAULT 'created'");
+  }
   if (!columns.some((c) => c.name === "colour")) {
     db.exec("ALTER TABLE projects ADD COLUMN colour TEXT NOT NULL DEFAULT 'teal'");
   }
@@ -247,6 +260,7 @@ type ProjectRow = {
   position: number;
   archived: number;
   card: string | null;
+  ordering: Ordering;
 };
 type ColumnRow = { id: string; project: string; name: string; kind: Kind; position: number };
 type LabelRow = { id: string; name: string; colour: Colour; removed: number };
@@ -291,6 +305,7 @@ export function sqliteCatalog(db: DatabaseSync, rows: Rows): Catalog {
           (CARD_PROPERTIES as readonly string[]).includes(p),
         )
       : [...DEFAULT_CARD],
+    ordering: (ORDERINGS as readonly string[]).includes(r.ordering) ? r.ordering : "created",
   });
   const toLabel = (r: LabelRow): Label => ({ id: r.id, name: r.name, colour: r.colour });
 
@@ -424,6 +439,11 @@ export function sqliteCatalog(db: DatabaseSync, rows: Rows): Catalog {
         ...(patch.icon === undefined ? {} : { icon: patch.icon }),
         ...(patch.colour === undefined ? {} : { colour: patch.colour }),
       });
+      return project(id);
+    },
+    setOrdering: (id, ordering) => {
+      project(id);
+      rows.update("projects", id, { ordering });
       return project(id);
     },
     setCard: (id, show) => {

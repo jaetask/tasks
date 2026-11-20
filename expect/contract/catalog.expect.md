@@ -25,6 +25,7 @@
 | catalog.project-create | write | catalog-changed | Create a project. Its board starts with the columns To do, Doing, Review and Done. |
 | catalog.project-edit | write | catalog-changed | Change a project's name, its icon or its colour. Its prefix and ticket ids stay the same. |
 | catalog.project-card-set | write | catalog-changed | Choose what a ticket's card shows on a project's board and backlog, besides its title. With null, the usual set. |
+| catalog.project-ordering-set | write | catalog-changed | Choose how the cards of a project's columns are ordered: created (oldest first), priority (most urgent first), due (soonest first) or updated (latest first). |
 | catalog.project-move | write | catalog-changed | Move a project to another place in the list of projects. |
 | catalog.project-archive | write | catalog-changed | Archive a project. Its tickets are kept and it can be restored. |
 | catalog.project-restore | write | catalog-changed | Restore an archived project. |
@@ -71,6 +72,7 @@ Tools:
 - catalog__project-create (changes): Create a project. Its board starts with the columns To do, Doing, Review and Done.
 - catalog__project-edit (changes): Change a project's name, its icon or its colour. Its prefix and ticket ids stay the same.
 - catalog__project-card-set (changes): Choose what a ticket's card shows on a project's board and backlog, besides its title. With null, the usual set.
+- catalog__project-ordering-set (changes): Choose how the cards of a project's columns are ordered: created (oldest first), priority (most urgent first), due (soonest first) or updated (latest first).
 - catalog__project-move (changes): Move a project to another place in the list of projects.
 - catalog__project-archive (changes): Archive a project. Its tickets are kept and it can be restored.
 - catalog__project-restore (changes): Restore an archived project.
@@ -305,6 +307,33 @@ A tool that changes something after the person says yes waits for them; tell the
   "required": [
     "project",
     "show"
+  ]
+}
+```
+
+#### catalog.project-ordering-set
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string"
+    },
+    "ordering": {
+      "type": "string",
+      "enum": [
+        "created",
+        "priority",
+        "due",
+        "updated"
+      ]
+    }
+  },
+  "required": [
+    "project",
+    "ordering"
   ]
 }
 ```

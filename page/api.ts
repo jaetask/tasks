@@ -15,6 +15,7 @@ export type Project = {
   archived: boolean;
   columns: Column[];
   card: string[];
+  ordering: "created" | "priority" | "due" | "updated";
 };
 export type Label = { id: string; name: string; colour: Colour };
 export type Catalog = {
