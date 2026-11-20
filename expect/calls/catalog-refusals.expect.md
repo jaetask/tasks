@@ -9,17 +9,17 @@
 ### Steps
 
 1. owner calls catalog.project-create {"name":"Talk","prefix":"TLK"} → succeeded; created project TLK
-2. owner calls catalog.project-create {"name":"Talk two","prefix":"TLK"} → refused: prefix-taken: A project already has the prefix TLK.
+2. owner calls catalog.project-create {"name":"Talk two","prefix":"TLK"} → rejected: prefix-taken: A project already has the prefix TLK.
 3. owner calls catalog.project-create {"name":"Lower","prefix":"tlk"} → rejected: invalid-input: prefix: a prefix is 2 to 6 capital letters, like TLK
 4. owner calls catalog.project-create {"name":"  ","prefix":"EMP"} → rejected: invalid-input: name: Too small: expected string to have >=1 characters
-5. owner calls catalog.project-edit {"project":"NOPE","name":"x"} → refused: unknown-project: No project has id NOPE.
+5. owner calls catalog.project-edit {"project":"NOPE","name":"x"} → rejected: unknown-project: No project has id NOPE.
 6. owner calls catalog.actor-create {"name":"Coder"} → succeeded; created actor a1
-7. owner calls catalog.actor-create {"name":"coder"} → refused: name-taken: An actor is already named coder.
-8. owner calls catalog.actor-archive {"actor":"owner"} → refused: owner: The owner cannot be archived.
+7. owner calls catalog.actor-create {"name":"coder"} → rejected: name-taken: An actor is already named coder.
+8. owner calls catalog.actor-archive {"actor":"owner"} → rejected: owner: The owner cannot be archived.
 9. owner calls catalog.label-create {"name":"bug","colour":"pink"} → rejected: invalid-input: colour: Invalid option: expected one of "teal"|"plum"|"red"|"amber"|"green"|"grey"
 10. owner calls catalog.label-create {"name":"bug","colour":"red"} → succeeded; created label l1
-11. owner calls catalog.label-create {"name":"Bug","colour":"red"} → refused: name-taken: A label is already named Bug.
-12. owner calls catalog.column-add {"project":"TLK","name":"Doing","kind":"doing"} → refused: name-taken: This board already has a column named Doing.
+11. owner calls catalog.label-create {"name":"Bug","colour":"red"} → rejected: name-taken: A label is already named Bug.
+12. owner calls catalog.column-add {"project":"TLK","name":"Doing","kind":"doing"} → rejected: name-taken: This board already has a column named Doing.
 13. owner calls catalog.column-add {"project":"TLK","name":"Later","kind":"someday"} → rejected: invalid-input: kind: Invalid option: expected one of "todo"|"doing"|"waiting"|"done"
 14. owner calls catalog.project-edit {"project":"TLK","name":"Changed"} → succeeded; created project TLK
 

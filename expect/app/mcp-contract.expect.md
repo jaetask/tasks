@@ -32,24 +32,6 @@
 | tool | reads only | description |
 | --- | --- | --- |
 | catalog__catalog-read | yes | List the actors, the projects with their columns, and the labels. |
-| catalog__actor-create |  | Add an actor for an agent. A Connection acts as an actor. |
-| catalog__actor-rename |  | Rename an actor. The owner's actor id is owner. |
-| catalog__actor-archive |  | Archive an actor. It can no longer act; what it did stays visible. |
-| catalog__actor-restore |  | Restore an archived actor. |
-| catalog__project-create |  | Create a project. Its board starts with the columns To do, Doing, Review and Done. |
-| catalog__project-edit |  | Change a project's name, its icon (an emoji, or empty for none) or its colour. Its prefix and ticket ids stay the same. |
-| catalog__project-move |  | Move a project to another place in the list of projects. |
-| catalog__project-archive |  | Archive a project. Its tickets are kept and it can be restored. |
-| catalog__project-restore |  | Restore an archived project. |
-| catalog__column-add |  | Add a column to a project's board. |
-| catalog__column-rename |  | Rename a column. |
-| catalog__column-kind-set |  | Set what a column means: todo, doing, waiting or done. |
-| catalog__column-move |  | Move a column to another place on its board. |
-| catalog__column-remove |  | Remove a column. Its tickets move to the column before it, or after it for the first column. |
-| catalog__label-create |  | Create a label. |
-| catalog__label-rename |  | Rename a label. |
-| catalog__label-colour-set |  | Set a label's colour. |
-| catalog__label-remove |  | Remove a label. Tickets no longer show it. |
 | tickets__work-find | yes | Find work to do: open tickets on a board, in to-do columns, that are not blocked and are assigned to you or to nobody, oldest first. |
 | tickets__ticket-find | yes | Find tickets, oldest first. Every filter is optional; a column's kind says what the column means. |
 | tickets__ticket-read | yes | Read one ticket. |
@@ -72,8 +54,6 @@
 | tickets__ticket-unblock |  | Mark a ticket no longer blocked. |
 | tickets__ticket-archive |  | Archive a ticket. It leaves the board and keeps its column; the owner can restore it. |
 | tickets__ticket-cancel |  | Cancel a ticket. It goes to the Archive as canceled; the owner can restore it. |
-| tickets__ticket-restore |  | Restore an archived or canceled ticket to the column it was in. Only the owner can. |
-| tickets__ticket-delete |  | Delete a ticket for good, with its comments and images. It cannot be undone. Only the owner can. |
 | tickets__feature-find | yes | List a project's features, each with how many open tickets belong to it. |
 | tickets__feature-create |  | Create a feature: one part of a project, which groups the tickets for that part. |
 | tickets__feature-edit |  | Change a feature's name or description, or mark it as a favourite. |
@@ -103,24 +83,14 @@
 | inbox__item-dismiss |  | Dismiss an inbox item that needs nothing done, with the reason. |
 | inbox__item-promote |  | Turn an inbox item into a ticket in its project's backlog, or on the board in the first to-do column. |
 | inbox__item-link |  | Link an inbox item to a ticket that already covers it. |
-| inbox__item-run |  | Run the steps on an inbox item again, such as after changing the steps. |
 | inbox__pipeline-read | yes | List the inbox steps, in the order they run. |
-| inbox__step-add |  | Add a step that looks at each new inbox item. It may ask only for the Actions you give it. |
-| inbox__step-edit |  | Change an inbox step: its name, kind, actor, Actions, condition, settings, or whether it is on. |
-| inbox__step-move |  | Move an inbox step to another place in the order. |
-| inbox__step-remove |  | Remove an inbox step. |
 | input__input-list | yes | List the questions asked of the owner, oldest first: all of them, or by state, project or ticket. |
 | input__input-read | yes | Read one input request, to see whether the owner has answered it. |
 | input__input-request |  | Ask the owner a question on a ticket when you cannot go on without a person's answer. Then wait: read the request again later, or look in your agent inbox. |
-| input__input-resolve |  | Answer an input request. Only the owner can. |
 | input__input-withdraw |  | Take back an input request that no longer needs an answer. Whoever asked or the owner can. |
 | replies__reply-list | yes | Read your agent inbox, oldest first: replies to your comments, comments on tickets assigned to you, and the owner's answers to your questions. The owner can read any agent's, or everyone's. |
 | replies__reply-acknowledge |  | Mark a reply in your agent inbox as read and dealt with. |
-| connections__connection-list | yes | List the Connections: those waiting for approval, connected and revoked. |
-| connections__connection-approve |  | Approve a Connection that asked to connect: pick the actor it acts as, and whether it may change things or only read. |
-| connections__connection-revoke |  | Revoke a Connection, or turn down one that is waiting. It is cut off at once; what it did stays visible. |
 | history__change-list | yes | List recorded changes, oldest first: all of them, or those about one ticket. |
-| history__change-undo |  | Undo a recorded change. Refused if what it changed has changed again since. An undo can itself be undone. |
 
 
 ### Change events the page saw

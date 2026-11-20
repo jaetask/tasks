@@ -546,5 +546,10 @@ export const ticketsDomain = defineDomain<TicketsDeps>({
     featureRestore,
   ],
   cards: [ticketList, ticketCard, ticketChanged, featureList, featureChanged],
-  authorise: (principal, action) => principal.id === OWNER || !OWNER_ONLY.includes(action.name),
+  // Only the owner restores a ticket. Deleting one for good is for the owner
+  // on the page: no Connection or step can do it, whoever it acts as.
+  authorise: (principal, action, from) => {
+    if (action.name === ticketDelete.name) return principal.id === OWNER && from?.caller === "ui";
+    return principal.id === OWNER || !OWNER_ONLY.includes(action.name);
+  },
 });

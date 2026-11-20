@@ -14,17 +14,17 @@
 4. a1 calls tickets.feature-create {"project":"TLK","name":"Voice","description":"Recording and playing voice notes."} → succeeded; created feature f1
 5. owner calls tickets.feature-create {"project":"TLK","name":"Search"} → succeeded; created feature f2
 6. owner calls tickets.feature-create {"project":"MNY","name":"Export"} → succeeded; created feature f3
-7. owner calls tickets.feature-create {"project":"TLK","name":"voice"} → refused: name-taken: This project already has a feature named voice.
-8. owner calls tickets.feature-create {"project":"NOPE","name":"x"} → refused: unknown-project: No project has id NOPE.
+7. owner calls tickets.feature-create {"project":"TLK","name":"voice"} → rejected: name-taken: This project already has a feature named voice.
+8. owner calls tickets.feature-create {"project":"NOPE","name":"x"} → rejected: unknown-project: No project has id NOPE.
 9. owner calls tickets.ticket-create {"project":"TLK","title":"Voice notes on the phone","feature":"f1"} → succeeded; created ticket TLK-1
 10. owner calls tickets.ticket-create {"project":"TLK","title":"Fix the crash on send"} → succeeded; created ticket TLK-2
-11. owner calls tickets.ticket-create {"project":"TLK","title":"Wrong project","feature":"f3"} → refused: other-project: Feature f3 is not in project TLK.
+11. owner calls tickets.ticket-create {"project":"TLK","title":"Wrong project","feature":"f3"} → rejected: other-project: Feature f3 is not in project TLK.
 12. a1 calls tickets.ticket-feature-set {"ticket":"TLK-2","feature":"f1"} → succeeded; updated ticket TLK-2
 13. a1 calls tickets.ticket-feature-set {"ticket":"TLK-2","feature":"f2"} → succeeded; updated ticket TLK-2
-14. a1 calls tickets.ticket-feature-set {"ticket":"TLK-2","feature":"f3"} → refused: other-project: Feature f3 is not in project TLK.
-15. a1 calls tickets.ticket-feature-set {"ticket":"TLK-2","feature":"f9"} → refused: unknown-feature: No feature has id f9.
+14. a1 calls tickets.ticket-feature-set {"ticket":"TLK-2","feature":"f3"} → rejected: other-project: Feature f3 is not in project TLK.
+15. a1 calls tickets.ticket-feature-set {"ticket":"TLK-2","feature":"f9"} → rejected: unknown-feature: No feature has id f9.
 16. owner calls tickets.feature-edit {"feature":"f1","name":"Voice notes","favourite":true} → succeeded; updated feature f1
-17. owner calls tickets.feature-edit {"feature":"f2","name":"Voice notes"} → refused: name-taken: This project already has a feature named Voice notes.
+17. owner calls tickets.feature-edit {"feature":"f2","name":"Voice notes"} → rejected: name-taken: This project already has a feature named Voice notes.
 18. a1 calls tickets.feature-find {"project":"TLK"} → succeeded:
 
 ```json
@@ -119,7 +119,7 @@
 ```
 
 21. owner calls tickets.feature-archive {"feature":"f2"} → succeeded; updated feature f2
-22. a1 calls tickets.ticket-create {"project":"TLK","title":"Too late","feature":"f2"} → refused: archived-feature: Search is archived.
+22. a1 calls tickets.ticket-create {"project":"TLK","title":"Too late","feature":"f2"} → rejected: archived-feature: Search is archived.
 23. a1 calls tickets.feature-find {"project":"TLK"} → succeeded:
 
 ```json

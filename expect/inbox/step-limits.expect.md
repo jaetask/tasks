@@ -19,7 +19,7 @@
 9. owner calls inbox.step-add {"name":"Never reached","kind":"script","actor":"a1","actions":["item-tag"],"config":{"file":"greedy.mjs"}} → succeeded; created step s6
 10. owner calls inbox.item-capture {"project":"TLK","text":"A calm first item."} → succeeded; created item n1
 11. owner calls inbox.item-capture {"project":"TLK","text":"the board crashes when I drag a ticket to review"} → succeeded; created item n2
-12. owner calls inbox.step-add {"name":"As the owner","kind":"script","actor":"owner","actions":["item-tag"],"config":{"file":"sort.mjs"}} → refused: owner: A step cannot act as the owner. Pick another actor.
+12. owner calls inbox.step-add {"name":"As the owner","kind":"script","actor":"owner","actions":["item-tag"],"config":{"file":"sort.mjs"}} → rejected: owner: A step cannot act as the owner. Pick another actor.
 13. owner calls inbox.step-add {"name":"Board access","kind":"script","actor":"a1","actions":["ticket-delete"],"config":{}} → rejected: invalid-input: actions.0: Invalid option: expected one of "item-tag"|"item-untag"|"item-category-set"|"item-fields-set"|"item-fields-clear"|"item-edit"|"item-accept"|"item-reject"|"item-dismiss"|"item-promote"|"item-link"
 14. a1 calls inbox.step-add {"name":"Mine","kind":"script","actor":"a1","actions":["item-tag"],"config":{"file":"sort.mjs"}} → rejected: not-allowed: a1 may not run inbox.step-add
 15. a1 calls inbox.step-remove {"step":"s1"} → rejected: not-allowed: a1 may not run inbox.step-remove

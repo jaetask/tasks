@@ -31,10 +31,6 @@ export function said(outcome: Outcome, read: boolean): string {
   if (outcome.state !== "succeeded") {
     return `${outcome.state}: ${outcome.reason.code}: ${outcome.reason.message}`;
   }
-  const output = outcome.output as { refused?: { code: string; message: string } } | null;
-  if (output && typeof output === "object" && "refused" in output && output.refused) {
-    return `refused: ${output.refused.code}: ${output.refused.message}`;
-  }
   if (read) return `succeeded:\n\n${json(outcome.output)}\n`;
   const changes = outcome.changes.map((c) => `${c.kind} ${c.subject} ${c.id}`).join(", ");
   return `succeeded${changes ? `; ${changes}` : ""}`;

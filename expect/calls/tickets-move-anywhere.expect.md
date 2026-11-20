@@ -17,8 +17,8 @@
 7. a1 calls tickets.ticket-move {"ticket":"TLK-1","column":"c1"} → succeeded; updated ticket TLK-1
 8. a1 calls tickets.ticket-move {"ticket":"TLK-1","column":"c3"} → succeeded; updated ticket TLK-1
 9. a1 calls tickets.ticket-move {"ticket":"TLK-1","column":"c2"} → succeeded; updated ticket TLK-1
-10. a1 calls tickets.ticket-move {"ticket":"TLK-1","column":"c5"} → refused: other-board: Column c5 is not on the board of TLK.
-11. a1 calls tickets.ticket-move {"ticket":"TLK-1","column":"c99"} → refused: unknown-column: No column has id c99.
+10. a1 calls tickets.ticket-move {"ticket":"TLK-1","column":"c5"} → rejected: other-board: Column c5 is not on the board of TLK.
+11. a1 calls tickets.ticket-move {"ticket":"TLK-1","column":"c99"} → rejected: unknown-column: No column has id c99.
 12. owner calls catalog.column-remove {"column":"c3"} → succeeded; deleted column c3
 13. owner calls tickets.board-read {"project":"TLK"} → succeeded:
 
@@ -189,9 +189,9 @@
 ```
 
 16. owner calls catalog.column-remove {"column":"c2"} → succeeded; deleted column c2
-17. a1 calls tickets.ticket-claim {"ticket":"TLK-1"} → refused: no-column: The board of TLK has no doing column.
+17. a1 calls tickets.ticket-claim {"ticket":"TLK-1"} → rejected: no-column: The board of TLK has no doing column.
 18. owner calls catalog.column-remove {"column":"c3"} → succeeded; deleted column c3
-19. a1 calls tickets.ticket-review-request {"ticket":"TLK-2"} → refused: no-column: The board of TLK has no waiting column.
+19. a1 calls tickets.ticket-review-request {"ticket":"TLK-2"} → rejected: no-column: The board of TLK has no waiting column.
 
 ### Actors
 

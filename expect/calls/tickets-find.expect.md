@@ -312,7 +312,7 @@
 ]
 ```
 
-20. a1 calls tickets.ticket-find {"project":"NOPE"} → refused: unknown-project: No project has id NOPE.
+20. a1 calls tickets.ticket-find {"project":"NOPE"} → rejected: unknown-project: No project has id NOPE.
 
 ### Actors
 

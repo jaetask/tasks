@@ -130,13 +130,6 @@ export function domains(now: () => number = Date.now): Provided<DatabaseSync>[] 
     provide(connectionsDomain, (db: DatabaseSync) => ({
       ...open(db, now),
       connections: sqliteConnections(db, now),
-      // The Kit's approve() keeps the Principal and Effects the Connection asked
-      // with, so Tasks sets them on the Kit's record before approving.
-      scope: (connection, actor, effects) => {
-        db.prepare(
-          "UPDATE kit_connections SET record = json_set(record, '$.principal.id', ?, '$.effects', json(?)) WHERE id = ?",
-        ).run(actor, JSON.stringify(effects), connection);
-      },
     })),
     provide(historyDomain, (db: DatabaseSync) => open(db, now)),
   ];

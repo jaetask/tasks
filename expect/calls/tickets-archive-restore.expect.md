@@ -16,8 +16,8 @@
 6. a1 calls tickets.ticket-move {"ticket":"TLK-1","column":"c3"} → succeeded; updated ticket TLK-1
 7. a1 calls tickets.ticket-archive {"ticket":"TLK-1"} → succeeded; updated ticket TLK-1
 8. a1 calls tickets.ticket-cancel {"ticket":"TLK-2"} → succeeded; updated ticket TLK-2
-9. a1 calls tickets.ticket-cancel {"ticket":"TLK-1"} → refused: not-open: TLK-1 is archived. The owner can restore it.
-10. a1 calls tickets.ticket-edit {"ticket":"TLK-1","title":"Changed"} → refused: not-open: TLK-1 is archived. The owner can restore it.
+9. a1 calls tickets.ticket-cancel {"ticket":"TLK-1"} → rejected: not-open: TLK-1 is archived. The owner can restore it.
+10. a1 calls tickets.ticket-edit {"ticket":"TLK-1","title":"Changed"} → rejected: not-open: TLK-1 is archived. The owner can restore it.
 11. a1 calls tickets.ticket-restore {"ticket":"TLK-1"} → rejected: not-allowed: a1 may not run tickets.ticket-restore
 12. a1 calls tickets.ticket-delete {"ticket":"TLK-3"} → rejected: not-allowed: a1 may not run tickets.ticket-delete
 13. a1 calls tickets.ticket-find {"state":"archived"} → succeeded:
@@ -52,12 +52,12 @@
 ```
 
 14. owner calls tickets.ticket-restore {"ticket":"TLK-1"} → succeeded; updated ticket TLK-1
-15. owner calls tickets.ticket-restore {"ticket":"TLK-1"} → refused: no-change: TLK-1 is already open.
+15. owner calls tickets.ticket-restore {"ticket":"TLK-1"} → rejected: no-change: TLK-1 is already open.
 16. owner calls history.change-undo {"change":"h8"} → succeeded; updated change h8
 17. owner calls tickets.ticket-delete {"ticket":"TLK-3"} → succeeded; deleted ticket TLK-3
-18. owner calls history.change-undo {"change":"h11"} → refused: final: h11 cannot be undone.
-19. owner calls history.change-undo {"change":"h5"} → refused: final: h5 cannot be undone.
-20. owner calls tickets.ticket-read {"ticket":"TLK-3"} → refused: unknown-ticket: No ticket has id TLK-3.
+18. owner calls history.change-undo {"change":"h11"} → rejected: final: h11 cannot be undone.
+19. owner calls history.change-undo {"change":"h5"} → rejected: final: h5 cannot be undone.
+20. owner calls tickets.ticket-read {"ticket":"TLK-3"} → rejected: unknown-ticket: No ticket has id TLK-3.
 21. owner calls tickets.ticket-create {"project":"TLK","title":"Number four"} → succeeded; created ticket TLK-4
 
 ### Actors

@@ -26,8 +26,8 @@
 11. owner calls inbox.item-promote {"item":"n2"} → succeeded; updated item n2
 12. owner calls inbox.item-reject {"item":"n3","reason":"spam"} → succeeded; updated item n3
 13. a1 calls inbox.item-link {"item":"n4","ticket":"TLK-1"} → succeeded; updated item n4
-14. owner calls inbox.item-tag {"item":"n3","tags":["late"]} → refused: ended: n3 was rejected. It is no longer in the inbox.
-15. owner calls inbox.item-link {"item":"n1","ticket":"TLK-9"} → refused: unknown-ticket: No ticket has id TLK-9.
+14. owner calls inbox.item-tag {"item":"n3","tags":["late"]} → rejected: ended: n3 was rejected. It is no longer in the inbox.
+15. owner calls inbox.item-link {"item":"n1","ticket":"TLK-9"} → rejected: unknown-ticket: No ticket has id TLK-9.
 16. owner calls inbox.item-promote {"item":"n1","backlog":false} → succeeded; updated item n1
 17. owner calls history.change-undo {"change":"h11"} → succeeded; updated change h11
 18. owner calls inbox.item-dismiss {"item":"n3","reason":"nothing to do"} → succeeded; updated item n3

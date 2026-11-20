@@ -22,7 +22,7 @@
 12. owner calls history.change-undo {"change":"h5"} → succeeded; updated change h5
 13. owner calls history.change-undo {"change":"h8"} → succeeded; updated change h8
 14. owner calls history.change-undo {"change":"h7"} → succeeded; updated change h7
-15. owner calls history.change-undo {"change":"h4"} → refused: changed-since: Something h4 changed has changed again since. Undo the later change first.
+15. owner calls history.change-undo {"change":"h4"} → rejected: changed-since: Something h4 changed has changed again since. Undo the later change first.
 16. owner calls tickets.ticket-create {"project":"TLK","title":"A mistake"} → succeeded; created ticket TLK-2
 17. owner calls history.change-undo {"change":"h14"} → succeeded; updated change h14
 18. owner calls tickets.ticket-read {"ticket":"TLK-1"} → succeeded:

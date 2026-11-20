@@ -161,11 +161,11 @@
 }
 ```
 
-9. a1 calls tickets.ticket-claim {"ticket":"TLK-2"} → refused: in-backlog: TLK-2 is in the backlog. Put it on the board first.
-10. a1 calls tickets.ticket-move {"ticket":"TLK-2","column":"c3"} → refused: in-backlog: TLK-2 is in the backlog. Put it on the board first.
+9. a1 calls tickets.ticket-claim {"ticket":"TLK-2"} → rejected: in-backlog: TLK-2 is in the backlog. Put it on the board first.
+10. a1 calls tickets.ticket-move {"ticket":"TLK-2","column":"c3"} → rejected: in-backlog: TLK-2 is in the backlog. Put it on the board first.
 11. a1 calls tickets.ticket-edit {"ticket":"TLK-2","title":"Waiting one, clearer"} → succeeded; updated ticket TLK-2
 12. a1 calls tickets.ticket-board-send {"ticket":"TLK-2"} → succeeded; updated ticket TLK-2
-13. a1 calls tickets.ticket-board-send {"ticket":"TLK-2"} → refused: no-change: TLK-2 is already on the board.
+13. a1 calls tickets.ticket-board-send {"ticket":"TLK-2"} → rejected: no-change: TLK-2 is already on the board.
 14. a1 calls tickets.ticket-claim {"ticket":"TLK-2"} → succeeded; updated ticket TLK-2
 15. a1 calls tickets.ticket-backlog-send {"ticket":"TLK-1"} → succeeded; updated ticket TLK-1
 16. a1 calls tickets.ticket-find {"backlog":true} → succeeded:

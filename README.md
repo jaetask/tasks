@@ -88,7 +88,7 @@ Node 22.13 or later. `npm install` also turns on the git hooks in `.agents/guard
 
 ## Software used
 
-- [@jaetask/open-agent-kit](https://github.com/jaetask/open-agent-kit) 0.1.0 (MIT): Actions, the Call pipeline, Connections, Cards and the App.
+- [@jaetask/open-agent-kit](https://github.com/jaetask/open-agent-kit) 0.2.0 (MIT): Actions, the Call pipeline, Connections, Cards and the App.
 - SQLite, through Node's `node:sqlite`: the data and the Calls, in one file.
 - [Model Context Protocol](https://modelcontextprotocol.io) TypeScript SDK 2.4.0 (Apache-2.0): how agents and other Apps reach Tasks.
 - [zod](https://zod.dev) (MIT): schemas.

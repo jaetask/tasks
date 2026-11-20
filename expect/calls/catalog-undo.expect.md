@@ -15,14 +15,14 @@
 5. owner calls catalog.label-remove {"label":"l1"} → succeeded; deleted label l1
 6. owner calls history.change-undo {"change":"h5"} → succeeded; updated change h5
 7. owner calls history.change-undo {"change":"h3"} → succeeded; updated change h3
-8. owner calls history.change-undo {"change":"h3"} → refused: already-undone: h3 was already undone by h7.
+8. owner calls history.change-undo {"change":"h3"} → rejected: already-undone: h3 was already undone by h7.
 9. owner calls history.change-undo {"change":"h2"} → succeeded; updated change h2
 10. owner calls history.change-undo {"change":"h8"} → succeeded; updated change h8
 11. owner calls catalog.column-rename {"column":"c2","name":"In progress"} → succeeded; updated column c2
 12. owner calls catalog.column-rename {"column":"c2","name":"Working"} → succeeded; updated column c2
-13. owner calls history.change-undo {"change":"h10"} → refused: changed-since: Something h10 changed has changed again since. Undo the later change first.
-14. owner calls history.change-undo {"change":"h1"} → refused: changed-since: Something h1 changed has changed again since. Undo the later change first.
-15. owner calls history.change-undo {"change":"h404"} → refused: unknown-change: No change has id h404.
+13. owner calls history.change-undo {"change":"h10"} → rejected: changed-since: Something h10 changed has changed again since. Undo the later change first.
+14. owner calls history.change-undo {"change":"h1"} → rejected: changed-since: Something h1 changed has changed again since. Undo the later change first.
+15. owner calls history.change-undo {"change":"h404"} → rejected: unknown-change: No change has id h404.
 16. owner calls history.change-list {"limit":3} → succeeded:
 
 ```json

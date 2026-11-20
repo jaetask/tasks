@@ -33,7 +33,7 @@
     "check:toolkit": "toolkit-guard page"
   },
   "dependencies": {
-    "@jaetask/open-agent-kit": "0.1.0",
+    "@jaetask/open-agent-kit": "0.2.0",
     "@modelcontextprotocol/client": "2.4.0",
     "@modelcontextprotocol/server": "2.4.0",
     "zod": "4.6.7"
