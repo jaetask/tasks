@@ -57,6 +57,7 @@ import { Editor } from "./editor.js";
 import { DeleteForGood, Face, Nothing } from "./local.js";
 import { AddLinkDialog } from "./add-link.js";
 import { EvidenceSection } from "./evidence.js";
+import { FilesSection } from "./files.js";
 import { linkHost, ServiceIcon } from "./links.js";
 import { RequestCard } from "./pages.js";
 import { LabelDot, PRIORITY_NAME, PriorityIcon, RailRow, StatusIcon } from "./pickers.js";
@@ -382,7 +383,7 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
                 )
               }
             />
-            {open && <Attach ticket={id} />}
+            {open && <Attach ticket={id} shortcut />}
           </div>
         </section>
 
@@ -488,6 +489,8 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
             />
           )}
         </section>
+
+        <FilesSection ticket={id} open={open} />
 
         <Activity ticket={id} conversation={conversation} canWrite={open} />
 

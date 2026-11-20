@@ -1,11 +1,15 @@
 // Tasks as an App on the Kit: its Domains on one SQLite file, served to the
 // page, to agents and to other Apps through the same Call pipeline.
+import { mkdtempSync } from "node:fs";
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
+import { tmpdir } from "node:os";
+import { dirname, join } from "node:path";
 import { type App, createApp } from "@jaetask/open-agent-kit/app";
 import { nodeListener, type RemoteOptions } from "@jaetask/open-agent-kit/mcp";
 import { OWNER } from "./catalog/catalog.js";
 import { domains, migrate } from "./domains.js";
+import { filesRoutes } from "./files/http.js";
 import { createPipeline, type Pipeline } from "./inbox/pipeline.js";
 import { createLinkTitles } from "./tickets/link-titles.js";
 import type { ReadTitle } from "./tickets/page-title.js";
@@ -24,6 +28,10 @@ export type TasksOptions = {
   page?: string;
   /** The folder the owner's script steps for the inbox are in. */
   stepsDir: string;
+  /** The folder files attached to tickets are kept in. Beside the database if left out. */
+  filesDir?: string;
+  /** Folders an agent may attach files from, by path. None if left out. */
+  filesFrom?: string[];
   /**
    * Reads the title of the page a new link points to. Without one, links keep their address as
    * their name and Tasks asks no other site anything.
@@ -45,11 +53,16 @@ export type Tasks = App & { pipeline: Pipeline };
 
 export async function createTasks(options: TasksOptions): Promise<Tasks> {
   const now = options.now ?? Date.now;
+  const filesDir =
+    options.filesDir ??
+    (options.file === ":memory:"
+      ? mkdtempSync(join(tmpdir(), "tasks-files-"))
+      : join(dirname(options.file), "files"));
   const app = await createApp({
     name: "tasks",
     version: VERSION,
     file: options.file,
-    domains: domains(now),
+    domains: domains(now, { dir: filesDir, from: options.filesFrom ?? [] }),
     owner: { id: OWNER },
     now,
     ...(options.setupSecret ? { setupSecret: options.setupSecret } : {}),
@@ -64,6 +77,12 @@ export async function createTasks(options: TasksOptions): Promise<Tasks> {
 
   // A Connection is approved only through connections.connection-approve,
   // where the owner picks its actor and what it may do.
+  const files = filesRoutes({
+    app,
+    db: app.db,
+    dir: filesDir,
+    stagedDir: join(filesDir, "staged"),
+  });
   const fetch = async (request: Request) => {
     if (request.method === "POST" && APPROVE.test(new URL(request.url).pathname)) {
       return Response.json(
@@ -71,7 +90,7 @@ export async function createTasks(options: TasksOptions): Promise<Tasks> {
         { status: 404 },
       );
     }
-    return app.fetch(request);
+    return (await files(request)) ?? app.fetch(request);
   };
 
   // The steps look at each new inbox item as it arrives, and again when asked.

@@ -22,7 +22,14 @@ import {
   DropdownMenuTrigger,
 } from "@jaetask/toolkit/ui/dropdown-menu";
 import { Input } from "@jaetask/toolkit/ui/input";
+import { Kbd } from "@jaetask/toolkit/ui/kbd";
 import { Textarea } from "@jaetask/toolkit/ui/textarea";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@jaetask/toolkit/ui/tooltip";
 import {
   IconArrowUp,
   IconCircleCheck,
@@ -34,7 +41,7 @@ import {
   IconPlus,
   IconTrash,
 } from "@tabler/icons-react";
-import { type ReactNode, useRef, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { type Comment, type Conversation, OWNER, type Reply, type Ticket, when } from "./api.js";
 import { useApp } from "./app.js";
 import { Editor } from "./editor.js";
@@ -65,15 +72,18 @@ function Who({ id, name }: { id: string; name: string }) {
 
 /** A paperclip that picks image files and attaches them to the ticket. */
 const IMAGES = ["image/png", "image/jpeg", "image/gif", "image/webp"];
-/** The images among some files, as the paperclip, a paste or a drop hands them over. */
-const imagesIn = (files: Iterable<File> | null | undefined) =>
-  [...(files ?? [])].filter((f) => IMAGES.includes(f.type));
+/** Small images are kept with the ticket's images and shown as thumbnails. */
+const SMALL_IMAGE = 2 * 1024 * 1024;
 
-/** Attaches images to a ticket. */
+/** Attaches files to a ticket: small images as its images, anything else as its files. */
 function useAttach(ticket: string) {
-  const { act } = useApp();
-  return (files: File[]) => {
-    for (const picked of files) {
+  const { act, upload } = useApp();
+  return (files: Iterable<File> | null | undefined) => {
+    for (const picked of files ?? []) {
+      if (!IMAGES.includes(picked.type) || picked.size > SMALL_IMAGE) {
+        void upload(ticket, picked);
+        continue;
+      }
       const reader = new FileReader();
       reader.onload = () => {
         const data = String(reader.result).split(",")[1] ?? "";
@@ -89,32 +99,51 @@ function useAttach(ticket: string) {
   };
 }
 
-export function Attach({ ticket }: { ticket: string }) {
+/** The paperclip. With `shortcut`, Cmd or Ctrl with Shift and U opens it from anywhere. */
+export function Attach({ ticket, shortcut }: { ticket: string; shortcut?: boolean }) {
   const attach = useAttach(ticket);
   const picker = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (!shortcut) return;
+    const on = (e: KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey) || !e.shiftKey || e.key.toLowerCase() !== "u") return;
+      e.preventDefault();
+      picker.current?.click();
+    };
+    window.addEventListener("keydown", on);
+    return () => window.removeEventListener("keydown", on);
+  }, [shortcut]);
   return (
     <>
       <Input
         ref={picker}
         type="file"
-        aria-label="Attach an image"
-        accept={IMAGES.join(",")}
+        aria-label="Attach images, files, or videos"
         multiple
         className="hidden"
         onChange={(e) => {
-          attach(imagesIn(e.target.files));
+          attach(e.target.files);
           e.target.value = "";
         }}
       />
-      <Button
-        variant="ghost"
-        size="icon-sm"
-        aria-label="Attach an image"
-        title="Attach images. You can also paste or drop them into the box."
-        onClick={() => picker.current?.click()}
-      >
-        <IconPaperclip aria-hidden />
-      </Button>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-label="Attach images, files, or videos"
+              onClick={() => picker.current?.click()}
+            >
+              <IconPaperclip aria-hidden />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent className="flex items-center gap-2">
+            Attach images, files, or videos
+            {shortcut && <Kbd>⌘⇧U</Kbd>}
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     </>
   );
 }
@@ -328,12 +357,11 @@ function Write({
   // The editor starts again, empty, after each send.
   const [sent, setSent] = useState(0);
   const attach = useAttach(ticket);
-  // An image pasted or dropped into the box is attached to the ticket; anything else is the editor's.
+  // A file pasted or dropped into the box is attached to the ticket; text is the editor's.
   const take = (e: { preventDefault(): void }, files: FileList | undefined) => {
-    const images = imagesIn(files);
-    if (images.length === 0) return;
+    if (!files || files.length === 0) return;
     e.preventDefault();
-    attach(images);
+    attach(files);
   };
   const send = () => {
     const wanted = text.trim();

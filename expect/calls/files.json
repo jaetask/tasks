@@ -1,0 +1,91 @@
+{
+  "steps": [
+    {
+      "call": "catalog.actor-rename",
+      "input": {
+        "actor": "owner",
+        "name": "Sam"
+      }
+    },
+    {
+      "call": "catalog.actor-create",
+      "input": {
+        "name": "Coder"
+      }
+    },
+    {
+      "call": "catalog.project-create",
+      "input": {
+        "name": "Talk",
+        "prefix": "TLK"
+      }
+    },
+    {
+      "call": "tickets.ticket-create",
+      "input": {
+        "project": "TLK",
+        "title": "Voice notes on the phone"
+      }
+    },
+    {
+      "call": "tickets.ticket-create",
+      "input": {
+        "project": "TLK",
+        "title": "Crash on send"
+      }
+    },
+    {
+      "call": "files.file-list",
+      "input": {
+        "ticket": "TLK-1"
+      }
+    },
+    {
+      "as": "a1",
+      "call": "files.file-add-path",
+      "input": {
+        "ticket": "TLK-1",
+        "path": "/etc/hosts"
+      }
+    },
+    {
+      "call": "files.file-add",
+      "input": {
+        "ticket": "TLK-1",
+        "name": "notes.log",
+        "type": "text/plain",
+        "upload": "00000000000000000000000000000000"
+      }
+    },
+    {
+      "call": "files.file-add",
+      "input": {
+        "ticket": "TLK-1",
+        "name": "notes.log",
+        "type": "text/plain",
+        "upload": "../app.db"
+      }
+    },
+    {
+      "call": "files.file-add",
+      "input": {
+        "ticket": "TLK-9",
+        "name": "notes.log",
+        "type": "text/plain",
+        "upload": "00000000000000000000000000000000"
+      }
+    },
+    {
+      "call": "files.file-remove",
+      "input": {
+        "file": "fl1"
+      }
+    },
+    {
+      "call": "files.file-locate",
+      "input": {
+        "file": "fl1"
+      }
+    }
+  ]
+}

@@ -14,7 +14,7 @@ Tasks is where AI agents find work, claim tickets, report progress and hand work
 
 - **Built for agents.** Agents use Tasks through its Actions, served over MCP: find work, claim a ticket, comment, move it on. Every change shows which actor made it.
 - **A board per project.** Each project sets its own columns. Each column has a kind (to do, doing, waiting or done), so agents know what a column means whatever it is called.
-- **A simple ticket.** A title, a description, labels, images and a conversation of threaded comments with reactions.
+- **A simple ticket.** A title, a description, labels, images, files, videos and a conversation of threaded comments with reactions.
 - **Everything can be undone.** Every change is recorded with who made it. Agents archive and cancel tickets; the owner restores them.
 - **An inbox with steps.** New ideas and requests arrive in the inbox. The owner adds steps that look at each one in order: a classifier, a local or hosted model, a script, or another App. A step may only ask for the Actions it was given, and every run is recorded.
 - **Features and a backlog.** A project's tickets can be grouped into features, and wait in a backlog until they are put on the board.
@@ -54,6 +54,8 @@ npm start
 ```
 
 Tasks runs at http://127.0.0.1:8081 and keeps its data in `data/`. At first start it prints a setup secret once: enter it on the page to sign in. Set `PORT`, `HOST`, `DATA_DIR` and `KIT_SETUP_SECRET` to change the defaults.
+
+Files attached to tickets are kept in `data/files/`; back that folder up with `data/app.db`. A file can be up to 25 MB, and an mp4, webm or mov video up to 200 MB. Two settings are off until you set them: `FILES_FROM` names the folders, separated by commas, that an agent may attach files from by path, and `LINK_TITLES=1` makes Tasks read the title of the page each new link points to.
 
 ![A ticket: its description, an image, and the conversation with a line for each change](docs/img/ticket.png)
 

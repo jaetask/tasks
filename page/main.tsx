@@ -26,6 +26,7 @@ import {
   type Outcome,
   OWNER,
   refusal,
+  uploadFile,
   whenSignedOut,
 } from "./api.js";
 import { type App, AppContext, useApp, useRead } from "./app.js";
@@ -289,6 +290,18 @@ function Signed({ path, onSignOut }: { path: string; onSignOut: () => void }) {
     [bump],
   );
 
+  const upload = useCallback(
+    async (ticket: string, file: File): Promise<boolean> => {
+      const answer = await uploadFile(ticket, file).catch(() => ({ error: "The upload failed." }));
+      const refused = "error" in answer ? answer.error : refusal(answer);
+      if (refused !== null)
+        toast({ variant: "destructive", description: `${file.name}: ${refused}` });
+      bump();
+      return refused === null;
+    },
+    [bump],
+  );
+
   if (!catalog) return null;
   const [page = "", search = ""] = path.split("?");
   const app: App = {
@@ -296,6 +309,7 @@ function Signed({ path, onSignOut }: { path: string; onSignOut: () => void }) {
     version,
     act,
     go,
+    upload,
     path: page,
     query: new URLSearchParams(search),
   };
