@@ -7,9 +7,20 @@ import { useApp, useRead } from "./app.js";
 
 const VIDEO = ["video/mp4", "video/webm", "video/quicktime"];
 
-export function FilesSection({ ticket, open }: { ticket: string; open: boolean }) {
+export function FilesSection({
+  ticket,
+  open,
+  inText = "",
+}: {
+  ticket: string;
+  open: boolean;
+  /** What is written on the ticket. A file shown inside that text is not listed here too. */
+  inText?: string;
+}) {
   const { act } = useApp();
-  const files = useRead<TicketFile[]>("files.file-list", { ticket }) ?? [];
+  const files = (useRead<TicketFile[]>("files.file-list", { ticket }) ?? []).filter(
+    (f) => !inText.includes(`/api/files/${f.id})`),
+  );
   if (files.length === 0) return null;
   const remove = (file: TicketFile) => (
     <Button

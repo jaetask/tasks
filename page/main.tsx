@@ -24,6 +24,7 @@ import {
   call,
   type InputRequest,
   type Outcome,
+  type TicketFile,
   OWNER,
   refusal,
   uploadFile,
@@ -291,13 +292,13 @@ function Signed({ path, onSignOut }: { path: string; onSignOut: () => void }) {
   );
 
   const upload = useCallback(
-    async (ticket: string, file: File): Promise<boolean> => {
+    async (ticket: string, file: File): Promise<TicketFile | null> => {
       const answer = await uploadFile(ticket, file).catch(() => ({ error: "The upload failed." }));
       const refused = "error" in answer ? answer.error : refusal(answer);
       if (refused !== null)
         toast({ variant: "destructive", description: `${file.name}: ${refused}` });
       bump();
-      return refused === null;
+      return refused === null ? ((answer as Outcome).output as TicketFile) : null;
     },
     [bump],
   );

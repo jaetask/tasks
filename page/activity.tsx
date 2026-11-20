@@ -1,8 +1,12 @@
 // A ticket's activity: one stream in time order. Changes are quiet one-line
 // rows; a comment is a card that holds its replies and a row to add one.
 
-import { InlineMarkdown } from "@jaetask/toolkit/app/review";
-import { AddReactionButton, AttachButton, CommentReactionChips } from "@jaetask/toolkit/suite";
+import {
+  AddReactionButton,
+  AttachButton,
+  CommentReactionChips,
+  MarkdownText,
+} from "@jaetask/toolkit/suite";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,7 +36,7 @@ import {
   IconPlus,
   IconTrash,
 } from "@tabler/icons-react";
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useCallback, useState } from "react";
 import { type Comment, type Conversation, OWNER, type Reply, type Ticket, when } from "./api.js";
 import { useApp } from "./app.js";
 import { Editor } from "./editor.js";
@@ -88,6 +92,20 @@ function useAttach(ticket: string) {
       reader.readAsDataURL(picked);
     }
   };
+}
+
+/** Stores a picture put into a ticket's text as one of its files, and says where it is read. */
+export function usePictures(ticket: string) {
+  const { upload } = useApp();
+  // The same function from one render to the next: the editor is built again when it changes.
+  return useCallback(
+    async (file: File) => {
+      const stored = await upload(ticket, file);
+      if (!stored) throw new Error("The picture could not be stored.");
+      return { src: `/api/files/${stored.id}`, alt: file.name };
+    },
+    [ticket, upload],
+  );
 }
 
 /** The paperclip of a ticket: whatever is chosen is attached to it. */
@@ -248,7 +266,7 @@ function CommentBody({
             {comment.removed ? (
               "This comment was deleted."
             ) : (
-              <InlineMarkdown content={comment.text} renderLists />
+              <MarkdownText content={comment.text} />
             )}
           </div>
         )}
@@ -306,10 +324,13 @@ function Write({
   const [sent, setSent] = useState(0);
   const attach = useAttach(ticket);
   // A file pasted or dropped into the box is attached to the ticket; text is the editor's.
+  // A picture goes into the text where it was put, which is the editor's own work.
+  const pictures = usePictures(ticket);
   const take = (e: { preventDefault(): void }, files: FileList | undefined) => {
-    if (!files || files.length === 0) return;
+    const others = [...(files ?? [])].filter((f) => !f.type.startsWith("image/"));
+    if (others.length === 0) return;
     e.preventDefault();
-    attach(files);
+    attach(others);
   };
   const send = () => {
     const wanted = text.trim();
@@ -347,6 +368,7 @@ function Write({
           value={text}
           onChange={setText}
           className="text-sm outline-none"
+          onImageUpload={pictures}
         />
       </div>
       <span className={`flex items-center gap-1 ${tall ? "justify-end" : ""}`}>

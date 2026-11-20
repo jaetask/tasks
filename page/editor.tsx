@@ -6,6 +6,10 @@ const Rich = lazy(() =>
   import("@jaetask/toolkit/editor").then((m) => ({ default: m.RichMarkdownEditor })),
 );
 
+// Pictures are a part of the editor that is off unless asked for. One object, so the editor is
+// not built again on every render.
+const PICTURES = { image: true };
+
 export function Editor({
   label,
   value,
@@ -13,6 +17,7 @@ export function Editor({
   onBlur,
   placeholder,
   className,
+  onImageUpload,
 }: {
   label: string;
   value: string;
@@ -20,6 +25,8 @@ export function Editor({
   onBlur?: () => void;
   placeholder?: string;
   className?: string;
+  /** Stores a picture pasted, dropped or chosen in the text, and says where it can be read. */
+  onImageUpload?: (file: File) => Promise<{ src: string; alt?: string }>;
 }) {
   return (
     <Suspense fallback={<div className={className} />}>
@@ -30,6 +37,7 @@ export function Editor({
         {...(onBlur ? { onBlur } : {})}
         {...(placeholder ? { placeholder } : {})}
         {...(className ? { editorClassName: className } : {})}
+        {...(onImageUpload ? { onImageUpload, features: PICTURES } : {})}
       />
     </Suspense>
   );
