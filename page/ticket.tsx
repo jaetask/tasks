@@ -29,7 +29,6 @@ import {
   IconArrowUp,
   IconChevronDown,
   IconChevronRight,
-  IconLink,
   IconMapPin,
   IconNote,
   IconPlus,
@@ -56,6 +55,7 @@ import { useApp, useRead } from "./app.js";
 import { Editor } from "./editor.js";
 import { DeleteForGood, Face, Nothing } from "./local.js";
 import { EvidenceSection } from "./evidence.js";
+import { linkHost, ServiceIcon } from "./links.js";
 import { RequestCard } from "./pages.js";
 import { LabelDot, PRIORITY_NAME, PriorityIcon, RailRow, StatusIcon } from "./pickers.js";
 import {
@@ -111,14 +111,6 @@ export function TicketPage({ id }: { id: string }) {
     </PageBody>
   );
 }
-
-const linkHost = (url: string) => {
-  try {
-    return new URL(url).hostname.replace(/^www\./, "");
-  } catch {
-    return "";
-  }
-};
 
 /** A small round button that goes to where a property's value is shown across tickets. */
 function GoTo({ label, onClick }: { label: string; onClick: () => void }) {
@@ -396,7 +388,7 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
           <section id="links" aria-label="Links" className="grid gap-1">
             {ticket.links.map((l) => (
               <div key={l.id} className="group flex items-start gap-2">
-                <IconLink size={14} aria-hidden className="mt-1 shrink-0 text-muted-foreground" />
+                <ServiceIcon url={l.url} className="mt-1 shrink-0" />
                 <span className="grid min-w-0">
                   <a
                     href={l.url}

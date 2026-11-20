@@ -505,7 +505,7 @@ try {
     await page.getByRole("menuitem", { name: "Mark as" }).press("ArrowRight");
     await page.getByRole("menuitem", { name: "Blocked..." }).press("Enter");
     await page.getByRole("textbox", { name: "Mark as blocked" }).fill("Waiting on the codec");
-    await page.keyboard.press("Enter");
+    await button("Mark as blocked").click();
     await card.getByText("Blocked").waitFor();
     await card.click({ button: "right" });
     await page.getByRole("menuitem", { name: "Mark as" }).press("ArrowRight");
@@ -519,6 +519,14 @@ try {
     if (await page.evaluate(() => window.location.hash.includes("ticket="))) {
       throw new Error("the ticket opened");
     }
+    await card.click({ button: "right" });
+    await page.getByRole("menuitem", { name: "Add link..." }).press("Enter");
+    await page.getByRole("heading", { name: "Add link to TLK-3" }).waitFor();
+    await page.fill("#link-url", "https://www.youtube.com/watch?v=abc");
+    await page.getByText("YouTube URL").waitFor();
+    await page.fill("#link-title", "Check this out");
+    await button("Add link").click();
+    await page.getByRole("heading", { name: "Add link to TLK-3" }).waitFor({ state: "detached" });
     await card.click({ button: "right" });
     await page.getByRole("menuitem", { name: "Make a copy" }).waitFor();
     await page.getByRole("menuitem", { name: "Due date", exact: true }).press("ArrowRight");

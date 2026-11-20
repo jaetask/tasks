@@ -20,10 +20,12 @@ import {
   DialogTitle,
 } from "@jaetask/toolkit/ui/dialog";
 import { Input } from "@jaetask/toolkit/ui/input";
+import { Label } from "@jaetask/toolkit/ui/label";
 import { type ReactElement, useState } from "react";
 import { day, endOfWeek } from "../src/due.js";
 import type { Ticket } from "./api.js";
 import { useApp } from "./app.js";
+import { knownService, ServiceIcon } from "./links.js";
 
 /** What the menu asks for in a dialog before it acts. */
 const ASKS = {
@@ -45,6 +47,7 @@ export function TicketMenu({ ticket, children }: { ticket: Ticket; children: Rea
   const { act, go, path } = useApp();
   const [ask, setAsk] = useState<keyof typeof ASKS | null>(null);
   const [text, setText] = useState("");
+  const [title, setTitle] = useState("");
   const id = ticket.id;
   const copy = (value: string) => void navigator.clipboard?.writeText(value);
   const link = `${window.location.origin}${window.location.pathname}#/t/${id}`;
@@ -74,11 +77,16 @@ export function TicketMenu({ ticket, children }: { ticket: Ticket; children: Rea
     if (!ask || !value) return;
     const done =
       ask === "link"
-        ? await act("tickets.ticket-link-add", { ticket: id, url: value })
+        ? await act("tickets.ticket-link-add", {
+            ticket: id,
+            url: value,
+            ...(title.trim() ? { title: title.trim() } : {}),
+          })
         : await act("tickets.ticket-block", { ticket: id, note: value });
     if (done) {
       setAsk(null);
       setText("");
+      setTitle("");
     }
   };
   if (ticket.state !== "open") return children;
@@ -163,11 +171,18 @@ export function TicketMenu({ ticket, children }: { ticket: Ticket; children: Rea
         {ask && (
           <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle>{`${ASKS[ask].title} · ${id}`}</DialogTitle>
+              <DialogTitle className="flex items-center gap-2">
+                {ask === "link" && <ServiceIcon url={text.trim()} size={18} />}
+                {ask === "link" ? `Add link to ${id}` : `${ASKS[ask].title} · ${id}`}
+              </DialogTitle>
               <DialogDescription>{ASKS[ask].line}</DialogDescription>
             </DialogHeader>
+            {ask === "link" && (
+              <Label htmlFor="link-url">{`${knownService(text.trim()) || "Link"} URL`}</Label>
+            )}
             <Input
               autoFocus
+              id={ask === "link" ? "link-url" : "blocked-why"}
               aria-label={ASKS[ask].title}
               placeholder={ASKS[ask].placeholder}
               value={text}
@@ -176,6 +191,22 @@ export function TicketMenu({ ticket, children }: { ticket: Ticket; children: Rea
                 if (e.key === "Enter") void answer();
               }}
             />
+            {ask === "link" && (
+              <>
+                <Label htmlFor="link-title">
+                  Title <span className="font-normal text-muted-foreground">(optional)</span>
+                </Label>
+                <Input
+                  id="link-title"
+                  maxLength={200}
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") void answer();
+                  }}
+                />
+              </>
+            )}
             <DialogFooter>
               <Button variant="outline" onClick={() => setAsk(null)}>
                 Cancel

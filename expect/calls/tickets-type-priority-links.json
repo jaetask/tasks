@@ -169,6 +169,14 @@
       }
     },
     {
+      "call": "tickets.ticket-link-add",
+      "input": {
+        "ticket": "TLK-2",
+        "url": "https://www.youtube.com/watch?v=abc",
+        "title": "Check this out"
+      }
+    },
+    {
       "call": "tickets.ticket-read",
       "input": {
         "ticket": "TLK-2"
