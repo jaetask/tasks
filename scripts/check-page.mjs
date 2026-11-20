@@ -252,6 +252,18 @@ try {
     });
     await until(() => document.querySelectorAll(".tk-thumb img").length === 2);
   });
+  await step("record the evidence for the work, then read it back", async () => {
+    await page.locator("#evidence").getByRole("button", { name: "Evidence" }).click();
+    await page.fill('[aria-label="Result"]', "Voice notes record and send.");
+    await page.fill('[aria-label="Verification"]', "Unit tests, and a recording on a phone.");
+    await page.fill('[aria-label="Pull request"]', "https://example.com/talk/pull/7");
+    await button("Save evidence").click();
+    await page
+      .locator("#evidence")
+      .getByRole("link", { name: /pull\/7/ })
+      .waitFor();
+    await page.locator("#evidence").getByText("Unit tests, and a recording on a phone.").waitFor();
+  });
   await step(
     "mark it blocked in its properties, then undo that from its line in the activity",
     async () => {

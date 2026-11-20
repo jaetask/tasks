@@ -93,6 +93,7 @@
 | tickets.ticket-delete | write |
 | tickets.ticket-due-set | write |
 | tickets.ticket-edit | write |
+| tickets.ticket-evidence-set | write |
 | tickets.ticket-feature-set | write |
 | tickets.ticket-find | read |
 | tickets.ticket-label-add | write |

@@ -51,6 +51,7 @@
 | tickets__ticket-feature-set |  | Put a ticket in a feature of its project, or in no feature with null. |
 | tickets__ticket-location-set |  | Set the location a ticket's work is done at, such as a machine, or none with null. |
 | tickets__ticket-due-set |  | Set the day a ticket is due, as YYYY-MM-DD, or no due date with null. |
+| tickets__ticket-evidence-set |  | Record what was done on a ticket and how it was checked, for whoever reviews it. With null, remove the record. Tasks checks none of it, and no record is needed to move a ticket. |
 | tickets__ticket-type-set |  | Set what kind of work a ticket is: task, bug, improvement or specification. |
 | tickets__ticket-priority-set |  | Set a ticket's priority: none, urgent, high, medium or low. |
 | tickets__ticket-link-add |  | Add a link to a ticket: a web address that belongs to it, such as a pull request. |

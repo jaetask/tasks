@@ -38,6 +38,13 @@ export type Ticket = {
   priority: "none" | "urgent" | "high" | "medium" | "low";
   links: { id: string; url: string }[];
   due: string | null;
+  evidence: {
+    kind: "code" | "non-code";
+    summary: string;
+    checks: string;
+    pullRequest?: string;
+    mergeCommit?: string;
+  } | null;
   reactions: { emoji: string; actors: string[] }[];
   location: string | null;
   locationName: string;

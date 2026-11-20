@@ -34,6 +34,7 @@
 | tickets.ticket-feature-set | write | ticket-changed | Put a ticket in a feature of its project, or in no feature with null. |
 | tickets.ticket-location-set | write | ticket-changed | Set the location a ticket's work is done at, such as a machine, or none with null. |
 | tickets.ticket-due-set | write | ticket-changed | Set the day a ticket is due, as YYYY-MM-DD, or no due date with null. |
+| tickets.ticket-evidence-set | write | ticket-changed | Record what was done on a ticket and how it was checked, for whoever reviews it. With null, remove the record. Tasks checks none of it, and no record is needed to move a ticket. |
 | tickets.ticket-type-set | write | ticket-changed | Set what kind of work a ticket is: task, bug, improvement or specification. |
 | tickets.ticket-priority-set | write | ticket-changed | Set a ticket's priority: none, urgent, high, medium or low. |
 | tickets.ticket-link-add | write | ticket-changed | Add a link to a ticket: a web address that belongs to it, such as a pull request. |
@@ -186,6 +187,7 @@ Tools:
 - tickets__ticket-feature-set (changes): Put a ticket in a feature of its project, or in no feature with null.
 - tickets__ticket-location-set (changes): Set the location a ticket's work is done at, such as a machine, or none with null.
 - tickets__ticket-due-set (changes): Set the day a ticket is due, as YYYY-MM-DD, or no due date with null.
+- tickets__ticket-evidence-set (changes): Record what was done on a ticket and how it was checked, for whoever reviews it. With null, remove the record. Tasks checks none of it, and no record is needed to move a ticket.
 - tickets__ticket-type-set (changes): Set what kind of work a ticket is: task, bug, improvement or specification.
 - tickets__ticket-priority-set (changes): Set a ticket's priority: none, urgent, high, medium or low.
 - tickets__ticket-link-add (changes): Add a link to a ticket: a web address that belongs to it, such as a pull request.
@@ -770,6 +772,72 @@ A tool that changes something after the person says yes waits for them; tell the
   "required": [
     "ticket",
     "due"
+  ]
+}
+```
+
+#### tickets.ticket-evidence-set
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "ticket": {
+      "type": "string",
+      "description": "A ticket id, like TLK-529."
+    },
+    "evidence": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "code",
+                "non-code"
+              ],
+              "description": "code for a code change, non-code for any other result."
+            },
+            "summary": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4000,
+              "description": "The result, in a few sentences."
+            },
+            "checks": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4000,
+              "description": "What was checked, and what passed."
+            },
+            "pullRequest": {
+              "description": "For code: the pull request's address.",
+              "type": "string",
+              "maxLength": 500
+            },
+            "mergeCommit": {
+              "description": "For code: the merged commit.",
+              "type": "string",
+              "maxLength": 100
+            }
+          },
+          "required": [
+            "kind",
+            "summary",
+            "checks"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "ticket",
+    "evidence"
   ]
 }
 ```
