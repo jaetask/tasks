@@ -428,9 +428,9 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
                       target="_blank"
                       rel="noreferrer"
                       title={l.url}
-                      className={`shrink-0 font-medium hover:underline ${l.title ? "max-w-[50%] truncate" : "min-w-0 shrink break-all"}`}
+                      className={`hover:underline ${l.title ? "max-w-[50%] shrink-0 truncate font-medium" : "min-w-0 truncate"}`}
                     >
-                      {l.title || l.url}
+                      {l.title || l.url.replace(/^https?:\/\/(www\.)?/, "")}
                     </a>
                     <span
                       className="min-w-0 flex-1 truncate text-muted-foreground"
