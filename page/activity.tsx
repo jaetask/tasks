@@ -64,7 +64,7 @@ function Who({ id, name }: { id: string; name: string }) {
 }
 
 /** A paperclip that picks image files and attaches them to the ticket. */
-function Attach({ ticket }: { ticket: string }) {
+export function Attach({ ticket }: { ticket: string }) {
   const { act } = useApp();
   const picker = useRef<HTMLInputElement>(null);
   return (

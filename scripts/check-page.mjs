@@ -225,7 +225,7 @@ try {
     await until(() => document.querySelectorAll(".reactions [aria-pressed]").length === 2);
   });
   await step("attach an image", async () => {
-    await page.setInputFiles('#images input[type="file"]', {
+    await page.setInputFiles('#ticket input[type="file"]', {
       name: "record-button.png",
       mimeType: "image/png",
       buffer: Buffer.from(
