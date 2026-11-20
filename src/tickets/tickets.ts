@@ -34,6 +34,23 @@ export const Feature = z.object({
 });
 export type Feature = z.infer<typeof Feature>;
 
+/** What was done on a ticket and how it was checked. Recorded by its author; nothing here is verified. */
+export const Evidence = z.object({
+  kind: z
+    .enum(["code", "non-code"])
+    .describe("code for a code change, non-code for any other result."),
+  summary: z.string().trim().min(1).max(4000).describe("The result, in a few sentences."),
+  checks: z.string().trim().min(1).max(4000).describe("What was checked, and what passed."),
+  pullRequest: z
+    .string()
+    .trim()
+    .max(500)
+    .optional()
+    .describe("For code: the pull request's address."),
+  mergeCommit: z.string().trim().max(100).optional().describe("For code: the merged commit."),
+});
+export type Evidence = z.infer<typeof Evidence>;
+
 export const Ticket = z.object({
   id: z.string(),
   project: z.string(),
@@ -50,6 +67,9 @@ export const Ticket = z.object({
   reactions: z
     .array(z.object({ emoji: z.string(), actors: z.array(z.string()) }))
     .describe("Reactions to the ticket itself, each emoji with the ids of the actors who gave it."),
+  evidence: Evidence.nullable().describe(
+    "What was done and how it was checked, as its author recorded it, or null.",
+  ),
   due: z
     .string()
     .nullable()
@@ -177,6 +197,8 @@ export type Tickets = {
   assign(id: string, actor: string | null): Ticket;
   /** Sets the day a ticket is due, or none with null. */
   setDue(id: string, due: string | null): Ticket;
+  /** Records what was done on a ticket and how it was checked, or removes the record with null. */
+  setEvidence(id: string, evidence: Evidence | null): Ticket;
   setType(id: string, type: Type): Ticket;
   setPriority(id: string, priority: Priority): Ticket;
   /** Adds an actor's reaction to a ticket. The same emoji again changes nothing. */
@@ -214,6 +236,9 @@ export function migrateTickets(db: DatabaseSync): void {
   if (!columns.some((c) => c.name === "due")) {
     db.exec("ALTER TABLE tickets ADD COLUMN due TEXT");
   }
+  if (!columns.some((c) => c.name === "evidence")) {
+    db.exec("ALTER TABLE tickets ADD COLUMN evidence TEXT");
+  }
   if (!columns.some((c) => c.name === "type")) {
     db.exec("ALTER TABLE tickets ADD COLUMN type TEXT NOT NULL DEFAULT 'task'");
   }
@@ -247,6 +272,7 @@ type TicketRow = {
   type: Type;
   priority: Priority;
   due: string | null;
+  evidence: string | null;
   blocked: string | null;
   state: State;
   backlog: number;
@@ -338,6 +364,7 @@ export function sqliteTickets(
       type: r.type,
       priority: r.priority,
       due: r.due,
+      evidence: r.evidence ? (JSON.parse(r.evidence) as Evidence) : null,
       reactions: reactionsOf(r.id),
       links: db
         .prepare("SELECT id, url FROM ticket_links WHERE ticket = ? ORDER BY rowid")
@@ -630,6 +657,11 @@ export function sqliteTickets(
       open(id);
       if (actor !== null) activeActor(actor);
       rows.update("tickets", id, { assignee: actor });
+      return get(id);
+    },
+    setEvidence: (id, evidence) => {
+      open(id);
+      rows.update("tickets", id, { evidence: evidence === null ? null : JSON.stringify(evidence) });
       return get(id);
     },
     setDue: (id, due) => {

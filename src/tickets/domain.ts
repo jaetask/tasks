@@ -7,6 +7,7 @@ import { type Base, readAction, writeAction } from "../actions.js";
 import { type Catalog, OWNER } from "../catalog/catalog.js";
 import {
   Board,
+  Evidence,
   Feature,
   Find,
   Narrow,
@@ -302,6 +303,19 @@ const ticketDueSet = write({
   run: ({ ticket, due }, { tickets }) => ({
     ticket: tickets.setDue(ticket, due),
     summary: due ? `set ${ticket} due on ${due}` : `removed the due date of ${ticket}`,
+  }),
+});
+
+const ticketEvidenceSet = write({
+  name: "ticket-evidence-set",
+  description:
+    "Record what was done on a ticket and how it was checked, for whoever reviews it. With null, remove the record. Tasks checks none of it, and no record is needed to move a ticket.",
+  input: z.object({ ticket: id, evidence: Evidence.nullable() }),
+  run: ({ ticket, evidence }, { tickets }) => ({
+    ticket: tickets.setEvidence(ticket, evidence),
+    summary: evidence
+      ? `recorded the evidence for ${ticket}`
+      : `removed the evidence for ${ticket}`,
   }),
 });
 
@@ -655,6 +669,7 @@ export const ticketsDomain = defineDomain<TicketsDeps>({
     ticketFeatureSet,
     ticketLocationSet,
     ticketDueSet,
+    ticketEvidenceSet,
     ticketTypeSet,
     ticketPrioritySet,
     ticketLinkAdd,

@@ -42,6 +42,7 @@
     "type": "task",
     "priority": "none",
     "reactions": [],
+    "evidence": null,
     "due": null,
     "links": [],
     "location": null,

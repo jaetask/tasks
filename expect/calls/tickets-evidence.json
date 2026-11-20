@@ -1,0 +1,88 @@
+{
+  "steps": [
+    {
+      "call": "catalog.actor-rename",
+      "input": {
+        "actor": "owner",
+        "name": "Sam"
+      }
+    },
+    {
+      "call": "catalog.actor-create",
+      "input": {
+        "name": "Coder"
+      }
+    },
+    {
+      "call": "catalog.project-create",
+      "input": {
+        "name": "Talk",
+        "prefix": "TLK"
+      }
+    },
+    {
+      "call": "tickets.ticket-create",
+      "input": {
+        "project": "TLK",
+        "title": "Voice notes on the phone"
+      }
+    },
+    {
+      "call": "tickets.ticket-create",
+      "input": {
+        "project": "TLK",
+        "title": "Crash on send"
+      }
+    },
+    {
+      "as": "a1",
+      "call": "tickets.ticket-evidence-set",
+      "input": {
+        "ticket": "TLK-1",
+        "evidence": {
+          "kind": "code",
+          "summary": "Voice notes record and send.",
+          "checks": "Unit tests and a recording on a phone.",
+          "pullRequest": "https://example.com/talk/pull/7"
+        }
+      }
+    },
+    {
+      "call": "tickets.ticket-evidence-set",
+      "input": {
+        "ticket": "TLK-2",
+        "evidence": {
+          "kind": "non-code",
+          "summary": "",
+          "checks": "Read it twice."
+        }
+      }
+    },
+    {
+      "call": "tickets.ticket-evidence-set",
+      "input": {
+        "ticket": "TLK-9",
+        "evidence": null
+      }
+    },
+    {
+      "call": "tickets.ticket-read",
+      "input": {
+        "ticket": "TLK-1"
+      }
+    },
+    {
+      "call": "tickets.ticket-evidence-set",
+      "input": {
+        "ticket": "TLK-1",
+        "evidence": null
+      }
+    },
+    {
+      "call": "tickets.ticket-read",
+      "input": {
+        "ticket": "TLK-1"
+      }
+    }
+  ]
+}

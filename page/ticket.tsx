@@ -55,6 +55,7 @@ import {
 import { useApp, useRead } from "./app.js";
 import { Editor } from "./editor.js";
 import { DeleteForGood, Face, Nothing } from "./local.js";
+import { EvidenceSection } from "./evidence.js";
 import { RequestCard } from "./pages.js";
 import { LabelDot, PRIORITY_NAME, PriorityIcon, RailRow, StatusIcon } from "./pickers.js";
 import {
@@ -432,6 +433,7 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
         )}
 
         <Steps ticket={id} open={open} />
+        <EvidenceSection ticket={ticket} open={open} />
 
         <section id="images" className="grid gap-2">
           {thumbs.length > 0 && (
