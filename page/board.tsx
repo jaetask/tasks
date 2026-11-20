@@ -255,15 +255,22 @@ export function TicketCard({ ticket, action }: { ticket: Ticket; action?: ReactN
   const { catalog, go, path } = useApp();
   const project = catalog.projects.find((p) => p.id === ticket.project);
   const actor = catalog.actors.find((a) => a.id === ticket.assignee);
+  const open = () => go(`${path}?ticket=${ticket.id}`);
   return (
+    // The whole card opens the ticket; it can be dragged, and on the backlog it holds a button of its own.
     <article
       draggable
+      aria-label={`${ticket.id} ${ticket.title}`}
       data-blocked={ticket.blocked !== null}
       onDragStart={(e) => {
         e.dataTransfer.setData(DRAG, ticket.id);
         e.dataTransfer.effectAllowed = "move";
       }}
-      className="ticket rounded-xl border bg-card p-4 shadow-sm transition-shadow hover:shadow-md"
+      onClick={open}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" && e.target === e.currentTarget) open();
+      }}
+      className="ticket cursor-pointer rounded-xl border bg-card p-4 shadow-sm transition-shadow hover:shadow-md focus-visible:outline-2 focus-visible:outline-ring"
     >
       <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
         <span>{`${ticket.id} · ${titleCase(ticket.type)}`}</span>
@@ -280,13 +287,7 @@ export function TicketCard({ ticket, action }: { ticket: Ticket; action?: ReactN
           )}
         </span>
       </div>
-      <Button
-        variant="ghost"
-        className="h-auto w-full justify-start whitespace-normal p-0 text-left font-medium hover:bg-transparent"
-        onClick={() => go(`${path}?ticket=${ticket.id}`)}
-      >
-        {ticket.title}
-      </Button>
+      <div className="font-medium">{ticket.title}</div>
       <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
         <StatusIcon kind={ticket.column.kind} backlog={ticket.backlog} />
         <span>{ticket.backlog ? "Backlog" : ticket.column.name}</span>
@@ -608,7 +609,10 @@ export function BacklogPage({ project }: { project: Project }) {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => void act("tickets.ticket-board-send", { ticket: t.id })}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    void act("tickets.ticket-board-send", { ticket: t.id });
+                  }}
                 >
                   To the board
                 </Button>

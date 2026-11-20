@@ -195,7 +195,7 @@ try {
     }
   });
   await step("open a ticket; edit it on its own page; comment and react", async () => {
-    await page.locator(".ticket").getByRole("button", { name: "Voice notes on the phone" }).click();
+    await page.locator(".ticket", { hasText: "Voice notes on the phone" }).click();
     await page.getByRole("dialog").waitFor();
     await button("Actions").click();
     await page.getByRole("menuitem", { name: "Edit ticket" }).click();
@@ -214,13 +214,13 @@ try {
     );
     await page.press('[aria-label="Leave a comment"]', "Control+Enter");
     await page.waitForSelector(".thread .comment");
-    await button("Add a reaction").click();
-    await button("React with 👀").click();
-    await page.waitForSelector('.reaction[aria-pressed="true"]');
+    await button("Add reaction").click();
+    await button("👀").click();
+    await page.waitForSelector('.reactions [aria-pressed="true"]');
     // The same emoji again takes it back; a different one is added beside it.
-    await button("Add a reaction").click();
-    await button("React with ✅").click();
-    await until(() => document.querySelectorAll(".reaction").length === 2);
+    await button("Add reaction").click();
+    await button("🎉").click();
+    await until(() => document.querySelectorAll(".reactions [aria-pressed]").length === 2);
   });
   await step("attach an image", async () => {
     await page.setInputFiles('#images input[type="file"]', {
