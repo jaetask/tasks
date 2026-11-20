@@ -31,7 +31,6 @@ import {
   IconChevronRight,
   IconDots,
   IconMapPin,
-  IconNote,
   IconPlus,
   IconStack2,
   IconTag,
@@ -141,9 +140,7 @@ function Steps({ ticket, open }: { ticket: string; open: boolean }) {
   const { act } = useApp();
   const steps = useRead<TicketStep[]>("steps.ticket-step-list", { ticket }) ?? [];
   const [title, setTitle] = useState("");
-  const [shown, setShown] = useState<string | null>(null);
   const [editing, setEditing] = useState<string | null>(null);
-  const [note, setNote] = useState("");
   if (!open && steps.length === 0) return null;
   const add = () => {
     const wanted = title.trim();
@@ -204,36 +201,8 @@ function Steps({ ticket, open }: { ticket: string; open: boolean }) {
                 {step.title}
               </Button>
             )}
-            {(step.notes.length > 0 || shown === step.id) && (
-              <Button
-                variant="ghost"
-                size="sm"
-                aria-label={`Notes on ${step.title}`}
-                className="h-6 gap-1 px-1 text-xs text-muted-foreground"
-                onClick={() => {
-                  setShown(shown === step.id ? null : step.id);
-                  setNote("");
-                }}
-              >
-                <IconNote size={14} aria-hidden />
-                {step.notes.length > 0 && step.notes.length}
-              </Button>
-            )}
             {open && (
               <span className="flex opacity-0 focus-within:opacity-100 group-hover:opacity-100">
-                {step.notes.length === 0 && shown !== step.id && (
-                  <Button
-                    variant="ghost"
-                    size="icon-xs"
-                    aria-label={`Add a note to ${step.title}`}
-                    onClick={() => {
-                      setShown(step.id);
-                      setNote("");
-                    }}
-                  >
-                    <IconNote aria-hidden />
-                  </Button>
-                )}
                 <Button
                   variant="ghost"
                   size="icon-xs"
@@ -273,40 +242,6 @@ function Steps({ ticket, open }: { ticket: string; open: boolean }) {
               </span>
             )}
           </div>
-          {shown === step.id && (
-            <div className="mb-2 ml-6 grid gap-2 border-l-2 pl-3">
-              {step.notes.map((n) => (
-                <div key={n.id}>
-                  <div className="body min-w-0 break-words">
-                    <InlineMarkdown content={n.text} renderLists />
-                  </div>
-                  <p className="m-0 text-xs text-muted-foreground">{`${n.byName} · ${when(n.at)}`}</p>
-                </div>
-              ))}
-              {open && (
-                <form
-                  className="flex gap-2"
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    const text = note.trim();
-                    if (!text) return;
-                    setNote("");
-                    void act("steps.ticket-step-note", { step: step.id, text });
-                  }}
-                >
-                  <Input
-                    aria-label={`Note for ${step.title}`}
-                    placeholder="Record what was checked or link to a result"
-                    value={note}
-                    onChange={(e) => setNote(e.target.value)}
-                  />
-                  <Button type="submit" variant="outline">
-                    Add note
-                  </Button>
-                </form>
-              )}
-            </div>
-          )}
         </div>
       ))}
       {open && (
