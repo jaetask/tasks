@@ -1,10 +1,41 @@
 // The toolkit's rich Markdown editor, loaded when a ticket first needs it.
 // What is written is saved as Markdown, so agents read and write plain text.
-import { lazy, Suspense } from "react";
+import type { SlashCommandItem } from "@jaetask/toolkit/editor";
+import { type ComponentProps, lazy, Suspense } from "react";
+
+// Short names for the editor's blocks, so "/h1" finds "Heading 1" as well as "/heading" does.
+const SHORT: Record<string, string> = {
+  Text: "p paragraph plain",
+  "Heading 1": "h1 title",
+  "Heading 2": "h2 subtitle",
+  "Heading 3": "h3",
+  "Bulleted list": "ul bullets",
+  "Numbered list": "ol numbers",
+  "To-do list": "todo task checkbox checklist",
+  Quote: "blockquote",
+  "Code block": "pre snippet",
+  Divider: "hr line rule",
+  Table: "grid",
+  Image: "img picture photo",
+};
+
+// Filled in when the editor has loaded: its blocks, each findable by its short names too.
+let slashItems: SlashCommandItem[] | undefined;
 
 const Rich = lazy(() =>
-  import("@jaetask/toolkit/editor").then((m) => ({ default: m.RichMarkdownEditor })),
+  import("@jaetask/toolkit/editor").then((m) => {
+    slashItems = m.DEFAULT_SLASH_COMMANDS.map((c) => ({
+      ...c,
+      searchText: [c.searchText, SHORT[c.title]].filter(Boolean).join(" "),
+    }));
+    return { default: m.RichMarkdownEditor };
+  }),
 );
+
+/** The editor with its blocks. Drawn inside Suspense, so it is drawn again once the editor loads. */
+function Loaded(props: ComponentProps<typeof Rich>) {
+  return <Rich {...(slashItems ? { slashItems } : {})} {...props} />;
+}
 
 // Pictures are a part of the editor that is off unless asked for. One object, so the editor is
 // not built again on every render.
@@ -30,7 +61,7 @@ export function Editor({
 }) {
   return (
     <Suspense fallback={<div className={className} />}>
-      <Rich
+      <Loaded
         ariaLabel={label}
         value={value}
         onChange={onChange}

@@ -408,6 +408,19 @@ try {
       .fill("Good. Ask for review when the lock screen works.");
     await thread.locator('[aria-label="Leave a reply"]').press("Control+Enter");
     await thread.locator(".comment").nth(1).waitFor();
+    // "/h1" then Return picks Heading 1; it does not send "/h1" as a reply.
+    await thread.locator('[aria-label="Leave a reply"]').click();
+    await page.keyboard.type("/h1");
+    await page.locator(".an-rich-md-slash-menu", { hasText: "Heading 1" }).waitFor();
+    await page.keyboard.press("Enter");
+    await thread.locator('[aria-label="Leave a reply"] h1').waitFor();
+    if ((await thread.locator(".comment").count()) !== 2)
+      throw new Error("/h1 was sent as a reply");
+    await page.keyboard.press("Backspace");
+    await page.keyboard.type("/nosuchblock");
+    await page.keyboard.press("Enter");
+    if ((await thread.locator(".comment").count()) !== 2) throw new Error("a slash word was sent");
+    for (let i = 0; i < 14; i += 1) await page.keyboard.press("Backspace");
     // Return sends; Shift+Return starts a new line in the same reply.
     await thread.locator('[aria-label="Leave a reply"]').click();
     await page.keyboard.type("And tell me which phones you tried.");
