@@ -287,7 +287,10 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
   const ticket = useRead<Ticket>("tickets.ticket-read", { ticket: id });
   const conversation = useRead<Conversation>("comments.conversation-read", { ticket: id });
   const images = useRead<Image[]>("images.image-list", { ticket: id });
-  const requests = useRead<InputRequest[]>("input.input-list", { ticket: id, state: "awaiting" });
+  // Every question asked on the ticket: those awaiting an answer first, then the answered ones.
+  const asked = useRead<InputRequest[]>("input.input-list", { ticket: id });
+  const awaiting = (asked ?? []).filter((r) => r.state === "awaiting");
+  const requests = asked && [...awaiting, ...asked.filter((r) => r.state !== "awaiting")];
   const _features = useRead<Feature[]>(ticket ? "tickets.feature-find" : null, {
     project: ticket?.project,
   });
@@ -447,7 +450,7 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
         <Activity ticket={id} conversation={conversation} canWrite={open} />
 
         {requests && requests.length > 0 && (
-          <Collapsible defaultOpen>
+          <Collapsible defaultOpen={awaiting.length > 0}>
             <section id="questions" className="grid gap-2">
               <CollapsibleTrigger asChild>
                 <Button
@@ -455,7 +458,9 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
                   className="h-auto justify-start gap-2 p-0 hover:bg-transparent"
                 >
                   <IconChevronRight size={14} aria-hidden />
-                  {`Human input · ${requests.length} awaiting your answer`}
+                  {awaiting.length > 0
+                    ? `Human input · ${awaiting.length} awaiting your answer`
+                    : `Human input · none awaiting, ${requests.length} earlier`}
                 </Button>
               </CollapsibleTrigger>
               <CollapsibleContent className="grid gap-2">
