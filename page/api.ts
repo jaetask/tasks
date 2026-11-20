@@ -204,6 +204,8 @@ export type Outcome = {
   state: string;
   output?: unknown;
   card?: { html?: string };
+  /** What a succeeded Call changed. */
+  changes?: { kind: "created" | "updated" | "deleted"; subject: string; id: string }[];
   reason?: { message: string };
   error?: string;
 };

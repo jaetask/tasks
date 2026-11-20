@@ -279,7 +279,9 @@ function Signed({ path, onSignOut }: { path: string; onSignOut: () => void }) {
       const outcome: Outcome = await call(action, input);
       const refused = refusal(outcome);
       if (refused !== null) toast({ variant: "destructive", description: refused });
-      else if (outcome.card?.html) {
+      else if (outcome.card?.html && outcome.changes?.some((c) => c.kind === "deleted")) {
+        // Only a deletion is announced; any other change shows where it was made, and a
+        // notification for each would bury the ones that matter.
         // The Card arrives as HTML already escaped by the App's cardHtml.
         // biome-ignore lint/security/noDangerouslySetInnerHtml: escaped by the App
         toast({ description: <span dangerouslySetInnerHTML={{ __html: outcome.card.html }} /> });
