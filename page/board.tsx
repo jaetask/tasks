@@ -69,13 +69,14 @@ import {
 import { TicketView } from "./ticket.js";
 import { TicketMenu } from "./ticket-menu.js";
 
-const VIEWS = [
+export const VIEWS: readonly ViewChoice[] = [
   { id: "features", label: "Features", Icon: IconStack2, heading: "Features" },
   { id: "actors", label: "Actors", Icon: IconUsers, heading: "Who is working" },
   { id: "locations", label: "Locations", Icon: IconMapPin, heading: "Where work happens" },
   { id: "status", label: "Status", Icon: IconCircleCheck, heading: "Progress" },
-] as const;
-type View = (typeof VIEWS)[number]["id"];
+];
+type View = "features" | "actors" | "locations" | "status" | "projects";
+type ViewChoice = { id: View; label: string; Icon: typeof IconStack2; heading: string };
 
 /** How a board or backlog is narrowed. "" means all; "none" means tickets with none. */
 type Filters = {
@@ -90,7 +91,10 @@ type Filters = {
   due: string;
   hideDone: boolean;
   hideEmpty: boolean;
+  /** On the Overview: the projects to show. Empty means all. */
+  projects: string[];
 };
+export type { Filters, View, ViewChoice };
 const ALL: Filters = {
   view: "features",
   text: "",
@@ -103,15 +107,19 @@ const ALL: Filters = {
   due: "",
   hideDone: false,
   hideEmpty: false,
+  projects: [],
 };
 
 /** The filters of one screen of one project, remembered in this browser. */
-function useFilters(key: string): [Filters, (patch: Partial<Filters>) => void] {
+export function useFilters(
+  key: string,
+  start: Partial<Filters> = {},
+): [Filters, (patch: Partial<Filters>) => void] {
   const read = (): Filters => {
     try {
-      return { ...ALL, ...JSON.parse(localStorage.getItem(key) ?? "{}") };
+      return { ...ALL, ...start, ...JSON.parse(localStorage.getItem(key) ?? "{}") };
     } catch {
-      return ALL;
+      return { ...ALL, ...start };
     }
   };
   const [filters, setFilters] = useState(read);
@@ -134,7 +142,7 @@ function useFilters(key: string): [Filters, (patch: Partial<Filters>) => void] {
 const matches = (wanted: string, value: string | null) =>
   wanted === "" || (wanted === "none" ? value === null : value === wanted);
 
-function narrowed(tickets: Ticket[], f: Filters): Ticket[] {
+export function narrowed(tickets: Ticket[], f: Filters): Ticket[] {
   const words = f.text.toLowerCase().split(/\s+/).filter(Boolean);
   return tickets
     .filter((t) => matches(f.actor, t.assignee))
@@ -156,15 +164,19 @@ function narrowed(tickets: Ticket[], f: Filters): Ticket[] {
 }
 
 /** The search box and pickers above a board or backlog. */
-function FilterBar({
+export function FilterBar({
   filters,
   set,
   features,
+  lead,
   right,
 }: {
   filters: Filters;
   set: (patch: Partial<Filters>) => void;
-  features: Feature[];
+  /** The features to choose from. Left out where projects are mixed, which have no features in common. */
+  features?: Feature[];
+  /** A filter of the screen's own, shown after the actor filter. */
+  lead?: ReactNode;
   right?: ReactNode;
 }) {
   const { catalog } = useApp();
@@ -199,6 +211,7 @@ function FilterBar({
               .map((a) => ({ id: a.id, name: `${a.icon} ${a.name}`.trim() })),
           ]}
         />
+        {lead}
         <CollapsibleTrigger asChild>
           <Button variant="outline">
             <IconChevronDown size={16} aria-hidden className={open ? "rotate-180" : ""} />
@@ -208,16 +221,18 @@ function FilterBar({
         {right && <div className="ml-auto flex flex-wrap items-center gap-4">{right}</div>}
       </div>
       <CollapsibleContent className="flex flex-wrap items-center gap-2">
-        <Picker
-          label="Filter feature"
-          value={filters.feature}
-          onChange={(feature) => set({ feature })}
-          options={[
-            { id: "", name: "All features" },
-            { id: "none", name: "No feature" },
-            ...features.map((f) => ({ id: f.id, name: f.name })),
-          ]}
-        />
+        {features && (
+          <Picker
+            label="Filter feature"
+            value={filters.feature}
+            onChange={(feature) => set({ feature })}
+            options={[
+              { id: "", name: "All features" },
+              { id: "none", name: "No feature" },
+              ...features.map((f) => ({ id: f.id, name: f.name })),
+            ]}
+          />
+        )}
         <Picker
           label="Filter location"
           value={filters.location}
@@ -272,7 +287,7 @@ function FilterBar({
   );
 }
 
-function Tick({
+export function Tick({
   label,
   checked,
   onChange,
@@ -762,7 +777,7 @@ const ORDERINGS = [
 ];
 const RANK: Record<string, number> = { urgent: 0, high: 1, medium: 2, low: 3, none: 4 };
 /** Tickets in a project's chosen order. Ties, and "created", keep the order they came in. */
-function ordered(tickets: Ticket[], ordering: Project["ordering"]): Ticket[] {
+export function ordered(tickets: Ticket[], ordering: Project["ordering"]): Ticket[] {
   if (ordering === "created") return tickets;
   const key = (t: Ticket): number | string =>
     ordering === "priority"
@@ -812,7 +827,48 @@ function ColumnMenu({ project, column, name }: { project: Project; column: strin
   );
 }
 
-type Group = {
+/** The buttons that choose how a board groups its tickets. */
+export function ViewToggle({
+  views,
+  value,
+  onChange,
+}: {
+  views: readonly ViewChoice[];
+  value: View;
+  onChange: (view: View) => void;
+}) {
+  return (
+    <TooltipProvider>
+      <ToggleGroup
+        type="single"
+        aria-label="Board view"
+        className="gap-1 rounded-lg border p-1"
+        value={value}
+        onValueChange={(v) => {
+          if (v) onChange(v as View);
+        }}
+      >
+        {views.map(({ id, label, Icon }) => (
+          <Tooltip key={id}>
+            <TooltipTrigger asChild>
+              <ToggleGroupItem
+                value={id}
+                aria-label={`${label} view`}
+                // The tooltip takes over data-state, so the chosen view is marked by class.
+                className={`size-8 p-0 ${value === id ? "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground" : ""}`}
+              >
+                <Icon size={18} aria-hidden />
+              </ToggleGroupItem>
+            </TooltipTrigger>
+            <TooltipContent>{label}</TooltipContent>
+          </Tooltip>
+        ))}
+      </ToggleGroup>
+    </TooltipProvider>
+  );
+}
+
+export type Group = {
   id: string;
   title: string;
   kind?: Kind;
@@ -924,33 +980,7 @@ export function BoardPage({ project }: { project: Project }) {
       title={title(project)}
       action={
         <div className="flex flex-wrap items-center gap-2">
-          <TooltipProvider>
-            <ToggleGroup
-              type="single"
-              aria-label="Board view"
-              className="gap-1 rounded-lg border p-1"
-              value={view}
-              onValueChange={(v) => {
-                if (v) set({ view: v as View });
-              }}
-            >
-              {VIEWS.map(({ id, label, Icon }) => (
-                <Tooltip key={id}>
-                  <TooltipTrigger asChild>
-                    <ToggleGroupItem
-                      value={id}
-                      aria-label={`${label} view`}
-                      // The tooltip takes over data-state, so the chosen view is marked by class.
-                      className={`size-8 p-0 ${view === id ? "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground" : ""}`}
-                    >
-                      <Icon size={18} aria-hidden />
-                    </ToggleGroupItem>
-                  </TooltipTrigger>
-                  <TooltipContent>{label}</TooltipContent>
-                </Tooltip>
-              ))}
-            </ToggleGroup>
-          </TooltipProvider>
+          <ViewToggle views={VIEWS} value={view} onChange={(v) => set({ view: v })} />
           <Display project={project} />
           <EditLink to={`/p/${project.id}/columns`} label="Edit columns" />
           <PrimaryLink to={`/p/${project.id}/new`}>New ticket</PrimaryLink>

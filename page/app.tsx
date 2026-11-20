@@ -10,25 +10,10 @@ export type App = {
   /** Makes a change, shows its Card or why it was refused, and returns its output or null. */
   act<T = unknown>(action: string, input: unknown): Promise<T | null>;
   go(path: string): void;
-  /** What boards, the Overview and backlogs are narrowed to. */
-  narrow: Narrow;
-  setNarrow(narrow: Narrow): void;
   /** The page's path, and what follows its question mark. */
   path: string;
   query: URLSearchParams;
 };
-
-/** "" means every actor or feature; "none" means tickets with none. */
-export type Narrow = { text: string; actor: string; feature: string };
-
-/** A Narrow as the read Actions take it. */
-export const narrowInput = (narrow: Narrow, withFeature: boolean) => ({
-  ...(narrow.text ? { text: narrow.text } : {}),
-  ...(narrow.actor === "" ? {} : { assignee: narrow.actor === "none" ? null : narrow.actor }),
-  ...(withFeature && narrow.feature !== ""
-    ? { feature: narrow.feature === "none" ? null : narrow.feature }
-    : {}),
-});
 
 export const AppContext = createContext<App | null>(null);
 export function useApp(): App {

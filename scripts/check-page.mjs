@@ -472,6 +472,23 @@ try {
     await page.getByRole("menuitem", { name: "Move right" }).waitFor();
     await page.keyboard.press("Escape");
   });
+  await step("the Overview groups by project, and a project can be filtered out", async () => {
+    await open("/");
+    await page.getByRole("heading", { name: "Overview" }).waitFor();
+    await page.getByRole("radio", { name: "Projects view" }).click();
+    await page.locator(".lane", { hasText: "Talk" }).waitFor();
+    const lanes = await page.locator(".lane").count();
+    await button("Filter projects").click();
+    await page.getByRole("menuitemcheckbox", { name: "Talk" }).press("Enter");
+    await page.keyboard.press("Escape");
+    await until(() => document.querySelectorAll(".lane").length === 1);
+    await button("Filter projects").click();
+    await page.getByRole("menuitemcheckbox", { name: "Talk" }).press("Enter");
+    await page.keyboard.press("Escape");
+    await page.waitForFunction((n) => document.querySelectorAll(".lane").length === n, lanes);
+    await page.getByRole("radio", { name: "Status view" }).click();
+    await page.locator(".lane", { hasText: "to do" }).waitFor();
+  });
   await step("on the Overview a card names its project, as a pill to its board", async () => {
     await open("/");
     await page.getByRole("link", { name: "The board of Talk" }).first().click();
