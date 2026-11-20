@@ -46,7 +46,7 @@ const failed = await snap([
       );
       const names = provided.map((p) => p.domain.name).join("|");
       const scripts = readdirSync(folder)
-        .filter((file) => file.endsWith(".js"))
+        .filter((file) => /\.(js|ts|tsx)$/.test(file))
         .map((file) => readFileSync(join(folder, file), "utf8"))
         .join("\n");
       const called = scripts.matchAll(new RegExp(`"((?:${names})\\.[a-z-]+)"`, "g"));

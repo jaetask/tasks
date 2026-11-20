@@ -74,6 +74,8 @@ npm run expect
 npm run build
 ```
 
+The page is a React app in `page/`, built from @jaetask/toolkit into `public/` by `npm run build`. `toolkit-guard` (part of `lint`) fails a hand-built shell, section or edit page.
+
 `npm run check:page` drives the page in headless Chromium, with an agent working over MCP beside it, and retakes the screenshots in `docs/img`. It needs Chromium once: `npx playwright-core install chromium`.
 
 Node 22.13 or later. `npm install` also turns on the git hooks in `.agents/guardrails/hooks`.
@@ -91,6 +93,8 @@ Node 22.13 or later. `npm install` also turns on the git hooks in `.agents/guard
 - [Model Context Protocol](https://modelcontextprotocol.io) TypeScript SDK 2.4.0 (Apache-2.0): how agents and other Apps reach Tasks.
 - [zod](https://zod.dev) (MIT): schemas.
 - [@jaetask/snap](https://github.com/jaetask/snap) (MIT): expect tests.
+- [@jaetask/toolkit](https://github.com/jaetask/toolkit) 0.1.0 (MIT) with React 19: the page's shell, panels, lists and edit pages.
+- [esbuild](https://esbuild.github.io) (MIT): builds the page.
 - [Playwright](https://playwright.dev) (Apache-2.0): the page check.
 - TypeScript and [Biome](https://biomejs.dev).
 

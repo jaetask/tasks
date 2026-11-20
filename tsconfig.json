@@ -15,5 +15,6 @@
     "sourceMap": true,
     "outDir": "dist"
   },
-  "include": ["src", "expect"]
+  "include": ["src", "expect"],
+  "exclude": ["page"]
 }

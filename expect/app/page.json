@@ -2,9 +2,7 @@
   "steps": [
     { "get": "/" },
     { "get": "/app.js" },
-    { "get": "/kit.js" },
-    { "get": "/shell.js" },
-    { "get": "/style.css" },
+    { "get": "/app.css" },
     { "get": "/index.html" },
     { "get": "/../package.json" },
     { "get": "/nothing.js" },

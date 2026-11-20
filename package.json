@@ -16,19 +16,21 @@
     "node": ">=22.13"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
-    "typecheck": "tsc --noEmit",
+    "build": "tsc -p tsconfig.build.json && node scripts/build-page.mjs",
+    "typecheck": "tsc --noEmit && tsc -p page",
     "test": "tsx --test src/*.test.ts",
-    "expect": "tsx expect/snap.ts",
-    "lint": "biome lint . && npm run check:docs",
+    "expect": "node scripts/build-page.mjs && tsx expect/snap.ts",
+    "lint": "biome lint . && npm run check:docs && npm run check:toolkit",
     "format": "biome format --write .",
     "format:check": "biome format .",
     "prepare": "git config core.hooksPath .agents/guardrails/hooks || true",
     "check:docs": "node scripts/check-docs.mjs",
     "start": "node dist/main.js",
-    "dev": "tsx src/main.ts",
+    "dev": "node scripts/build-page.mjs && tsx src/main.ts",
     "connect": "tsx src/connect.ts",
-    "check:page": "node scripts/check-page.mjs"
+    "check:page": "node scripts/build-page.mjs && node scripts/check-page.mjs",
+    "build:page": "node scripts/build-page.mjs",
+    "check:toolkit": "toolkit-guard page"
   },
   "dependencies": {
     "@jaetask/open-agent-kit": "0.1.0",
@@ -39,8 +41,14 @@
   "devDependencies": {
     "@biomejs/biome": "2.6.5",
     "@jaetask/snap": "0.1.0",
+    "@jaetask/toolkit": "0.1.0",
     "@types/node": "22.18.0",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "esbuild": "0.28.2",
     "playwright-core": "1.63.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
     "tsx": "4.20.5",
     "typescript": "5.9.2"
   }
