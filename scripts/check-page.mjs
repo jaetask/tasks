@@ -443,6 +443,34 @@ try {
     await page.getByRole("menuitem", { name: "Move right" }).waitFor();
     await page.keyboard.press("Escape");
   });
+  await step("a right click on a card opens its menu: blocked and due date", async () => {
+    const card = page.locator(".ticket", { hasText: "Show the recording length" });
+    await card.click({ button: "right" });
+    await page.getByRole("menuitem", { name: "Mark as" }).press("ArrowRight");
+    await page.getByRole("menuitem", { name: "Blocked..." }).press("Enter");
+    await page.getByRole("textbox", { name: "Mark as blocked" }).fill("Waiting on the codec");
+    await page.keyboard.press("Enter");
+    await card.getByText("Blocked").waitFor();
+    await card.click({ button: "right" });
+    await page.getByRole("menuitem", { name: "Mark as" }).press("ArrowRight");
+    await page.getByRole("menuitem", { name: "Not blocked" }).press("Enter");
+    await until(
+      () =>
+        ![...document.querySelectorAll(".ticket")]
+          .find((t) => t.textContent.includes("Show the recording length"))
+          ?.textContent.includes("Blocked"),
+    );
+    if (await page.evaluate(() => window.location.hash.includes("ticket="))) {
+      throw new Error("the ticket opened");
+    }
+    await card.click({ button: "right" });
+    await page.getByRole("menuitem", { name: "Make a copy" }).waitFor();
+    await page.getByRole("menuitem", { name: "Due date", exact: true }).press("ArrowRight");
+    await page.getByRole("menuitem", { name: "Tomorrow" }).press("Enter");
+    await card.click({ button: "right" });
+    await page.getByRole("menuitem", { name: "Due date", exact: true }).press("ArrowRight");
+    await page.getByRole("menuitem", { name: "Remove due date" }).press("Enter");
+  });
   await step("back to the status view", async () => {
     await page.getByRole("radio", { name: "Status view" }).click();
     await page.locator(".lane", { hasText: "To do" }).waitFor();

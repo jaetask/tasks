@@ -67,6 +67,7 @@ import {
   TypePicker,
 } from "./properties.js";
 import { TicketView } from "./ticket.js";
+import { TicketMenu } from "./ticket-menu.js";
 
 const VIEWS = [
   { id: "features", label: "Features", Icon: IconStack2, heading: "Features" },
@@ -395,161 +396,164 @@ export function TicketCard({
   const bare = shown.size === 0;
   return (
     // The whole card opens the ticket; it can be dragged, and on the backlog it holds a button of its own.
-    <article
-      draggable
-      aria-label={`${ticket.id} ${ticket.title}`}
-      data-blocked={ticket.blocked !== null}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      onDragStart={(e) => {
-        e.dataTransfer.setData(DRAG, ticket.id);
-        e.dataTransfer.effectAllowed = "move";
-      }}
-      onClick={(e) => {
-        // A click in a picker, which is drawn outside the card, or on a chip is not for the card.
-        const target = e.target as HTMLElement;
-        if (!e.currentTarget.contains(target) || target.closest("[data-chip]")) return;
-        open();
-      }}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" && e.target === e.currentTarget) open();
-      }}
-      className={`ticket grid cursor-pointer gap-3 rounded-xl border bg-card shadow-sm transition-shadow hover:shadow-md focus-visible:outline-2 focus-visible:outline-ring ${bare ? "px-3 py-2" : "p-4"}`}
-    >
-      {top && (
-        <div className="-mb-1 flex items-center justify-between gap-2 text-xs text-muted-foreground">
-          <span className="flex items-center gap-1">
-            {has("id") && <span>{ticket.id}</span>}
-            {has("id") && has("type") && <span>·</span>}
-            {has("type") && (
-              <TypePicker ticket={ticket}>
-                <Chip className="text-muted-foreground">{titleCase(ticket.type)}</Chip>
-              </TypePicker>
-            )}
-          </span>
-          <span className="flex items-center gap-2">
-            {ticket.blocked && <span>Blocked</span>}
-            {has("priority") && (
-              <PriorityPicker ticket={ticket} armed={hovered}>
-                <Chip className="gap-1 text-muted-foreground" aria-label="Priority">
-                  <PriorityIcon priority={ticket.priority} />
-                  {ticket.priority !== "none" && titleCase(ticket.priority)}
-                </Chip>
-              </PriorityPicker>
-            )}
-            {has("actor") && !together && (
-              <ActorPicker ticket={ticket} armed={hovered}>
-                <Chip aria-label="Actor">
-                  {avatar ?? (
-                    <IconUserOff size={16} aria-hidden className="text-muted-foreground" />
-                  )}
-                </Chip>
-              </ActorPicker>
-            )}
-          </span>
-        </div>
-      )}
-      <div className="flex items-start gap-2 font-medium">
-        {has("status") && !together && (
-          <StatusPicker ticket={ticket} armed={hovered}>
-            <Chip className="mt-0.5" aria-label="Status">
-              {status}
-            </Chip>
-          </StatusPicker>
-        )}
-        <span className={bare ? "truncate" : ""}>{ticket.title}</span>
-      </div>
-      {together && (
-        <div className="flex flex-wrap items-center gap-2 text-xs">
-          <StatusPicker ticket={ticket} armed={hovered}>
-            <Chip className="gap-2" aria-label="Status">
-              {status}
-              {ticket.backlog ? "Backlog" : ticket.column.name}
-            </Chip>
-          </StatusPicker>
-          <ActorPicker ticket={ticket} armed={hovered}>
-            <Chip className="gap-2" aria-label="Actor">
-              {avatar}
-              {actor ? actor.name : <span className="text-muted-foreground">No actor</span>}
-            </Chip>
-          </ActorPicker>
-        </div>
-      )}
-      {has("feature") && (
-        <FeaturePicker ticket={ticket}>
-          <Chip className="justify-start whitespace-normal text-left text-muted-foreground">
-            {[project?.name ?? ticket.project, ticket.featureName].filter(Boolean).join(" / ")}
-          </Chip>
-        </FeaturePicker>
-      )}
-      {pills && (
-        <div className="flex flex-wrap items-center gap-1.5">
-          {has("location") && ticket.locationName && (
-            <LocationPicker ticket={ticket}>
-              <Chip className={PILL}>
-                <IconMapPin size={12} aria-hidden />
-                {ticket.locationName}
-              </Chip>
-            </LocationPicker>
-          )}
-          {has("labels") &&
-            ticket.labels.map((l) => (
-              <LabelsPicker key={l.id} ticket={ticket} armed={hovered}>
-                <Chip className={PILL}>
-                  <LabelDot colour={l.colour} />
-                  {l.name}
-                </Chip>
-              </LabelsPicker>
-            ))}
-          {has("links") &&
-            [...byService].map(([name, urls]) => (
-              <Chip key={name} asChild className={PILL}>
-                <a href={urls[0]} target="_blank" rel="noopener noreferrer">
-                  <IconLink size={12} aria-hidden />
-                  {urls.length > 1 ? `${name} ${urls.length}` : name}
-                </a>
-              </Chip>
-            ))}
-          {has("due") && ticket.due && (
-            <DuePicker ticket={ticket} armed={hovered}>
-              <Chip className={PILL}>
-                <DueIcon due={ticket.due} size={12} />
-                {dueLabel(ticket.due)}
-              </Chip>
-            </DuePicker>
-          )}
-          {has("time-in-status") && (
-            <span className={PILL} title={new Date(ticket.columnSince).toLocaleString()}>
-              <IconStopwatch size={12} aria-hidden />
-              {since(ticket.columnSince)}
+    // A right click opens its menu.
+    <TicketMenu ticket={ticket}>
+      <article
+        draggable
+        aria-label={`${ticket.id} ${ticket.title}`}
+        data-blocked={ticket.blocked !== null}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        onDragStart={(e) => {
+          e.dataTransfer.setData(DRAG, ticket.id);
+          e.dataTransfer.effectAllowed = "move";
+        }}
+        onClick={(e) => {
+          // A click in a picker, which is drawn outside the card, or on a chip is not for the card.
+          const target = e.target as HTMLElement;
+          if (!e.currentTarget.contains(target) || target.closest("[data-chip]")) return;
+          open();
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && e.target === e.currentTarget) open();
+        }}
+        className={`ticket grid cursor-pointer gap-3 rounded-xl border bg-card shadow-sm transition-shadow hover:shadow-md focus-visible:outline-2 focus-visible:outline-ring ${bare ? "px-3 py-2" : "p-4"}`}
+      >
+        {top && (
+          <div className="-mb-1 flex items-center justify-between gap-2 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1">
+              {has("id") && <span>{ticket.id}</span>}
+              {has("id") && has("type") && <span>·</span>}
+              {has("type") && (
+                <TypePicker ticket={ticket}>
+                  <Chip className="text-muted-foreground">{titleCase(ticket.type)}</Chip>
+                </TypePicker>
+              )}
             </span>
+            <span className="flex items-center gap-2">
+              {ticket.blocked && <span>Blocked</span>}
+              {has("priority") && (
+                <PriorityPicker ticket={ticket} armed={hovered}>
+                  <Chip className="gap-1 text-muted-foreground" aria-label="Priority">
+                    <PriorityIcon priority={ticket.priority} />
+                    {ticket.priority !== "none" && titleCase(ticket.priority)}
+                  </Chip>
+                </PriorityPicker>
+              )}
+              {has("actor") && !together && (
+                <ActorPicker ticket={ticket} armed={hovered}>
+                  <Chip aria-label="Actor">
+                    {avatar ?? (
+                      <IconUserOff size={16} aria-hidden className="text-muted-foreground" />
+                    )}
+                  </Chip>
+                </ActorPicker>
+              )}
+            </span>
+          </div>
+        )}
+        <div className="flex items-start gap-2 font-medium">
+          {has("status") && !together && (
+            <StatusPicker ticket={ticket} armed={hovered}>
+              <Chip className="mt-0.5" aria-label="Status">
+                {status}
+              </Chip>
+            </StatusPicker>
           )}
-          {has("reactions") &&
-            ticket.reactions.map((r) => (
-              <span key={r.emoji} className="text-xs text-muted-foreground">
-                {`${r.emoji} ${r.actors.length}`}
-              </span>
-            ))}
+          <span className={bare ? "truncate" : ""}>{ticket.title}</span>
         </div>
-      )}
-      {(has("created") || has("updated") || action) && (
-        <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
-          <span className="grid gap-1">
-            {has("created") && (
-              <span title={new Date(ticket.createdAt).toLocaleString()}>
-                {`Created ${shortDate(ticket.createdAt)}`}
+        {together && (
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            <StatusPicker ticket={ticket} armed={hovered}>
+              <Chip className="gap-2" aria-label="Status">
+                {status}
+                {ticket.backlog ? "Backlog" : ticket.column.name}
+              </Chip>
+            </StatusPicker>
+            <ActorPicker ticket={ticket} armed={hovered}>
+              <Chip className="gap-2" aria-label="Actor">
+                {avatar}
+                {actor ? actor.name : <span className="text-muted-foreground">No actor</span>}
+              </Chip>
+            </ActorPicker>
+          </div>
+        )}
+        {has("feature") && (
+          <FeaturePicker ticket={ticket}>
+            <Chip className="justify-start whitespace-normal text-left text-muted-foreground">
+              {[project?.name ?? ticket.project, ticket.featureName].filter(Boolean).join(" / ")}
+            </Chip>
+          </FeaturePicker>
+        )}
+        {pills && (
+          <div className="flex flex-wrap items-center gap-1.5">
+            {has("location") && ticket.locationName && (
+              <LocationPicker ticket={ticket}>
+                <Chip className={PILL}>
+                  <IconMapPin size={12} aria-hidden />
+                  {ticket.locationName}
+                </Chip>
+              </LocationPicker>
+            )}
+            {has("labels") &&
+              ticket.labels.map((l) => (
+                <LabelsPicker key={l.id} ticket={ticket} armed={hovered}>
+                  <Chip className={PILL}>
+                    <LabelDot colour={l.colour} />
+                    {l.name}
+                  </Chip>
+                </LabelsPicker>
+              ))}
+            {has("links") &&
+              [...byService].map(([name, urls]) => (
+                <Chip key={name} asChild className={PILL}>
+                  <a href={urls[0]} target="_blank" rel="noopener noreferrer">
+                    <IconLink size={12} aria-hidden />
+                    {urls.length > 1 ? `${name} ${urls.length}` : name}
+                  </a>
+                </Chip>
+              ))}
+            {has("due") && ticket.due && (
+              <DuePicker ticket={ticket} armed={hovered}>
+                <Chip className={PILL}>
+                  <DueIcon due={ticket.due} size={12} />
+                  {dueLabel(ticket.due)}
+                </Chip>
+              </DuePicker>
+            )}
+            {has("time-in-status") && (
+              <span className={PILL} title={new Date(ticket.columnSince).toLocaleString()}>
+                <IconStopwatch size={12} aria-hidden />
+                {since(ticket.columnSince)}
               </span>
             )}
-            {has("updated") && (
-              <span title={new Date(ticket.updatedAt).toLocaleString()}>
-                {`Updated ${shortDate(ticket.updatedAt)}`}
-              </span>
-            )}
-          </span>
-          {action}
-        </div>
-      )}
-    </article>
+            {has("reactions") &&
+              ticket.reactions.map((r) => (
+                <span key={r.emoji} className="text-xs text-muted-foreground">
+                  {`${r.emoji} ${r.actors.length}`}
+                </span>
+              ))}
+          </div>
+        )}
+        {(has("created") || has("updated") || action) && (
+          <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+            <span className="grid gap-1">
+              {has("created") && (
+                <span title={new Date(ticket.createdAt).toLocaleString()}>
+                  {`Created ${shortDate(ticket.createdAt)}`}
+                </span>
+              )}
+              {has("updated") && (
+                <span title={new Date(ticket.updatedAt).toLocaleString()}>
+                  {`Updated ${shortDate(ticket.updatedAt)}`}
+                </span>
+              )}
+            </span>
+            {action}
+          </div>
+        )}
+      </article>
+    </TicketMenu>
   );
 }
 
