@@ -627,8 +627,17 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
             }}
           />
         </form>
-        <div className="mt-3 flex items-center justify-between px-2">
-          <h3 className="m-0 text-xs font-medium text-muted-foreground">Labels</h3>
+        <h3 className="m-0 mt-3 px-2 text-xs font-medium text-muted-foreground">Labels</h3>
+        <div className="flex flex-wrap items-center gap-1.5 px-2">
+          {ticket.labels.map((l) => (
+            <span
+              key={l.id}
+              className="pill flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs"
+            >
+              <LabelDot colour={l.colour} />
+              {l.name}
+            </span>
+          ))}
           <LabelsPicker ticket={ticket}>
             <Button
               variant="ghost"
@@ -639,19 +648,6 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
             </Button>
           </LabelsPicker>
         </div>
-        {ticket.labels.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 px-2">
-            {ticket.labels.map((l) => (
-              <span
-                key={l.id}
-                className="pill flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs"
-              >
-                <LabelDot colour={l.colour} />
-                {l.name}
-              </span>
-            ))}
-          </div>
-        )}
         {!open && (
           <div className="mt-2 flex flex-wrap gap-2">
             <DeleteForGood
