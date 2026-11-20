@@ -403,9 +403,9 @@ export function sqliteTickets(
         ).at ?? r.created_at,
       updatedAt:
         (
-          db.prepare("SELECT max(at) AS at FROM changes WHERE ticket = ?").get(r.id) as {
-            at: string | null;
-          }
+          db
+            .prepare("SELECT max(at) AS at FROM changes WHERE ticket = ? AND imported = 0")
+            .get(r.id) as { at: string | null }
         ).at ?? r.created_at,
     };
   };

@@ -55,7 +55,7 @@ npm start
 
 Tasks runs at http://127.0.0.1:8081 and keeps its data in `data/`. At first start it prints a setup secret once: enter it on the page to sign in. Set `PORT`, `HOST`, `DATA_DIR` and `KIT_SETUP_SECRET` to change the defaults.
 
-Files attached to tickets are kept in `data/files/`; back that folder up with `data/app.db`. A file can be up to 25 MB, and an mp4, webm or mov video up to 200 MB. Two settings are off until you set them: `FILES_FROM` names the folders, separated by commas, that an agent may attach files from by path, and `LINK_TITLES=1` makes Tasks read the title of the page each new link points to.
+Files attached to tickets are kept in `data/files/`; back that folder up with `data/app.db`. A file can be up to 25 MB, and an mp4, webm or mov video up to 200 MB. An agent on this machine attaches a file by its path, from any folder Tasks can read. One setting is off until you set it: `LINK_TITLES=1` makes Tasks read the title of the page each new link points to.
 
 ![A ticket: its description, an image, and the conversation with a line for each change](docs/img/ticket.png)
 

@@ -19,7 +19,7 @@
 | files.file-list | read | files | List a ticket's files: their names, types and sizes. The bytes are not included. |
 | files.file-locate | read |  | Say where one file's bytes are on this machine, for an agent that runs here and wants to read it. |
 | files.file-add | write | file-changed | Attach an uploaded file to a ticket. The page uploads the bytes first and names the upload here; an agent on this machine uses file-add-path. |
-| files.file-add-path | write | file-changed | Attach a file that is on this machine to a ticket, by its path. The file is copied; the original stays. Only files inside the folders the owner allows can be attached. At most 26214400 bytes, or 209715200 for mp4, webm and mov video. |
+| files.file-add-path | write | file-changed | Attach a file that is on this machine to a ticket, by its path, from any folder Tasks can read. The file is copied; the original stays. At most 26214400 bytes, or 209715200 for mp4, webm and mov video. |
 | files.file-remove | write | file-changed | Remove a file from a ticket. Whoever attached it or the owner can. |
 
 ### Cards
@@ -73,7 +73,7 @@ Tools:
 - files__file-list (reads): List a ticket's files: their names, types and sizes. The bytes are not included.
 - files__file-locate (reads): Say where one file's bytes are on this machine, for an agent that runs here and wants to read it.
 - files__file-add (changes): Attach an uploaded file to a ticket. The page uploads the bytes first and names the upload here; an agent on this machine uses file-add-path.
-- files__file-add-path (changes): Attach a file that is on this machine to a ticket, by its path. The file is copied; the original stays. Only files inside the folders the owner allows can be attached. At most 26214400 bytes, or 209715200 for mp4, webm and mov video.
+- files__file-add-path (changes): Attach a file that is on this machine to a ticket, by its path, from any folder Tasks can read. The file is copied; the original stays. At most 26214400 bytes, or 209715200 for mp4, webm and mov video.
 - files__file-remove (changes): Remove a file from a ticket. Whoever attached it or the owner can.
 A tool that changes something after the person says yes waits for them; tell them what you asked for.
 ```

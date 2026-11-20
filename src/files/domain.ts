@@ -1,7 +1,7 @@
 // The files Domain: any file attached to a ticket. The bytes never travel inside a Call: the
 // page uploads them first, and an agent names a path on this machine.
 import { realpathSync } from "node:fs";
-import { basename, join, sep } from "node:path";
+import { basename, join } from "node:path";
 import { defineCard, defineDomain } from "@jaetask/open-agent-kit";
 import { z } from "zod";
 import { type Base, readAction, writeAction } from "../actions.js";
@@ -15,8 +15,6 @@ export type FilesDeps = Base & {
   files: Files;
   /** Where uploads wait until a Call attaches them. */
   stagedDir: string;
-  /** The folders an agent may attach files from. With none, attaching by path is refused. */
-  filesFrom: string[];
   now(): number;
 };
 
@@ -109,39 +107,19 @@ const attachUpload = add({
 
 const attachPath = add({
   name: "file-add-path",
-  description: `Attach a file that is on this machine to a ticket, by its path. The file is copied; the original stays. Only files inside the folders the owner allows can be attached. At most ${MAX_BYTES} bytes, or ${MAX_VIDEO_BYTES} for mp4, webm and mov video.`,
+  description: `Attach a file that is on this machine to a ticket, by its path, from any folder Tasks can read. The file is copied; the original stays. At most ${MAX_BYTES} bytes, or ${MAX_VIDEO_BYTES} for mp4, webm and mov video.`,
   input: z.object({
     ticket: z.string(),
     path: z.string().min(1).max(4000).describe("The file's full path on this machine."),
     name: name.optional().describe("What to call it. The file's own name if left out."),
   }),
-  run: ({ ticket, path, name }, { tickets, files, filesFrom, principal, now, log }) => {
+  run: ({ ticket, path, name }, { tickets, files, principal, now, log }) => {
     tickets.get(ticket);
-    if (filesFrom.length === 0) {
-      throw new Refusal(
-        "no-folder-allowed",
-        "The owner has not allowed any folder to attach files from.",
-      );
-    }
-    // The real place of the file, after any links, must be inside an allowed folder.
     let real: string;
     try {
       real = realpathSync(path);
     } catch {
       throw new Refusal("no-file", `There is no file at ${path}.`);
-    }
-    const inside = filesFrom.some((folder) => {
-      try {
-        return real.startsWith(realpathSync(folder) + sep);
-      } catch {
-        return false;
-      }
-    });
-    if (!inside) {
-      throw new Refusal(
-        "outside-allowed-folders",
-        `${path} is not inside a folder the owner allows: ${filesFrom.join(", ")}.`,
-      );
     }
     const called = name ?? basename(real);
     const file = files.add(principal.id, new Date(now()).toISOString(), {
