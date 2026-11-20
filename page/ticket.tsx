@@ -142,6 +142,7 @@ function Steps({ ticket, open }: { ticket: string; open: boolean }) {
   const steps = useRead<TicketStep[]>("steps.ticket-step-list", { ticket }) ?? [];
   const [title, setTitle] = useState("");
   const [shown, setShown] = useState<string | null>(null);
+  const [editing, setEditing] = useState<string | null>(null);
   const [note, setNote] = useState("");
   if (!open && steps.length === 0) return null;
   const add = () => {
@@ -170,24 +171,69 @@ function Steps({ ticket, open }: { ticket: string; open: boolean }) {
                 })
               }
             />
-            <Button
-              variant="ghost"
-              className={`h-auto min-w-0 flex-1 justify-start whitespace-normal p-0 text-left font-normal hover:bg-transparent ${step.done ? "text-muted-foreground line-through" : ""}`}
-              onClick={() => {
-                setShown(shown === step.id ? null : step.id);
-                setNote("");
-              }}
-            >
-              {step.title}
-            </Button>
-            {step.notes.length > 0 && (
-              <span className="flex items-center gap-1 text-xs text-muted-foreground">
+            {editing === step.id ? (
+              // Enter or leaving the box saves the new wording; Escape leaves it as it was.
+              <Input
+                autoFocus
+                aria-label={`Rename ${step.title}`}
+                className="h-7 flex-1"
+                maxLength={200}
+                defaultValue={step.title}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") e.currentTarget.blur();
+                  if (e.key === "Escape") {
+                    e.currentTarget.value = step.title;
+                    e.currentTarget.blur();
+                  }
+                }}
+                onBlur={(e) => {
+                  const wanted = e.currentTarget.value.trim();
+                  setEditing(null);
+                  if (wanted && wanted !== step.title) {
+                    void act("steps.ticket-step-rename", { step: step.id, title: wanted });
+                  }
+                }}
+              />
+            ) : (
+              <Button
+                variant="ghost"
+                disabled={!open}
+                className={`h-auto min-w-0 flex-1 cursor-text justify-start whitespace-normal p-0 text-left font-normal hover:bg-transparent disabled:opacity-100 ${step.done ? "text-muted-foreground line-through" : ""}`}
+                onClick={() => setEditing(step.id)}
+              >
+                {step.title}
+              </Button>
+            )}
+            {(step.notes.length > 0 || shown === step.id) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                aria-label={`Notes on ${step.title}`}
+                className="h-6 gap-1 px-1 text-xs text-muted-foreground"
+                onClick={() => {
+                  setShown(shown === step.id ? null : step.id);
+                  setNote("");
+                }}
+              >
                 <IconNote size={14} aria-hidden />
-                {step.notes.length}
-              </span>
+                {step.notes.length > 0 && step.notes.length}
+              </Button>
             )}
             {open && (
               <span className="flex opacity-0 focus-within:opacity-100 group-hover:opacity-100">
+                {step.notes.length === 0 && shown !== step.id && (
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    aria-label={`Add a note to ${step.title}`}
+                    onClick={() => {
+                      setShown(step.id);
+                      setNote("");
+                    }}
+                  >
+                    <IconNote aria-hidden />
+                  </Button>
+                )}
                 <Button
                   variant="ghost"
                   size="icon-xs"

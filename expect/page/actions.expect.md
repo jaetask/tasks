@@ -77,6 +77,7 @@
 | steps.ticket-step-move | write |
 | steps.ticket-step-note | write |
 | steps.ticket-step-remove | write |
+| steps.ticket-step-rename | write |
 | steps.ticket-step-uncheck | write |
 | tickets.backlog-read | read |
 | tickets.board-read | read |
