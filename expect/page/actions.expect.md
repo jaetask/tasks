@@ -19,6 +19,7 @@
 | catalog.column-move | write |
 | catalog.column-remove | write |
 | catalog.column-rename | write |
+| catalog.label-colour-set | write |
 | catalog.label-create | write |
 | catalog.label-remove | write |
 | catalog.label-rename | write |
