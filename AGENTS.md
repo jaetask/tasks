@@ -9,6 +9,7 @@ Tasks: task management for AI agents, an App on [@jaetask/open-agent-kit](https:
 - **The page** is in `page/`, built from [@jaetask/toolkit](https://github.com/jaetask/toolkit): its shell, panels, lists and edit pages. Editing opens an edit page with Back, Cancel and Save, never in place. `toolkit-guard` (part of `lint`) fails a hand-built shell, section or edit page; a missing piece is asked of the toolkit.
 - **Build only what has a reason**: leave a part out unless there is a deliberate reason for it.
 - **Checks**: `npm run typecheck`, `lint`, `format:check`, `test`, `expect`, `build`. Hooks in `.agents/guardrails/hooks` run them on commit and push; `npm run format` fixes formatting.
+- **Branches**: push a branch, never main. `auto-pr` opens a pull request to main and it merges itself when the `ci` check passes; the pre-push hook refuses main.
 - **Public docs state decisions only**: open questions and undecided items never go in `docs/` or README.md; they belong in issues or the conversation. `npm run check:docs` (part of `lint`) enforces it.
 - **Public docs describe what Tasks has and does**: they do not mention things removed or left out, and do not compare Tasks with other projects beyond a credit.
 - **Plain, literal language**: no slogans, hype or dramatic phrasing. `check:docs` bans known phrases from `scripts/docs-phrases.json`; when someone flags a new one, add it there with the pave skill.
