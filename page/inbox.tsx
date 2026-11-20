@@ -1,20 +1,11 @@
 // A project's Intake: its inbox items, and the steps that look at each new one.
-import {
-  Button,
-  Card,
-  Chip,
-  EmptyCard,
-  ListCard,
-  ListRow,
-  PageBody,
-  PageLink,
-  Panel,
-  Tabs,
-} from "@jaetask/toolkit";
+import { ListCard, ListRow, PageBody, PageLink, Panel } from "@jaetask/toolkit/suite";
+import { Button } from "@jaetask/toolkit/ui/button";
+import { Card } from "@jaetask/toolkit/ui/card";
 import { useState } from "react";
 import { type Item, type Project, type Run, type Step, when } from "./api.js";
 import { actorName, useApp, useRead } from "./app.js";
-import { Say } from "./local.js";
+import { Nothing, Pill, Say, TabBar } from "./local.js";
 import { projectTitle } from "./pages.js";
 
 export const CONDITIONS: Record<string, string> = {
@@ -64,7 +55,7 @@ function ItemCard({ item }: { item: Item }) {
   const live = item.state === "received" || item.state === "accepted";
   const why = (verb: string, action: string) => (
     <Button
-      surface="white"
+      variant="secondary"
       onClick={() => {
         const reason = window.prompt(`Why ${verb.toLowerCase()} it?`);
         if (reason?.trim()) void act(action, { item: item.id, reason: reason.trim() });
@@ -74,14 +65,14 @@ function ItemCard({ item }: { item: Item }) {
     </Button>
   );
   return (
-    <Card className="item">
-      <div className="who">
+    <Card className="item grid gap-2 p-4">
+      <div className="flex flex-wrap items-center gap-2">
         <b>{item.title}</b>
         <span className="tk-muted mono">{`${item.id} · from ${item.source} · ${when(item.at)}`}</span>
         {item.tags.map((t) => (
-          <Chip key={t}>{t}</Chip>
+          <Pill key={t}>{t}</Pill>
         ))}
-        {item.category && <Chip>{item.category}</Chip>}
+        {item.category && <Pill>{item.category}</Pill>}
       </div>
       {item.text !== item.title && <p className="text">{item.text}</p>}
       {(item.original.title !== item.title || item.original.text !== item.text) && (
@@ -95,23 +86,29 @@ function ItemCard({ item }: { item: Item }) {
         </p>
       )}
       {item.reason && <p className="tk-muted">{`Reason: ${item.reason}`}</p>}
-      <div className="buttons">
+      <div className="flex flex-wrap items-center gap-2">
         {item.ticket && (
           <PageLink to={`/t/${item.ticket}`} surface="white">{`Open ${item.ticket}`}</PageLink>
         )}
         {live && item.state !== "accepted" && (
-          <Button surface="white" onClick={() => void act("inbox.item-accept", { item: item.id })}>
+          <Button
+            variant="secondary"
+            onClick={() => void act("inbox.item-accept", { item: item.id })}
+          >
             Accept
           </Button>
         )}
         {live && (
-          <Button surface="white" onClick={() => void act("inbox.item-promote", { item: item.id })}>
+          <Button
+            variant="secondary"
+            onClick={() => void act("inbox.item-promote", { item: item.id })}
+          >
             Add to the backlog
           </Button>
         )}
         {live && (
           <Button
-            surface="white"
+            variant="secondary"
             onClick={() => void act("inbox.item-promote", { item: item.id, backlog: false })}
           >
             Put on the board
@@ -120,11 +117,11 @@ function ItemCard({ item }: { item: Item }) {
         {live && why("Reject", "inbox.item-reject")}
         {live && why("Dismiss", "inbox.item-dismiss")}
         {live && (
-          <Button surface="white" onClick={() => void act("inbox.item-run", { item: item.id })}>
+          <Button variant="secondary" onClick={() => void act("inbox.item-run", { item: item.id })}>
             Run the steps again
           </Button>
         )}
-        <Button surface="white" aria-expanded={open} onClick={() => setOpen(!open)}>
+        <Button variant="secondary" aria-expanded={open} onClick={() => setOpen(!open)}>
           What the steps did
         </Button>
       </div>
@@ -158,15 +155,11 @@ export function IntakePage({ project }: { project: Project }) {
           button="Capture"
           onSubmit={(text) => act("inbox.item-capture", { project: project.id, text })}
         />
-        <Tabs label="Which items" value={state} options={STATES} onChange={setState} />
+        <TabBar label="Which items" value={state} options={STATES} onChange={setState} />
         {items && items.length > 0 ? (
-          <>
-            {items.map((i) => (
-              <ItemCard key={i.id} item={i} />
-            ))}
-          </>
+          items.map((i) => <ItemCard key={i.id} item={i} />)
         ) : (
-          <EmptyCard text={`Nothing is ${state}.`} />
+          <Nothing text={`Nothing is ${state}.`} />
         )}
       </Panel>
       <Panel
@@ -178,7 +171,7 @@ export function IntakePage({ project }: { project: Project }) {
         {steps.length > 0 ? (
           <ListCard>
             {steps.map((s, i) => (
-              <ListRow key={s.id} to={`/steps/${s.id}`} aside={<Chip>{s.on ? "on" : "off"}</Chip>}>
+              <ListRow key={s.id} to={`/steps/${s.id}`} aside={<Pill>{s.on ? "on" : "off"}</Pill>}>
                 <b>{`${i + 1}. ${s.name}`}</b>
                 <span className="tk-muted">
                   {`${s.kind.replace("-", " ")} · as ${actorName(catalog, s.actor)} · may ${s.actions
@@ -195,7 +188,7 @@ export function IntakePage({ project }: { project: Project }) {
             ))}
           </ListCard>
         ) : (
-          <EmptyCard text="No steps yet. New items go straight to the inbox." />
+          <Nothing text="No steps yet. New items go straight to the inbox." />
         )}
       </Panel>
     </PageBody>

@@ -1,21 +1,21 @@
 // Tasks' page, built from @jaetask/toolkit: the app shell, panels, lists and
 // edit pages. Pages are routed on the hash. Everything the page reads or
 // changes goes through POST /api/calls, the same Call pipeline agents use.
-import "@jaetask/toolkit/styles.css";
-import "./page.css";
+
+import { toast } from "@jaetask/toolkit/hooks";
+import { AppShell, CenteredPage, type LinkComponent, LinkProvider } from "@jaetask/toolkit/suite";
+import { Button } from "@jaetask/toolkit/ui/button";
+import { Input } from "@jaetask/toolkit/ui/input";
+import { Toaster } from "@jaetask/toolkit/ui/toaster";
 import {
-  AppShell,
-  Button,
-  CenteredPage,
-  type Group,
-  Input,
-  type LinkComponent,
-  Notice,
-  SideLink,
-  SideSection,
-  ToolkitProvider,
-} from "@jaetask/toolkit";
-import { type FormEvent, type ReactNode, useCallback, useEffect, useState } from "react";
+  IconArchive,
+  IconHelpCircle,
+  IconHistory,
+  IconLayoutGrid,
+  IconMessage,
+  IconPlug,
+} from "@tabler/icons-react";
+import { type FormEvent, useCallback, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
   api,
@@ -29,6 +29,7 @@ import {
   whenSignedOut,
 } from "./api.js";
 import { type App, AppContext, type Narrow, useApp, useRead } from "./app.js";
+import { BacklogPage, BoardPage } from "./board.js";
 import {
   ActorEdit,
   ColumnsEdit,
@@ -43,11 +44,8 @@ import {
   TicketNew,
 } from "./edits.js";
 import { IntakePage } from "./inbox.js";
-import { ProjectAvatar } from "./local.js";
 import {
   ArchivePage,
-  BacklogPage,
-  BoardPage,
   ChangesPage,
   ConnectionsPage,
   FeaturesPage,
@@ -56,6 +54,7 @@ import {
   RepliesPage,
   SettingsPage,
 } from "./pages.js";
+import { ProjectsNav } from "./projects-nav.js";
 import { TicketPage } from "./ticket.js";
 
 // ---------- Routing on the hash ----------
@@ -79,46 +78,14 @@ const HashLink: LinkComponent = ({ href, children, ...rest }) => (
   </a>
 );
 
-const icon = (d: string): ReactNode => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-    <path d={d} strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
 const ICONS = {
-  overview: icon("M4 5h6v6H4zM14 5h6v6h-6zM4 15h6v4H4zM14 15h6v4h-6z"),
-  input: icon(
-    "M12 17v.01M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 1-1 1.7M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18",
-  ),
-  replies: icon("M4 5h16v11H9l-5 4z"),
-  archive: icon("M4 5h16v4H4zM6 9v10h12V9M10 13h4"),
-  connections: icon("M9 7V3M15 7V3M7 7h10v5a5 5 0 0 1-10 0zM12 17v4"),
-  changes: icon("M12 7v5l3 2M4 12a8 8 0 1 0 3-6.2M4 4v4h4"),
+  overview: <IconLayoutGrid size={16} aria-hidden />,
+  input: <IconHelpCircle size={16} aria-hidden />,
+  replies: <IconMessage size={16} aria-hidden />,
+  archive: <IconArchive size={16} aria-hidden />,
+  connections: <IconPlug size={16} aria-hidden />,
+  changes: <IconHistory size={16} aria-hidden />,
 };
-
-// The projects this browser has been to, so that each stays open in the
-// sidebar beside the others. Remembered in this browser only.
-const VISITED = "tasks.projects.visited";
-function useVisited(here: string | undefined): string[] {
-  const [visited, setVisited] = useState<string[]>(() => {
-    try {
-      const stored = JSON.parse(localStorage.getItem(VISITED) ?? "[]");
-      return Array.isArray(stored) ? stored.filter((id) => typeof id === "string") : [];
-    } catch {
-      return [];
-    }
-  });
-  useEffect(() => {
-    if (!here || visited.includes(here)) return;
-    const next = [...visited, here];
-    setVisited(next);
-    try {
-      localStorage.setItem(VISITED, JSON.stringify(next));
-    } catch {
-      // Without storage the sidebar still works; it forgets on reload.
-    }
-  }, [here, visited]);
-  return here && !visited.includes(here) ? [...visited, here] : visited;
-}
 
 // ---------- Signing in, and the first start ----------
 
@@ -140,7 +107,7 @@ function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
       title="Sign in to Tasks"
       line="Enter the setup secret Tasks printed when it first started."
     >
-      <form className="composer" onSubmit={submit}>
+      <form className="flex gap-2" onSubmit={submit}>
         <Input
           type="password"
           aria-label="Setup secret"
@@ -150,12 +117,10 @@ function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
           onChange={(e) => setSecret(e.target.value)}
           required
         />
-        <Button type="submit" variant="primary">
-          Sign in
-        </Button>
+        <Button type="submit">Sign in</Button>
       </form>
       {error && (
-        <p className="problem" role="alert">
+        <p className="m-0 text-destructive" role="alert">
           {error}
         </p>
       )}
@@ -171,7 +136,7 @@ function Setup({ onNamed }: { onNamed: (name: string) => void }) {
       line="Your changes show under this name. Your agents get their own names when they connect."
     >
       <form
-        className="composer"
+        className="flex gap-2"
         onSubmit={(e) => {
           e.preventDefault();
           if (name.trim()) onNamed(name.trim());
@@ -185,30 +150,9 @@ function Setup({ onNamed }: { onNamed: (name: string) => void }) {
           onChange={(e) => setName(e.target.value)}
           required
         />
-        <Button type="submit" variant="primary">
-          Start
-        </Button>
+        <Button type="submit">Start</Button>
       </form>
     </CenteredPage>
-  );
-}
-
-// ---------- The result of the last change ----------
-
-type Result = { html?: string; text?: string; refused?: boolean };
-
-function ResultCard({ result, onDismiss }: { result: Result | null; onDismiss: () => void }) {
-  if (!result) return null;
-  return (
-    <Notice tone={result.refused ? "refused" : "done"} floating onDismiss={onDismiss}>
-      {result.html ? (
-        // The Card arrives as HTML already escaped by the App's cardHtml.
-        // biome-ignore lint/security/noDangerouslySetInnerHtml: escaped by the App
-        <span dangerouslySetInnerHTML={{ __html: result.html }} />
-      ) : (
-        result.text
-      )}
-    </Notice>
   );
 }
 
@@ -255,7 +199,7 @@ function Page({ path, onSignOut }: { path: string; onSignOut: () => void }) {
 }
 
 function Shell({ path, onSignOut }: { path: string; onSignOut: () => void }) {
-  const { catalog, act } = useApp();
+  const { catalog } = useApp();
   const awaiting = useRead<InputRequest[]>("input.input-list", { state: "awaiting" }) ?? [];
   const asking = (useRead<Connection[]>("connections.connection-list") ?? []).filter(
     (c) => c.state === "pairing",
@@ -285,59 +229,6 @@ function Shell({ path, onSignOut }: { path: string; onSignOut: () => void }) {
     { href: "/changes", label: "Changes", icon: ICONS.changes, current: top === "changes" },
   ];
   const here = top === "p" ? parts[1] : undefined;
-  const screen = parts[2] ?? "board";
-  const active = catalog.projects.filter((p) => !p.archived);
-  const visited = useVisited(here);
-  const groups: Group[] = [
-    {
-      label: "Projects",
-      href: "/settings",
-      empty: "No projects yet. Create one in Settings.",
-      // The new order is saved one move at a time, from the end.
-      onReorder: (ids) => {
-        void (async () => {
-          for (let i = ids.length - 1; i >= 0; i--) {
-            const next = ids[i + 1];
-            await act("catalog.project-move", {
-              project: ids[i],
-              ...(next ? { before: next } : {}),
-            });
-          }
-        })();
-      },
-      items: active.map((p) => ({
-        id: p.id,
-        href: `/p/${p.id}/board`,
-        label: p.name,
-        avatar: <ProjectAvatar project={p} />,
-        current: here === p.id,
-        // A project you have been to stays open until you close it.
-        defaultOpen: visited.includes(p.id),
-        children: (
-          <SideSection label={p.id}>
-            {(
-              [
-                ["intake", "Intake", "New ideas and requests"],
-                ["backlog", "Backlog", "Waiting, off the board"],
-                ["board", "Board", "Tickets being worked on"],
-                ["features", "Features", "The parts of the project"],
-              ] as const
-            ).map(([id, label, line]) => (
-              <SideLink
-                key={id}
-                href={`/p/${p.id}/${id}`}
-                label={label}
-                line={line}
-                current={
-                  here === p.id && (screen === id || (id === "board" && screen === "columns"))
-                }
-              />
-            ))}
-          </SideSection>
-        ),
-      })),
-    },
-  ];
   const project = catalog.projects.find((p) => p.id === here);
   const title = project
     ? project.name
@@ -351,7 +242,7 @@ function Shell({ path, onSignOut }: { path: string; onSignOut: () => void }) {
       title={title}
       nav={nav}
       bottom={bottom}
-      groups={groups}
+      side={(collapsed) => <ProjectsNav collapsed={collapsed} />}
       settingsHref="/settings"
     >
       <Page path={path} onSignOut={onSignOut} />
@@ -362,7 +253,6 @@ function Shell({ path, onSignOut }: { path: string; onSignOut: () => void }) {
 function Signed({ path, onSignOut }: { path: string; onSignOut: () => void }) {
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [version, setVersion] = useState(0);
-  const [result, setResult] = useState<Result | null>(null);
   const [narrow, setNarrow] = useState<Narrow>({ text: "", actor: "", feature: "" });
   const bump = useCallback(() => setVersion((v) => v + 1), []);
 
@@ -384,18 +274,16 @@ function Signed({ path, onSignOut }: { path: string; onSignOut: () => void }) {
     return () => events.close();
   }, [bump]);
 
-  useEffect(() => {
-    if (!result) return;
-    const timer = setTimeout(() => setResult(null), 6000);
-    return () => clearTimeout(timer);
-  }, [result]);
-
   const act = useCallback(
     async <T,>(action: string, input: unknown): Promise<T | null> => {
       const outcome: Outcome = await call(action, input);
       const refused = refusal(outcome);
-      if (refused !== null) setResult({ text: refused, refused: true });
-      else if (outcome.card?.html) setResult({ html: outcome.card.html });
+      if (refused !== null) toast({ variant: "destructive", description: refused });
+      else if (outcome.card?.html) {
+        // The Card arrives as HTML already escaped by the App's cardHtml.
+        // biome-ignore lint/security/noDangerouslySetInnerHtml: escaped by the App
+        toast({ description: <span dangerouslySetInnerHTML={{ __html: outcome.card.html }} /> });
+      }
       bump();
       return refused === null ? (outcome.output as T) : null;
     },
@@ -422,7 +310,7 @@ function Signed({ path, onSignOut }: { path: string; onSignOut: () => void }) {
       ) : (
         <Setup onNamed={(name) => void act("catalog.actor-rename", { actor: OWNER, name })} />
       )}
-      <ResultCard result={result} onDismiss={() => setResult(null)} />
+      <Toaster />
     </AppContext.Provider>
   );
 }
@@ -439,13 +327,13 @@ function Root() {
     setSignedIn(false);
   };
   return (
-    <ToolkitProvider link={HashLink} location={path}>
+    <LinkProvider link={HashLink} location={path}>
       {signedIn === null ? null : signedIn ? (
         <Signed path={path} onSignOut={signOut} />
       ) : (
         <SignIn onSignedIn={() => setSignedIn(true)} />
       )}
-    </ToolkitProvider>
+    </LinkProvider>
   );
 }
 

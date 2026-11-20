@@ -6,12 +6,13 @@ import { type ActionName, createCalls, type Outcome } from "@jaetask/open-agent-
 import { sqliteStore } from "@jaetask/open-agent-kit/sqlite";
 import { table } from "@jaetask/snap";
 import { sqliteCatalog } from "../src/catalog/catalog.js";
-import { domains } from "../src/domains.js";
 import { sqliteComments } from "../src/comments/comments.js";
+import { domains } from "../src/domains.js";
 import { sqliteImages } from "../src/images/images.js";
 import { sqliteInputs } from "../src/input/input.js";
 import { openJournal } from "../src/journal.js";
 import { sqliteReplies } from "../src/replies/replies.js";
+import { sqliteSteps } from "../src/steps/steps.js";
 import { sqliteTickets } from "../src/tickets/tickets.js";
 
 type Step = {
@@ -57,6 +58,7 @@ export function renderData(db: DatabaseSync): string[] {
       .flatMap((c) => [c, ...c.replies]),
   );
   const replies = sqliteReplies(db, journal.rows, nameOf).list();
+  const steps = all.flatMap((t) => sqliteSteps(db, journal.rows, nameOf).list(t.id));
   const requests = sqliteInputs(db, journal.rows, nameOf).list();
   const images = all.flatMap((t) => sqliteImages(db, journal.rows).list(t.id));
   return [
@@ -159,6 +161,19 @@ export function renderData(db: DatabaseSync): string[] {
       ? table(
           ["id", "ticket", "asked by", "question", "state", "answer"],
           requests.map((q) => [q.id, q.ticket, q.askedByName, q.question, q.state, q.answer ?? ""]),
+        )
+      : "None.",
+    "### Ticket steps",
+    steps.length
+      ? table(
+          ["id", "ticket", "title", "done", "notes"],
+          steps.map((s) => [
+            s.id,
+            s.ticket,
+            s.title,
+            s.done ? "yes" : "",
+            s.notes.map((n) => `${n.byName}: ${n.text}`).join(" / "),
+          ]),
         )
       : "None.",
     "### Agent inboxes",

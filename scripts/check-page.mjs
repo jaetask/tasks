@@ -46,6 +46,11 @@ const count = (selector) => page.locator(selector).count();
 const until = (fn, arg) => page.waitForFunction(fn, arg);
 const see = (text) => page.getByText(text, { exact: false }).first().waitFor();
 const button = (name) => page.getByRole("button", { name, exact: true }).first();
+// Chooses an option of a dropdown: open it, then press the option.
+const pick = async (selector, option) => {
+  await page.locator(selector).click();
+  await page.getByRole("option", { name: option, exact: true }).click();
+};
 const link = (name) => page.getByRole("link", { name, exact: true }).first();
 // Opens a page by its address, as a bookmark would.
 const open = (path) =>
@@ -134,7 +139,11 @@ try {
   });
   await step("the sidebar opens the project's board with its four columns", async () => {
     await page.getByRole("link", { name: /Talk/ }).first().click();
-    await see("Tickets move through the columns");
+    await page
+      .getByRole("radiogroup", { name: "Board view" })
+      .or(page.getByRole("group", { name: "Board view" }))
+      .first()
+      .waitFor();
     await until(() => document.querySelectorAll(".tk-column").length === 4);
     await page
       .getByRole("link", { name: /Intake/ })
@@ -189,7 +198,7 @@ try {
     await shot("ticket-edit");
     await button("Save").click();
     await see("Record a voice note");
-    await page.locator("#ticket .tk-chip", { hasText: "voice" }).waitFor();
+    await page.locator("#ticket .pill", { hasText: "voice" }).waitFor();
     await page.fill(
       '[aria-label="Write a comment"]',
       "Keep the record button big on the lock screen.",
@@ -222,7 +231,7 @@ try {
   });
   await step("give it a location on its edit page", async () => {
     await page.locator("#place").getByRole("link", { name: "Edit" }).click();
-    await page.selectOption("#location", { label: "Studio" });
+    await pick("#location", "Studio");
     await button("Save").click();
     await page.locator("#place").getByText("Studio").waitFor();
   });
@@ -330,14 +339,33 @@ try {
     await button("Add feature").click();
     await see("0 open");
     await open("/t/TLK-1/edit");
-    await page.selectOption("#feature", { label: "Voice" });
+    await pick("#feature", "Voice");
     await button("Save").click();
     await see("What the work is.");
     await open("/p/TLK/board");
-    await page.selectOption('[aria-label="Feature"]', { label: "Voice" });
+    await page.getByRole("button", { name: /More filters/ }).click();
+    await pick('[aria-label="Filter feature"]', "Voice");
     await until(() => document.querySelectorAll(".tk-column .tk-list-row").length === 1);
-    await page.selectOption('[aria-label="Feature"]', { label: "Every feature" });
+    await pick('[aria-label="Filter feature"]', "All features");
     await until(() => document.querySelectorAll(".tk-column .tk-list-row").length === 3);
+  });
+  await step("the board groups its tickets by feature, by actor and by location", async () => {
+    await page.getByRole("radio", { name: "Features view" }).click();
+    await page.locator(".tk-column", { hasText: "Voice" }).locator(".tk-list-row").waitFor();
+    await page.locator(".tk-column", { hasText: "No feature" }).waitFor();
+    await page.getByRole("radio", { name: "Actors view" }).click();
+    await page.locator(".tk-column", { hasText: "Coder" }).waitFor();
+    await page.locator(".tk-column", { hasText: "Unassigned" }).waitFor();
+    await page.getByRole("radio", { name: "Locations view" }).click();
+    await page.locator(".tk-column", { hasText: "Studio" }).locator(".tk-list-row").waitFor();
+    await page.getByLabel("Hide empty columns").click();
+    await until(() => document.querySelectorAll(".tk-column-empty").length === 0);
+    await page.getByLabel("Hide empty columns").click();
+  });
+  await shot("board-locations");
+  await step("back to the status view", async () => {
+    await page.getByRole("radio", { name: "Status view" }).click();
+    await page.locator(".tk-column", { hasText: "To do" }).waitFor();
   });
   await step("backlog: a new ticket waits there, then goes to the board", async () => {
     await page
@@ -348,7 +376,7 @@ try {
     await link("New ticket").click();
     await page.fill("#title", "Trim silence from recordings");
     await button("Create ticket").click();
-    await page.waitForSelector("#backlog .tk-list-row");
+    await page.waitForSelector(".tk-list-row");
     await open("/p/TLK/board");
     await until(() => document.querySelectorAll(".tk-column .tk-list-row").length === 3);
     await open("/p/TLK/backlog");
@@ -427,7 +455,7 @@ try {
       "the board crashes when I drag a ticket",
     );
     await page.press('[aria-label="A new idea or request"]', "Enter");
-    await page.locator(".item .tk-chip", { hasText: "bug" }).waitFor();
+    await page.locator(".item .pill", { hasText: "bug" }).waitFor();
     if ((await count(".item")) !== 2) throw new Error("the spam is in the inbox");
     await page.locator(".item").nth(1).getByRole("button", { name: "What the steps did" }).click();
     await see("not spam; a bug");
@@ -463,7 +491,7 @@ try {
       .first()
       .click();
     await button("Revoke").click();
-    await page.locator(".tk-chip", { hasText: "revoked" }).waitFor();
+    await page.locator(".pill", { hasText: "revoked" }).waitFor();
     const cut = await agent("tickets__work-find", {}).then(
       () => false,
       () => true,

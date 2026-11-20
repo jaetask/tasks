@@ -1,18 +1,31 @@
-// Builds Tasks' page (page/main.tsx and its styles) into public/app.js and public/app.css.
+// Builds Tasks' page into public/: app.js from page/main.tsx with esbuild,
+// app.css from page/app.css with Tailwind, and fonts.css with the Inter font files.
+import { execFileSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
 
+const at = (path) => fileURLToPath(new URL(path, import.meta.url));
+
 await build({
-  entryPoints: [new URL("../page/main.tsx", import.meta.url).pathname],
-  outdir: new URL("../public", import.meta.url).pathname,
-  entryNames: "app",
+  entryPoints: { app: at("../page/main.tsx"), fonts: at("../page/fonts.css") },
+  outdir: at("../public"),
   assetNames: "[name]",
   bundle: true,
+  // The toolkit loads its icon catalogue on demand; splitting keeps it out of app.js.
+  splitting: true,
+  chunkNames: "chunk-[hash]",
   minify: true,
   format: "esm",
   target: "es2022",
   jsx: "automatic",
-  // The toolkit's styles load the Inter font from files beside them.
   loader: { ".woff2": "file" },
+  // The toolkit's parts read these, as they do under Vite.
+  define: { "import.meta.env": '{"SSR":false,"MODE":"production","DEV":false}' },
   logLevel: "warning",
 });
+execFileSync(
+  at("../node_modules/.bin/tailwindcss"),
+  ["-i", at("../page/app.css"), "-o", at("../public/app.css"), "--minify"],
+  { stdio: ["ignore", "ignore", "inherit"] },
+);
 console.log("built public/app.js and public/app.css");

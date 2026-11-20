@@ -9,6 +9,7 @@ import { migrateComments, sqliteComments } from "./comments/comments.js";
 import { commentsDomain } from "./comments/domain.js";
 import { connectionsDomain } from "./connections/domain.js";
 import { historyDomain } from "./history/domain.js";
+import { migrateIds } from "./ids.js";
 import { imagesDomain } from "./images/domain.js";
 import { migrateImages, sqliteImages } from "./images/images.js";
 import { inboxDomain } from "./inbox/domain.js";
@@ -16,11 +17,12 @@ import { migrateInbox, sqliteInbox } from "./inbox/inbox.js";
 import { migrateRuns, sqliteRuns } from "./inbox/runs.js";
 import { inputDomain } from "./input/domain.js";
 import { migrateInput, sqliteInputs } from "./input/input.js";
-import { migrateIds } from "./ids.js";
 import { migrateJournal, openJournal } from "./journal.js";
-import { ticketsDomain } from "./tickets/domain.js";
 import { repliesDomain } from "./replies/domain.js";
 import { migrateReplies, sqliteReplies } from "./replies/replies.js";
+import { stepsDomain } from "./steps/domain.js";
+import { migrateSteps, sqliteSteps } from "./steps/steps.js";
+import { ticketsDomain } from "./tickets/domain.js";
 import { migrateTickets, sqliteTickets } from "./tickets/tickets.js";
 
 const migrated = new WeakSet<DatabaseSync>();
@@ -34,6 +36,7 @@ export function migrate(db: DatabaseSync): void {
   migrateCatalog(db);
   migrateTickets(db);
   migrateComments(db);
+  migrateSteps(db);
   migrateImages(db);
   migrateInput(db);
   migrateReplies(db);
@@ -65,7 +68,8 @@ function open(db: DatabaseSync, now: () => number) {
     awaiting: inputs.awaiting(ticket),
   }));
   const replies = sqliteReplies(db, journal.rows, nameOf);
-  return { ...base, catalog, tickets, comments, images, inputs, replies, nameOf, now };
+  const steps = sqliteSteps(db, journal.rows, nameOf);
+  return { ...base, catalog, tickets, comments, images, inputs, replies, steps, nameOf, now };
 }
 
 export function domains(now: () => number = Date.now): Provided<DatabaseSync>[] {
@@ -78,11 +82,25 @@ export function domains(now: () => number = Date.now): Provided<DatabaseSync>[] 
       const deps = open(db, now);
       const purge = (ticket: string) => {
         deps.comments.purge(ticket);
+        deps.steps.purge(ticket);
         deps.inputs.purge(ticket);
         deps.replies.purge(ticket);
         deps.images.purge(ticket);
       };
-      return { ...deps, purge };
+      const handoff = (ticket: string, from: string, to: string, note: string) => {
+        const at = new Date(now()).toISOString();
+        const comment = deps.comments.add(from, at, ticket, note);
+        deps.replies.leave({
+          to,
+          from,
+          kind: "comment",
+          ticket,
+          about: comment.id,
+          text: note,
+          at,
+        });
+      };
+      return { ...deps, purge, handoff };
     }),
     provide(commentsDomain, (db: DatabaseSync) => {
       const deps = open(db, now);
@@ -105,6 +123,7 @@ export function domains(now: () => number = Date.now): Provided<DatabaseSync>[] 
         },
       };
     }),
+    provide(stepsDomain, (db: DatabaseSync) => open(db, now)),
     provide(imagesDomain, (db: DatabaseSync) => open(db, now)),
     provide(inboxDomain, (db: DatabaseSync) => {
       const deps = open(db, now);

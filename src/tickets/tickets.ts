@@ -44,6 +44,7 @@ export const Ticket = z.object({
   awaiting: z.number().describe("How many questions on it await the owner's answer."),
   createdAt: z.string(),
   createdBy: z.string(),
+  updatedAt: z.string().describe("When it last changed."),
 });
 export type Ticket = z.infer<typeof Ticket>;
 
@@ -272,6 +273,13 @@ export function sqliteTickets(
       ...counts(r.id),
       createdAt: r.created_at,
       createdBy: r.created_by,
+      // The record of changes says when a ticket last changed.
+      updatedAt:
+        (
+          db.prepare("SELECT max(at) AS at FROM changes WHERE ticket = ?").get(r.id) as {
+            at: string | null;
+          }
+        ).at ?? r.created_at,
     };
   };
   const row = (id: string) => {

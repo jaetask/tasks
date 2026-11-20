@@ -13,6 +13,8 @@ export type TicketsDeps = Base & {
   now(): number;
   /** Deletes what other Domains keep about a ticket, before it is deleted for good. */
   purge(ticket: string): void;
+  /** Leaves the note of a handoff on the ticket as a comment, for whoever it was handed to. */
+  handoff(ticket: string, from: string, to: string, note: string): void;
 };
 
 const id = z.string().describe("A ticket id, like TLK-529.");
@@ -234,10 +236,16 @@ const ticketFinish = write({
 
 const ticketAssign = write({
   name: "ticket-assign",
-  description: "Assign a ticket to an actor, to hand it on, or to nobody with null.",
-  input: z.object({ ticket: id, actor: z.string().nullable() }),
-  run: ({ ticket, actor }, { tickets }) => {
+  description:
+    "Assign a ticket to an actor, to hand it on, or to nobody with null. A note says what the next actor needs to know; it is left as a comment on the ticket.",
+  input: z.object({
+    ticket: id,
+    actor: z.string().nullable(),
+    note: z.string().trim().min(1).max(5000).optional().describe("A handoff note."),
+  }),
+  run: ({ ticket, actor, note }, { tickets, handoff, actor: from }) => {
     const assigned = tickets.assign(ticket, actor);
+    if (note && actor) handoff(ticket, from, actor, note);
     return {
       ticket: assigned,
       summary: actor

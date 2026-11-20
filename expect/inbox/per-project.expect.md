@@ -97,7 +97,8 @@
     "images": 0,
     "awaiting": 0,
     "createdAt": "2026-01-01T09:12:00.000Z",
-    "createdBy": "owner"
+    "createdBy": "owner",
+    "updatedAt": "2026-01-01T09:12:00.000Z"
   }
 ]
 ```

@@ -1,4 +1,6 @@
 # Built by scripts/build-page.mjs
 app.js
 app.css
+fonts.css
+chunk-*.js
 *.woff2

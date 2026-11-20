@@ -27,7 +27,7 @@
 | tickets.ticket-move | write | ticket-changed | Move a ticket to any column of its board. |
 | tickets.ticket-review-request | write | ticket-changed | Ask for review: move a ticket to the first waiting column. |
 | tickets.ticket-finish | write | ticket-changed | Finish a ticket: move it to the first done column. |
-| tickets.ticket-assign | write | ticket-changed | Assign a ticket to an actor, to hand it on, or to nobody with null. |
+| tickets.ticket-assign | write | ticket-changed | Assign a ticket to an actor, to hand it on, or to nobody with null. A note says what the next actor needs to know; it is left as a comment on the ticket. |
 | tickets.ticket-edit | write | ticket-changed | Change a ticket's title, its description, or both. |
 | tickets.ticket-backlog-send | write | ticket-changed | Send a ticket to its project's backlog, off the board. |
 | tickets.ticket-board-send | write | ticket-changed | Put a backlog ticket on the board, in the first to-do column. |
@@ -172,7 +172,7 @@ Tools:
 - tickets__ticket-move (changes): Move a ticket to any column of its board.
 - tickets__ticket-review-request (changes): Ask for review: move a ticket to the first waiting column.
 - tickets__ticket-finish (changes): Finish a ticket: move it to the first done column.
-- tickets__ticket-assign (changes): Assign a ticket to an actor, to hand it on, or to nobody with null.
+- tickets__ticket-assign (changes): Assign a ticket to an actor, to hand it on, or to nobody with null. A note says what the next actor needs to know; it is left as a comment on the ticket.
 - tickets__ticket-edit (changes): Change a ticket's title, its description, or both.
 - tickets__ticket-backlog-send (changes): Send a ticket to its project's backlog, off the board.
 - tickets__ticket-board-send (changes): Put a backlog ticket on the board, in the first to-do column.
@@ -541,6 +541,12 @@ A tool that changes something after the person says yes waits for them; tell the
         "string",
         "null"
       ]
+    },
+    "note": {
+      "description": "A handoff note.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 5000
     }
   },
   "required": [

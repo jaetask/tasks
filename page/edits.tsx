@@ -1,22 +1,18 @@
 // The edit pages. Every one is the toolkit's EditFrame: Back at the top,
 // labelled rows, then Cancel and Save, which both return to where you were.
 import {
-  Button,
-  ChipMultiPicker,
-  ChipPicker,
+  DEFAULT_PROJECT_COLOUR,
   EditFrame,
-  Inline,
-  Input,
+  ProjectIconPicker,
   Row,
-  Select,
-  Textarea,
   useBackTo,
-} from "@jaetask/toolkit";
+} from "@jaetask/toolkit/suite";
+import { Button } from "@jaetask/toolkit/ui/button";
+import { Input } from "@jaetask/toolkit/ui/input";
+import { Textarea } from "@jaetask/toolkit/ui/textarea";
 import { type ReactNode, useState } from "react";
 import {
   type Actor,
-  COLOURS,
-  type Colour,
   type Column,
   type Connection,
   type Feature,
@@ -30,8 +26,7 @@ import {
 } from "./api.js";
 import { useApp, useRead } from "./app.js";
 import { CONDITIONS } from "./inbox.js";
-
-const COLOUR_OPTIONS = COLOURS.map((c) => ({ id: c, name: c }));
+import { Choice, Choices, Picker, projectLook } from "./local.js";
 
 /** Runs the changes of a Save; goes back only if none was refused. */
 function useSave(back: string) {
@@ -113,6 +108,7 @@ export function ActorEdit({ id }: { id: string | null }) {
         ? {
             extra: (
               <Button
+                variant="secondary"
                 onClick={() =>
                   void act(actor.archived ? "catalog.actor-restore" : "catalog.actor-archive", {
                     actor: actor.id,
@@ -160,6 +156,7 @@ export function LocationEdit({ id }: { id: string | null }) {
         ? {
             extra: (
               <Button
+                variant="secondary"
                 onClick={() =>
                   void act(
                     location.archived ? "catalog.location-restore" : "catalog.location-archive",
@@ -186,8 +183,9 @@ export function ProjectEdit({ project }: { project: Project | null }) {
   const { busy, save } = useSave(back);
   const [name, setName] = useState(project?.name ?? "");
   const [prefix, setPrefix] = useState("");
-  const [icon, setIcon] = useState(project?.icon ?? "");
-  const [colour, setColour] = useState<string>(project?.colour ?? "teal");
+  const look = projectLook(project ?? { icon: "folder", colour: DEFAULT_PROJECT_COLOUR });
+  const [icon, setIcon] = useState(look.projectIcon);
+  const [colour, setColour] = useState(look.iconColour);
   const order = catalog.projects.map((p) => p.id);
   const at = project ? order.indexOf(project.id) : -1;
   return (
@@ -207,9 +205,7 @@ export function ProjectEdit({ project }: { project: Project | null }) {
           }
           const id = prefix.trim().toUpperCase();
           if ((await act("catalog.project-create", { name, prefix: id })) === null) return false;
-          if (icon || colour !== "teal") {
-            await act("catalog.project-edit", { project: id, icon, colour });
-          }
+          await act("catalog.project-edit", { project: id, icon, colour });
           return true;
         })
       }
@@ -218,6 +214,7 @@ export function ProjectEdit({ project }: { project: Project | null }) {
             extra: (
               <>
                 <Button
+                  variant="secondary"
                   disabled={at <= 0}
                   onClick={() =>
                     void act("catalog.project-move", { project: project.id, before: order[at - 1] })
@@ -226,6 +223,7 @@ export function ProjectEdit({ project }: { project: Project | null }) {
                   Move up
                 </Button>
                 <Button
+                  variant="secondary"
                   disabled={at === order.length - 1}
                   onClick={() =>
                     void act("catalog.project-move", {
@@ -237,6 +235,7 @@ export function ProjectEdit({ project }: { project: Project | null }) {
                   Move down
                 </Button>
                 <Button
+                  variant="secondary"
                   onClick={() =>
                     void act(
                       project.archived ? "catalog.project-restore" : "catalog.project-archive",
@@ -270,15 +269,8 @@ export function ProjectEdit({ project }: { project: Project | null }) {
           />
         )}
       </Row>
-      <Row
-        title="Icon"
-        line="One emoji, shown beside the name. Leave empty for none."
-        htmlFor="icon"
-      >
-        <Input id="icon" value={icon} onChange={(e) => setIcon(e.target.value)} maxLength={16} />
-      </Row>
-      <Row title="Colour" line="The colour behind the icon.">
-        <ChipPicker label="Colour" value={colour} options={COLOUR_OPTIONS} onChange={setColour} />
+      <Row title="Icon and colour" line="Shown beside the name in the sidebar.">
+        <ProjectIconPicker icon={icon} colour={colour} onIcon={setIcon} onColour={setColour} />
       </Row>
     </EditFrame>
   );
@@ -297,7 +289,7 @@ function ColumnRow({
   const [name, setName] = useState(column.name);
   return (
     <Row title={column.name} line={`Column ${index + 1}. Its kind says what it means.`}>
-      <Inline>
+      <div className="flex flex-wrap items-center gap-2">
         <Input
           aria-label="Column name"
           value={name}
@@ -309,21 +301,19 @@ function ColumnRow({
             }
           }}
         />
-        <Select
-          aria-label="Column kind"
+        <Picker
+          label="Column kind"
           value={column.kind}
-          onChange={(e) =>
-            void act("catalog.column-kind-set", { column: column.id, kind: e.target.value })
-          }
-        >
-          {(Object.entries(KINDS) as [Kind, string][]).map(([k, text]) => (
-            <option key={k} value={k}>
-              {text}
-            </option>
-          ))}
-        </Select>
+          onChange={(v) => void act("catalog.column-kind-set", { column: column.id, kind: v })}
+          options={[
+            ...(Object.entries(KINDS) as [Kind, string][]).map(([k, text]) => ({
+              id: k,
+              name: text,
+            })),
+          ]}
+        />
         <Button
-          surface="white"
+          variant="secondary"
           aria-label="Move column left"
           disabled={index === 0}
           onClick={() =>
@@ -333,7 +323,7 @@ function ColumnRow({
           ←
         </Button>
         <Button
-          surface="white"
+          variant="secondary"
           aria-label="Move column right"
           disabled={index === columns.length - 1}
           onClick={() =>
@@ -346,14 +336,13 @@ function ColumnRow({
           →
         </Button>
         <Button
-          surface="white"
-          variant="danger"
+          variant="destructive"
           disabled={columns.length === 1}
           onClick={() => void act("catalog.column-remove", { column: column.id })}
         >
           Remove
         </Button>
-      </Inline>
+      </div>
     </Row>
   );
 }
@@ -374,7 +363,7 @@ export function ColumnsEdit({ project }: { project: Project }) {
         <ColumnRow key={c.id} column={c} index={i} columns={project.columns} />
       ))}
       <Row title="Add a column" line="It goes last; move it where you want it.">
-        <Inline>
+        <div className="flex flex-wrap items-center gap-2">
           <Input
             aria-label="New column name"
             placeholder="Column name"
@@ -382,19 +371,19 @@ export function ColumnsEdit({ project }: { project: Project }) {
             maxLength={60}
             onChange={(e) => setName(e.target.value)}
           />
-          <Select
-            aria-label="New column kind"
+          <Picker
+            label="New column kind"
             value={kind}
-            onChange={(e) => setKind(e.target.value as Kind)}
-          >
-            {(Object.entries(KINDS) as [Kind, string][]).map(([k, text]) => (
-              <option key={k} value={k}>
-                {text}
-              </option>
-            ))}
-          </Select>
+            onChange={(v) => setKind(v as Kind)}
+            options={[
+              ...(Object.entries(KINDS) as [Kind, string][]).map(([k, text]) => ({
+                id: k,
+                name: text,
+              })),
+            ]}
+          />
           <Button
-            surface="white"
+            variant="secondary"
             onClick={() => {
               if (!name.trim()) return;
               void act("catalog.column-add", { project: project.id, name: name.trim(), kind });
@@ -403,7 +392,7 @@ export function ColumnsEdit({ project }: { project: Project }) {
           >
             Add column
           </Button>
-        </Inline>
+        </div>
       </Row>
     </EditFrame>
   );
@@ -415,23 +404,19 @@ export function LabelEdit({ id }: { id: string | null }) {
   const { busy, save } = useSave(back);
   const label = catalog.labels.find((l) => l.id === id) as Label | undefined;
   const [name, setName] = useState(label?.name ?? "");
-  const [colour, setColour] = useState<Colour>(label?.colour ?? "teal");
   return (
     <EditFrame
       title={label ? `Edit the label ${label.name}` : "New label"}
-      line="A coloured tag for tickets, such as bug."
+      line="A tag for tickets, such as bug."
       backTo={back}
       busy={busy}
       saveLabel={label ? "Save" : "Add label"}
       onSave={() =>
         save(async () => {
-          if (!label) return (await act("catalog.label-create", { name, colour })) !== null;
+          if (!label) return (await act("catalog.label-create", { name, colour: "blue" })) !== null;
           if (name !== label.name) {
             if ((await act("catalog.label-rename", { label: label.id, name })) === null)
               return false;
-          }
-          if (colour !== label.colour) {
-            await act("catalog.label-colour-set", { label: label.id, colour });
           }
           return true;
         })
@@ -440,7 +425,7 @@ export function LabelEdit({ id }: { id: string | null }) {
         ? {
             extra: (
               <Button
-                variant="danger"
+                variant="destructive"
                 onClick={() =>
                   void act("catalog.label-remove", { label: label.id }).then(
                     (done) => done && go(back),
@@ -455,9 +440,6 @@ export function LabelEdit({ id }: { id: string | null }) {
     >
       <Row title="Name" line="Shown on tickets." htmlFor="name">
         <Input id="name" value={name} onChange={(e) => setName(e.target.value)} maxLength={60} />
-      </Row>
-      <Row title="Colour" line="The colour of the tag.">
-        <ChipPicker label="Colour" value={colour} options={COLOUR_OPTIONS} onChange={setColour} />
       </Row>
     </EditFrame>
   );
@@ -494,6 +476,7 @@ function FeatureForm({ project, feature }: { project: Project; feature: Feature 
         ? {
             extra: (
               <Button
+                variant="secondary"
                 onClick={() =>
                   void act(
                     feature.archived ? "tickets.feature-restore" : "tickets.feature-archive",
@@ -521,7 +504,7 @@ function FeatureForm({ project, feature }: { project: Project; feature: Feature 
       </Row>
       {feature && (
         <Row title="Favourite" line="Favourites are marked with a star.">
-          <ChipPicker
+          <Choice
             label="Favourite"
             value={favourite}
             options={[
@@ -593,21 +576,22 @@ export function TicketNew({ project }: { project: Project }) {
       </Row>
       {features.length > 0 && (
         <Row title="Feature" line="The part of the project it belongs to." htmlFor="feature">
-          <Select id="feature" value={feature} onChange={(e) => setFeature(e.target.value)}>
-            <option value="">No feature</option>
-            {features.map((f) => (
-              <option key={f.id} value={f.id}>
-                {f.name}
-              </option>
-            ))}
-          </Select>
+          <Picker
+            id="feature"
+            value={feature}
+            onChange={(v) => setFeature(v)}
+            options={[
+              { id: "", name: "No feature" },
+              ...features.map((f) => ({ id: f.id, name: f.name })),
+            ]}
+          />
         </Row>
       )}
       <Row
         title="Where it starts"
         line="On the board, in the first to-do column, or in the backlog."
       >
-        <ChipPicker
+        <Choice
           label="Where it starts"
           value={place}
           options={[
@@ -677,26 +661,22 @@ function TicketForm({ ticket }: { ticket: Ticket }) {
       </Row>
       <Row title="Labels" line="Tick the labels it carries.">
         {catalog.labels.length > 0 ? (
-          <ChipMultiPicker
-            label="Labels"
-            value={labels}
-            options={catalog.labels}
-            onChange={setLabels}
-          />
+          <Choices label="Labels" value={labels} options={catalog.labels} onChange={setLabels} />
         ) : (
           <span className="tk-muted">No labels yet. Add them in Settings.</span>
         )}
       </Row>
       {features.length > 0 && (
         <Row title="Feature" line="The part of the project it belongs to." htmlFor="feature">
-          <Select id="feature" value={feature} onChange={(e) => setFeature(e.target.value)}>
-            <option value="">No feature</option>
-            {features.map((f) => (
-              <option key={f.id} value={f.id}>
-                {f.name}
-              </option>
-            ))}
-          </Select>
+          <Picker
+            id="feature"
+            value={feature}
+            onChange={(v) => setFeature(v)}
+            options={[
+              { id: "", name: "No feature" },
+              ...features.map((f) => ({ id: f.id, name: f.name })),
+            ]}
+          />
         </Row>
       )}
     </EditFrame>
@@ -751,13 +731,17 @@ function PlaceForm({ ticket }: { ticket: Ticket }) {
       }
       extra={
         <>
-          <Button onClick={leave("tickets.ticket-archive")}>Archive</Button>
-          <Button onClick={leave("tickets.ticket-cancel")}>Cancel ticket</Button>
+          <Button variant="secondary" onClick={leave("tickets.ticket-archive")}>
+            Archive
+          </Button>
+          <Button variant="secondary" onClick={leave("tickets.ticket-cancel")}>
+            Cancel ticket
+          </Button>
         </>
       }
     >
       <Row title="Board or backlog" line="A backlog ticket waits off the board.">
-        <ChipPicker
+        <Choice
           label="Board or backlog"
           value={place}
           options={[
@@ -769,37 +753,43 @@ function PlaceForm({ ticket }: { ticket: Ticket }) {
       </Row>
       {place === "board" && !ticket.backlog && (
         <Row title="Column" line="It can move to any column." htmlFor="column">
-          <Select id="column" value={column} onChange={(e) => setColumn(e.target.value)}>
-            {(project?.columns ?? []).map((c) => (
-              <option key={c.id} value={c.id}>
-                {`${c.name} (${KINDS[c.kind]})`}
-              </option>
-            ))}
-          </Select>
+          <Picker
+            id="column"
+            value={column}
+            onChange={(v) => setColumn(v)}
+            options={[
+              ...(project?.columns ?? []).map((c) => ({
+                id: c.id,
+                name: `${c.name} (${KINDS[c.kind]})`,
+              })),
+            ]}
+          />
         </Row>
       )}
       <Row title="Assigned to" line="Assign it to another actor to hand it on." htmlFor="assignee">
-        <Select id="assignee" value={assignee} onChange={(e) => setAssignee(e.target.value)}>
-          <option value="">Nobody</option>
-          {catalog.actors
-            .filter((a) => !a.archived)
-            .map((a) => (
-              <option key={a.id} value={a.id}>
-                {`${a.icon} ${a.name}`.trim()}
-              </option>
-            ))}
-        </Select>
+        <Picker
+          id="assignee"
+          value={assignee}
+          onChange={(v) => setAssignee(v)}
+          options={[
+            { id: "", name: "Nobody" },
+            ...catalog.actors
+              .filter((a) => !a.archived)
+              .map((a) => ({ id: a.id, name: `${a.icon} ${a.name}`.trim() })),
+          ]}
+        />
       </Row>
       {locations.length > 0 && (
         <Row title="Location" line="Where its work is done, such as a machine." htmlFor="location">
-          <Select id="location" value={location} onChange={(e) => setLocation(e.target.value)}>
-            <option value="">None</option>
-            {locations.map((l) => (
-              <option key={l.id} value={l.id}>
-                {l.name}
-              </option>
-            ))}
-          </Select>
+          <Picker
+            id="location"
+            value={location}
+            onChange={(v) => setLocation(v)}
+            options={[
+              { id: "", name: "None" },
+              ...locations.map((l) => ({ id: l.id, name: l.name })),
+            ]}
+          />
         </Row>
       )}
       <Row
@@ -869,7 +859,7 @@ export function ConnectionApprove({ id }: { id: string }) {
       }
       extra={
         <Button
-          variant="danger"
+          variant="destructive"
           onClick={() =>
             void act("connections.connection-revoke", { connection: id }).then(
               (done) => done && go(back),
@@ -881,14 +871,15 @@ export function ConnectionApprove({ id }: { id: string }) {
       }
     >
       <Row title="Acts as" line="Its work shows under this actor." htmlFor="actor">
-        <Select id="actor" value={actor} onChange={(e) => setActor(e.target.value)}>
-          {agents.map((a) => (
-            <option key={a.id} value={a.id}>
-              {a.name}
-            </option>
-          ))}
-          <option value="">A new actor…</option>
-        </Select>
+        <Picker
+          id="actor"
+          value={actor}
+          onChange={(v) => setActor(v)}
+          options={[
+            ...agents.map((a) => ({ id: a.id, name: a.name })),
+            { id: "", name: "A new actor…" },
+          ]}
+        />
       </Row>
       {actor === "" && (
         <Row
@@ -900,7 +891,7 @@ export function ConnectionApprove({ id }: { id: string }) {
         </Row>
       )}
       <Row title="It may" line="Read only, or read and change.">
-        <ChipPicker
+        <Choice
           label="It may"
           value={may}
           options={[
@@ -975,12 +966,14 @@ function StepForm({ step, steps }: { step: Step | null; steps: Step[] }) {
   const extra: ReactNode = step ? (
     <>
       <Button
+        variant="secondary"
         disabled={at <= 0}
         onClick={() => void act("inbox.step-move", { step: step.id, before: steps[at - 1]?.id })}
       >
         Move up
       </Button>
       <Button
+        variant="secondary"
         disabled={at === steps.length - 1}
         onClick={() =>
           void act("inbox.step-move", {
@@ -992,7 +985,7 @@ function StepForm({ step, steps }: { step: Step | null; steps: Step[] }) {
         Move down
       </Button>
       <Button
-        variant="danger"
+        variant="destructive"
         onClick={() =>
           void act("inbox.step-remove", { step: step.id }).then((done) => done && go(back))
         }
@@ -1044,23 +1037,21 @@ function StepForm({ step, steps }: { step: Step | null; steps: Step[] }) {
         <Input id="name" value={name} onChange={(e) => setName(e.target.value)} maxLength={60} />
       </Row>
       <Row title="Kind" line="What looks at the item." htmlFor="kind">
-        <Select id="kind" value={kind} onChange={(e) => setKind(e.target.value as Step["kind"])}>
-          {Object.keys(SETTINGS).map((k) => (
-            <option key={k} value={k}>
-              {k.replace("-", " ")}
-            </option>
-          ))}
-        </Select>
+        <Picker
+          id="kind"
+          value={kind}
+          onChange={(v) => setKind(v as Step["kind"])}
+          options={[...Object.keys(SETTINGS).map((k) => ({ id: k, name: k.replace("-", " ") }))]}
+        />
       </Row>
       <Row title="Acts as" line="The step's changes show under this actor." htmlFor="actor">
         {agents.length > 0 ? (
-          <Select id="actor" value={actor} onChange={(e) => setActor(e.target.value)}>
-            {agents.map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.name}
-              </option>
-            ))}
-          </Select>
+          <Picker
+            id="actor"
+            value={actor}
+            onChange={(v) => setActor(v)}
+            options={[...agents.map((a) => ({ id: a.id, name: a.name }))]}
+          />
         ) : (
           <span className="tk-muted">Add an actor in Settings first.</span>
         )}
@@ -1075,7 +1066,7 @@ function StepForm({ step, steps }: { step: Step | null; steps: Step[] }) {
         </Row>
       ))}
       <Row title="It may" line="The Actions it may ask for. It can ask for no others.">
-        <ChipMultiPicker
+        <Choices
           label="It may"
           value={actions}
           options={INTAKE.map((a) => ({ id: a, name: a.replace("item-", "") }))}
@@ -1083,14 +1074,13 @@ function StepForm({ step, steps }: { step: Step | null; steps: Step[] }) {
         />
       </Row>
       <Row title="It runs on" line="Every item, or only some." htmlFor="runs-on">
-        <Inline>
-          <Select id="runs-on" value={runsOn} onChange={(e) => setRunsOn(e.target.value)}>
-            {Object.entries(CONDITIONS).map(([k, text]) => (
-              <option key={k} value={k}>
-                {text}
-              </option>
-            ))}
-          </Select>
+        <div className="flex flex-wrap items-center gap-2">
+          <Picker
+            id="runs-on"
+            value={runsOn}
+            onChange={(v) => setRunsOn(v)}
+            options={[...Object.entries(CONDITIONS).map(([k, text]) => ({ id: k, name: text }))]}
+          />
           {runsOn !== "" && (
             <Input
               aria-label="Condition value"
@@ -1098,10 +1088,10 @@ function StepForm({ step, steps }: { step: Step | null; steps: Step[] }) {
               onChange={(e) => setValue(e.target.value)}
             />
           )}
-        </Inline>
+        </div>
       </Row>
       <Row title="On" line="A step that is off is skipped.">
-        <ChipPicker
+        <Choice
           label="On"
           value={on}
           options={[
@@ -1111,7 +1101,7 @@ function StepForm({ step, steps }: { step: Step | null; steps: Step[] }) {
           onChange={setOn}
         />
         {problem && (
-          <p className="problem" role="alert">
+          <p className="m-0 text-destructive" role="alert">
             {problem}
           </p>
         )}
