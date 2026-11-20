@@ -54,11 +54,11 @@ import {
 } from "./api.js";
 import { useApp, useRead } from "./app.js";
 import { Editor } from "./editor.js";
-import { DeleteForGood, Face, Nothing } from "./local.js";
-import { AddLinkDialog } from "./add-link.js";
+import { addLink, DeleteForGood, Face, LINK_LINE, Nothing } from "./local.js";
+import { AddLinkDialog } from "@jaetask/toolkit/suite";
 import { EvidenceSection } from "./evidence.js";
 import { FilesSection } from "./files.js";
-import { linkHost, ServiceIcon } from "./links.js";
+import { linkHost, ServiceIcon } from "@jaetask/toolkit/suite";
 import { RequestCard } from "./pages.js";
 import { LabelDot, PRIORITY_NAME, PriorityIcon, RailRow, StatusIcon } from "./pickers.js";
 import {
@@ -473,7 +473,13 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
                   <p className="m-0 text-xs text-muted-foreground">No links yet.</p>
                 )}
               </CollapsibleContent>
-              <AddLinkDialog ticket={id} open={adding} onOpenChange={setAdding} />
+              <AddLinkDialog
+                to={id}
+                line={LINK_LINE}
+                open={adding}
+                onOpenChange={setAdding}
+                onAdd={addLink(act, id)}
+              />
             </section>
           </Collapsible>
         )}

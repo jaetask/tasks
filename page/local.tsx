@@ -361,3 +361,12 @@ export const projectLook = (project: { icon: string; colour: string }) => ({
     : "folder",
   iconColour: NAMED[project.colour] ?? project.colour,
 });
+
+/** What the Add link dialog says under its heading on a ticket. */
+export const LINK_LINE = "A web address that belongs to this ticket, such as a pull request.";
+
+/** Adds a link to a ticket, as the Add link dialog asks: true once it is added. */
+export const addLink =
+  (act: (action: string, input: unknown) => Promise<unknown>, ticket: string) =>
+  async (url: string, title: string | undefined) =>
+    (await act("tickets.ticket-link-add", { ticket, url, ...(title ? { title } : {}) })) !== null;
