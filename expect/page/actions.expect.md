@@ -62,6 +62,13 @@
 | input.input-resolve | write |
 | replies.reply-acknowledge | write |
 | replies.reply-list | read |
+| steps.ticket-step-add | write |
+| steps.ticket-step-check | write |
+| steps.ticket-step-list | read |
+| steps.ticket-step-move | write |
+| steps.ticket-step-note | write |
+| steps.ticket-step-remove | write |
+| steps.ticket-step-uncheck | write |
 | tickets.backlog-read | read |
 | tickets.board-read | read |
 | tickets.feature-archive | write |
