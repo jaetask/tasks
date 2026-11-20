@@ -1,5 +1,7 @@
 // A ticket's activity: one stream in time order. Changes are quiet one-line
 // rows; a comment is a card that holds its replies and a row to add one.
+
+import { InlineMarkdown } from "@jaetask/toolkit/app/review";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -50,13 +52,15 @@ export function ago(at: string): string {
 
 function Who({ id, name }: { id: string; name: string }) {
   const { catalog } = useApp();
-  const icon = catalog.actors.find((a) => a.id === id)?.icon;
+  const actor = catalog.actors.find((a) => a.id === id);
+  const icon = actor?.icon;
+  const shown = name || actor?.name || "";
   return (
     <span
       aria-hidden
       className="inline-flex size-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold"
     >
-      {icon || name.slice(0, 1) || "?"}
+      {icon || shown.slice(0, 1) || "?"}
     </span>
   );
 }
@@ -276,9 +280,15 @@ function CommentBody({
             </div>
           </form>
         ) : (
-          <p className={`text ${comment.removed ? "text-muted-foreground" : ""}`}>
-            {comment.removed ? "This comment was deleted." : comment.text}
-          </p>
+          <div
+            className={`body min-w-0 break-words ${comment.removed ? "text-muted-foreground" : ""}`}
+          >
+            {comment.removed ? (
+              "This comment was deleted."
+            ) : (
+              <InlineMarkdown content={comment.text} renderLists />
+            )}
+          </div>
         )}
         {!comment.removed && <ReactionRow comment={comment} used={used} />}
       </div>

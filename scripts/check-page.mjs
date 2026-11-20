@@ -244,8 +244,8 @@ try {
     },
   );
   await step("give it a location in its properties, and a step", async () => {
-    await pick('[aria-label="Location"]', "Studio");
-    await page.locator('#place [aria-label="Location"]', { hasText: "Studio" }).waitFor();
+    await pick('[data-property="location"]', "Studio");
+    await page.locator('[data-property="location"]', { hasText: "Studio" }).waitFor();
     await page.fill('[aria-label="New step"]', "Record with the screen locked");
     await page.press('[aria-label="New step"]', "Enter");
     await page.getByRole("checkbox", { name: "Record with the screen locked" }).click();
@@ -364,7 +364,7 @@ try {
     await open("/t/TLK-1/edit");
     await pick("#feature", "Voice");
     await button("Save").click();
-    await page.locator('#place [aria-label="Feature"]', { hasText: "Voice" }).waitFor();
+    await page.locator('[data-property="feature"]', { hasText: "Voice" }).waitFor();
     await open("/p/TLK/board");
     await page.getByRole("button", { name: /More filters/ }).click();
     await pick('[aria-label="Filter feature"]', "Voice");

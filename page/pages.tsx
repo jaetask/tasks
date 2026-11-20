@@ -39,6 +39,7 @@ import {
   Say,
   TabBar,
 } from "./local.js";
+import { StatusIcon } from "./pickers.js";
 
 export const projectTitle = (p: Project, screen: string) =>
   `${projectEmoji(p)} ${p.name} · ${screen}`.trim();
@@ -121,6 +122,7 @@ export function OverviewPage() {
             key={kind}
             id={`kind-${kind}`}
             title={KINDS[kind]}
+            icon={<StatusIcon kind={kind} />}
             count={tickets.length}
             onDrop={(id) => drop(id, kind)}
           >

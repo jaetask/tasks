@@ -1,5 +1,7 @@
 // A ticket's page: what it is, where it is, its images, the questions on it
 // and its conversation, all from toolkit parts.
+
+import { InlineMarkdown } from "@jaetask/toolkit/app/review";
 import { FileButton, PageBody, Thumbs } from "@jaetask/toolkit/suite";
 import { Button } from "@jaetask/toolkit/ui/button";
 import { Checkbox } from "@jaetask/toolkit/ui/checkbox";
@@ -16,18 +18,27 @@ import {
   DropdownMenuTrigger,
 } from "@jaetask/toolkit/ui/dropdown-menu";
 import { Input } from "@jaetask/toolkit/ui/input";
-import { Label } from "@jaetask/toolkit/ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from "@jaetask/toolkit/ui/popover";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@jaetask/toolkit/ui/tooltip";
 import {
   IconArrowDown,
   IconArrowUp,
   IconChevronDown,
   IconChevronRight,
   IconLink,
+  IconMapPin,
   IconNote,
+  IconPlus,
+  IconStack2,
+  IconTag,
+  IconUserOff,
   IconX,
 } from "@tabler/icons-react";
-import { type ReactNode, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Activity } from "./activity.js";
 import {
   type Comment,
@@ -37,6 +48,7 @@ import {
   type Image,
   type InputRequest,
   type Kind,
+  OWNER,
   PRIORITIES,
   type Ticket,
   type TicketStep,
@@ -44,8 +56,16 @@ import {
   when,
 } from "./api.js";
 import { useApp, useRead } from "./app.js";
-import { DeleteForGood, Nothing, Picker } from "./local.js";
+import { DeleteForGood, Face, Nothing } from "./local.js";
 import { RequestCard } from "./pages.js";
+import {
+  LabelDot,
+  PRIORITY_NAME,
+  PriorityIcon,
+  PropertyPicker,
+  RailRow,
+  StatusIcon,
+} from "./pickers.js";
 
 /** The images of a ticket with their data, read one by one as they are needed. */
 function useThumbs(images: Image[] | undefined) {
@@ -70,7 +90,7 @@ function useThumbs(images: Image[] | undefined) {
 
 const titleCase = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
-const KIND_DOT: Record<Kind, string> = {
+const _KIND_DOT: Record<Kind, string> = {
   todo: "bg-muted-foreground/50",
   doing: "bg-amber-500",
   waiting: "bg-violet-500",
@@ -87,13 +107,24 @@ export function TicketPage({ id }: { id: string }) {
   );
 }
 
-/** One quiet row of the property rail: a name and its control. */
-function Property({ name, children }: { name: string; children: ReactNode }) {
+/** A small round button that goes to where a property's value is shown across tickets. */
+function GoTo({ label, onClick }: { label: string; onClick: () => void }) {
   return (
-    <div className="grid grid-cols-[5.5rem_minmax(0,1fr)] items-center gap-2">
-      <span className="text-xs text-muted-foreground">{name}</span>
-      <div className="min-w-0">{children}</div>
-    </div>
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            aria-label={label}
+            className="size-6 shrink-0 rounded-full p-0 text-muted-foreground opacity-0 focus-visible:opacity-100 group-hover/row:opacity-100"
+            onClick={onClick}
+          >
+            <IconChevronRight size={14} aria-hidden />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>{label}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }
 
@@ -192,7 +223,9 @@ function Steps({ ticket, open }: { ticket: string; open: boolean }) {
             <div className="mb-2 ml-6 grid gap-2 border-l-2 pl-3">
               {step.notes.map((n) => (
                 <div key={n.id}>
-                  <p className="text m-0">{n.text}</p>
+                  <div className="body min-w-0 break-words">
+                    <InlineMarkdown content={n.text} renderLists />
+                  </div>
                   <p className="m-0 text-xs text-muted-foreground">{`${n.byName} · ${when(n.at)}`}</p>
                 </div>
               ))}
@@ -245,7 +278,7 @@ function Steps({ ticket, open }: { ticket: string; open: boolean }) {
 
 /** What a ticket is, its steps, images and conversation, with its properties in a rail on the right. */
 export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) {
-  const { catalog, act, go } = useApp();
+  const { catalog, act, go, narrow, setNarrow } = useApp();
   const ticket = useRead<Ticket>("tickets.ticket-read", { ticket: id });
   const conversation = useRead<Conversation>("comments.conversation-read", { ticket: id });
   const images = useRead<Image[]>("images.image-list", { ticket: id });
@@ -262,6 +295,7 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
   if (!ticket) return <Nothing text={`No ticket has the id ${id}.`} />;
   const open = ticket.state === "open";
   const project = catalog.projects.find((p) => p.id === ticket.project);
+  const actor = catalog.actors.find((a) => a.id === ticket.assignee);
   const attach = (files: File[]) => {
     for (const picked of files) {
       const reader = new FileReader();
@@ -290,11 +324,15 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
         </p>
 
         <section id="ticket" className="grid gap-3">
-          <p
-            className={`text rounded-lg bg-muted/40 p-4 ${ticket.description ? "" : "text-muted-foreground"}`}
+          <div
+            className={`body min-w-0 break-words rounded-lg bg-muted/40 p-4 ${ticket.description ? "" : "text-muted-foreground"}`}
           >
-            {ticket.description || "No description."}
-          </p>
+            {ticket.description ? (
+              <InlineMarkdown content={ticket.description} renderLists />
+            ) : (
+              "No description."
+            )}
+          </div>
         </section>
 
         {(ticket.links.length > 0 || open) && (
@@ -441,174 +479,261 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-        <Property name="Status">
-          {open && !ticket.backlog ? (
-            <Picker
-              label="Status"
-              className={quiet}
-              value={ticket.column.id}
-              onChange={(column) => void act("tickets.ticket-move", { ticket: id, column })}
-              options={(project?.columns ?? []).map((c) => ({ id: c.id, name: c.name }))}
-            />
-          ) : (
-            <span className="flex items-center gap-2 px-2">
-              <span
-                className={`inline-block size-2 rounded-full ${KIND_DOT[ticket.column.kind]}`}
-              />
-              {open ? "Backlog" : ticket.state}
-            </span>
-          )}
-        </Property>
-        <Property name="Actor">
-          <Picker
+        <h3 className="m-0 px-2 text-xs font-medium text-muted-foreground">Properties</h3>
+        <PropertyPicker
+          label="Status"
+          placeholder="Change status..."
+          hint="S"
+          disabled={!open}
+          chosen={ticket.backlog ? [] : [ticket.column.id]}
+          choices={(project?.columns ?? []).map((c) => ({
+            id: c.id,
+            name: c.name,
+            icon: <StatusIcon kind={c.kind} />,
+          }))}
+          onPick={(column) =>
+            void (async () => {
+              // A backlog ticket goes on the board first, then to the column picked.
+              if (ticket.backlog) await act("tickets.ticket-board-send", { ticket: id });
+              await act("tickets.ticket-move", { ticket: id, column });
+            })()
+          }
+        >
+          <RailRow
+            data-property="status"
+            icon={<StatusIcon kind={ticket.column.kind} backlog={ticket.backlog} />}
+          >
+            {open ? (ticket.backlog ? "Backlog" : ticket.column.name) : titleCase(ticket.state)}
+          </RailRow>
+        </PropertyPicker>
+        <PropertyPicker
+          label="Priority"
+          placeholder="Set priority to..."
+          hint="P"
+          disabled={!open}
+          chosen={[ticket.priority]}
+          choices={PRIORITIES.map((p) => ({
+            id: p,
+            name: PRIORITY_NAME[p],
+            icon: <PriorityIcon priority={p} />,
+          }))}
+          onPick={(priority) => void act("tickets.ticket-priority-set", { ticket: id, priority })}
+        >
+          <RailRow
+            data-property="priority"
+            muted={ticket.priority === "none"}
+            icon={<PriorityIcon priority={ticket.priority} />}
+          >
+            {ticket.priority === "none" ? "Set priority" : PRIORITY_NAME[ticket.priority]}
+          </RailRow>
+        </PropertyPicker>
+        <div className="group/row flex items-center">
+          <PropertyPicker
             label="Actor"
-            className={quiet}
-            value={ticket.assignee ?? ""}
-            onChange={(actor) => {
+            placeholder="Assign to..."
+            hint="A"
+            disabled={!open}
+            chosen={[ticket.assignee ?? ""]}
+            choices={[
+              { id: "", name: "No actor", icon: <IconUserOff size={16} aria-hidden /> },
+              ...catalog.actors
+                .filter((a) => !a.archived || a.id === ticket.assignee)
+                .map((a) => ({
+                  id: a.id,
+                  name: a.name,
+                  icon: <Face name={a.name} emoji={a.icon} />,
+                  ...(a.id === OWNER ? {} : { group: "Agents" }),
+                })),
+            ]}
+            onPick={(picked) => {
               const note = handoff.trim();
               setHandoff("");
               void act("tickets.ticket-assign", {
                 ticket: id,
-                actor: actor || null,
-                ...(note && actor ? { note } : {}),
-              });
-            }}
-            options={[
-              { id: "", name: "Unassigned" },
-              ...catalog.actors
-                .filter((a) => !a.archived || a.id === ticket.assignee)
-                .map((a) => ({ id: a.id, name: `${a.icon} ${a.name}`.trim() })),
-            ]}
-          />
-        </Property>
-        {open && (
-          <Property name="Handoff">
-            <Input
-              aria-label="Handoff note"
-              placeholder="Note for the next actor"
-              className={quiet}
-              value={handoff}
-              onChange={(e) => setHandoff(e.target.value)}
-            />
-          </Property>
-        )}
-        {(catalog.locations.length > 0 || ticket.location) && (
-          <Property name="Location">
-            <Picker
-              label="Location"
-              className={quiet}
-              value={ticket.location ?? ""}
-              onChange={(location) =>
-                void act("tickets.ticket-location-set", { ticket: id, location: location || null })
-              }
-              options={[
-                { id: "", name: "None" },
-                ...catalog.locations
-                  .filter((l) => !l.archived || l.id === ticket.location)
-                  .map((l) => ({ id: l.id, name: l.name })),
-              ]}
-            />
-          </Property>
-        )}
-        <Property name="Feature">
-          <Picker
-            label="Feature"
-            className={quiet}
-            value={ticket.feature ?? ""}
-            onChange={(feature) =>
-              void act("tickets.ticket-feature-set", { ticket: id, feature: feature || null })
-            }
-            options={[
-              { id: "", name: "None" },
-              ...(features ?? []).map((f) => ({ id: f.id, name: f.name })),
-            ]}
-          />
-        </Property>
-        <Property name="Labels">
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="ghost"
-                className={`${quiet} h-auto min-h-8 justify-start whitespace-normal text-left font-normal`}
-              >
-                {ticket.labels.length > 0 ? ticket.labels.map((l) => l.name).join(", ") : "None"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent align="start" className="grid w-56 gap-2">
-              {catalog.labels.length > 0 ? (
-                catalog.labels.map((l) => {
-                  const on = ticket.labels.some((x) => x.id === l.id);
-                  return (
-                    <Label key={l.id} className="flex items-center gap-2 font-normal">
-                      <Checkbox
-                        checked={on}
-                        onCheckedChange={() =>
-                          void act(
-                            on ? "tickets.ticket-label-remove" : "tickets.ticket-label-add",
-                            {
-                              ticket: id,
-                              label: l.id,
-                            },
-                          )
-                        }
-                      />
-                      {l.name}
-                    </Label>
-                  );
-                })
-              ) : (
-                <p className="m-0 text-muted-foreground">No labels yet.</p>
-              )}
-            </PopoverContent>
-          </Popover>
-        </Property>
-        <Property name="Type">
-          <Picker
-            label="Type"
-            className={quiet}
-            value={ticket.type}
-            onChange={(type) => void act("tickets.ticket-type-set", { ticket: id, type })}
-            options={TYPES.map((t) => ({ id: t, name: titleCase(t) }))}
-          />
-        </Property>
-        <Property name="Priority">
-          <Picker
-            label="Priority"
-            className={quiet}
-            value={ticket.priority}
-            onChange={(priority) =>
-              void act("tickets.ticket-priority-set", { ticket: id, priority })
-            }
-            options={PRIORITIES.map((p) => ({ id: p, name: titleCase(p) }))}
-          />
-        </Property>
-        <Property name="Blocked">
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              const text = (blocked ?? "").trim();
-              setBlocked(null);
-              void act(text ? "tickets.ticket-block" : "tickets.ticket-unblock", {
-                ticket: id,
-                ...(text ? { note: text } : {}),
+                actor: picked || null,
+                ...(note && picked ? { note } : {}),
               });
             }}
           >
-            <Input
-              aria-label="Blocked"
-              placeholder="No"
-              className={quiet}
-              disabled={!open}
-              value={blocked ?? ticket.blocked ?? ""}
-              onChange={(e) => setBlocked(e.target.value)}
-              onBlur={(e) => {
-                if (blocked !== null && blocked.trim() !== (ticket.blocked ?? "")) {
-                  e.currentTarget.form?.requestSubmit();
-                } else setBlocked(null);
+            <RailRow
+              data-property="actor"
+              muted={!actor}
+              icon={
+                actor ? (
+                  <Face name={actor.name} emoji={actor.icon} />
+                ) : (
+                  <IconUserOff size={16} aria-hidden />
+                )
+              }
+            >
+              {actor ? actor.name : "No actor"}
+            </RailRow>
+          </PropertyPicker>
+          {actor && (
+            <GoTo
+              label="Go to actor"
+              onClick={() => {
+                setNarrow({ ...narrow, actor: actor.id });
+                go("/overview");
               }}
             />
-          </form>
-        </Property>
+          )}
+        </div>
+        {open && (
+          <Input
+            aria-label="Handoff note"
+            placeholder="Handoff note for the next actor"
+            className={quiet}
+            value={handoff}
+            onChange={(e) => setHandoff(e.target.value)}
+          />
+        )}
+        {(catalog.locations.length > 0 || ticket.location) && (
+          <PropertyPicker
+            label="Location"
+            placeholder="Set location to..."
+            disabled={!open}
+            chosen={[ticket.location ?? ""]}
+            choices={[
+              { id: "", name: "No location" },
+              ...catalog.locations
+                .filter((l) => !l.archived || l.id === ticket.location)
+                .map((l) => ({ id: l.id, name: l.name })),
+            ]}
+            onPick={(location) =>
+              void act("tickets.ticket-location-set", { ticket: id, location: location || null })
+            }
+          >
+            <RailRow
+              data-property="location"
+              muted={!ticket.location}
+              icon={<IconMapPin size={16} aria-hidden className="text-muted-foreground" />}
+            >
+              {ticket.locationName || "No location"}
+            </RailRow>
+          </PropertyPicker>
+        )}
+        <div className="group/row flex items-center">
+          <PropertyPicker
+            label="Feature"
+            placeholder="Set feature to..."
+            disabled={!open}
+            chosen={[ticket.feature ?? ""]}
+            choices={[
+              { id: "", name: "No feature" },
+              ...(features ?? []).map((f) => ({ id: f.id, name: f.name })),
+            ]}
+            onPick={(feature) =>
+              void act("tickets.ticket-feature-set", { ticket: id, feature: feature || null })
+            }
+          >
+            <RailRow
+              data-property="feature"
+              muted={!ticket.feature}
+              icon={<IconStack2 size={16} aria-hidden className="text-muted-foreground" />}
+            >
+              {ticket.featureName || "No feature"}
+            </RailRow>
+          </PropertyPicker>
+          {ticket.feature && (
+            <GoTo
+              label="Go to feature"
+              onClick={() =>
+                go(`/p/${ticket.project}/board?feature=${encodeURIComponent(ticket.feature ?? "")}`)
+              }
+            />
+          )}
+        </div>
+        <PropertyPicker
+          label="Type"
+          placeholder="Set type to..."
+          disabled={!open}
+          chosen={[ticket.type]}
+          choices={TYPES.map((t) => ({ id: t, name: titleCase(t) }))}
+          onPick={(type) => void act("tickets.ticket-type-set", { ticket: id, type })}
+        >
+          <RailRow
+            data-property="type"
+            icon={<IconTag size={16} aria-hidden className="text-muted-foreground" />}
+          >
+            {titleCase(ticket.type)}
+          </RailRow>
+        </PropertyPicker>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            const text = (blocked ?? "").trim();
+            setBlocked(null);
+            void act(text ? "tickets.ticket-block" : "tickets.ticket-unblock", {
+              ticket: id,
+              ...(text ? { note: text } : {}),
+            });
+          }}
+        >
+          <Input
+            aria-label="Blocked"
+            placeholder="Not blocked"
+            className={quiet}
+            disabled={!open}
+            value={blocked ?? ticket.blocked ?? ""}
+            onChange={(e) => setBlocked(e.target.value)}
+            onBlur={(e) => {
+              if (blocked !== null && blocked.trim() !== (ticket.blocked ?? "")) {
+                e.currentTarget.form?.requestSubmit();
+              } else setBlocked(null);
+            }}
+          />
+        </form>
+        <div className="mt-3 flex items-center justify-between px-2">
+          <h3 className="m-0 text-xs font-medium text-muted-foreground">Labels</h3>
+          <PropertyPicker
+            label="Labels"
+            placeholder="Change or add labels..."
+            hint="L"
+            many
+            disabled={!open}
+            chosen={ticket.labels.map((l) => l.id)}
+            choices={catalog.labels.map((l) => ({
+              id: l.id,
+              name: l.name,
+              icon: <LabelDot colour={l.colour} />,
+            }))}
+            onPick={(label) =>
+              void act(
+                ticket.labels.some((l) => l.id === label)
+                  ? "tickets.ticket-label-remove"
+                  : "tickets.ticket-label-add",
+                { ticket: id, label },
+              )
+            }
+            onCreate={(name) =>
+              void act<{ id: string }>("catalog.label-create", { name, colour: "blue" }).then(
+                (made) => made && act("tickets.ticket-label-add", { ticket: id, label: made.id }),
+              )
+            }
+          >
+            <Button
+              variant="ghost"
+              aria-label="Change or add labels"
+              className="size-6 rounded-full p-0 text-muted-foreground"
+            >
+              <IconPlus size={14} aria-hidden />
+            </Button>
+          </PropertyPicker>
+        </div>
+        {ticket.labels.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 px-2">
+            {ticket.labels.map((l) => (
+              <span
+                key={l.id}
+                className="pill flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs"
+              >
+                <LabelDot colour={l.colour} />
+                {l.name}
+              </span>
+            ))}
+          </div>
+        )}
         {!open && (
           <div className="mt-2 flex flex-wrap gap-2">
             <DeleteForGood
