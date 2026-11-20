@@ -15,6 +15,8 @@ const state = {
   project: null,
   text: "",
   actor: "",
+  feature: "",
+  archivedFeatures: false,
   editingColumns: false,
   ticket: null,
   editingTicket: false,
@@ -116,6 +118,7 @@ function ticketCard(ticket) {
       "span",
       { class: "card-meta" },
       h("span", { class: "mono", text: ticket.id }),
+      ticket.featureName && h("span", { text: ticket.featureName }),
       ticket.comments > 0 && h("span", { text: `💬 ${ticket.comments}` }),
       ticket.images > 0 && h("span", { text: `🖼 ${ticket.images}` }),
       ticket.assignee && avatar(ticket.assignee, ticket.assigneeName),
@@ -210,6 +213,9 @@ function columnView(column, index, columns) {
 
 // What the board and the overview are narrowed to, as the Actions take it.
 const narrow = () => ({
+  ...(state.view === "board" && state.feature !== ""
+    ? { feature: state.feature === "none" ? null : state.feature }
+    : {}),
   ...(state.text ? { text: state.text } : {}),
   ...(state.actor === "" ? {} : { assignee: state.actor === "nobody" ? null : state.actor }),
 });
@@ -296,6 +302,10 @@ async function boardView() {
   if (!state.project)
     return [h("div", { class: "stack" }, newProjectPanel("Create your first project"))];
   const project = projects.find((p) => p.id === state.project);
+  const features = (await read("tickets.feature-find", { project: state.project })) ?? [];
+  if (!["", "none"].includes(state.feature) && !features.some((f) => f.id === state.feature)) {
+    state.feature = "";
+  }
   const board = await read("tickets.board-read", { project: state.project, ...narrow() });
   if (!board) return [];
   const missing = Object.keys(KINDS).filter((k) => !board.columns.some((c) => c.kind === k));
@@ -311,6 +321,16 @@ async function boardView() {
       "div",
       { class: "board-head" },
       h("h2", { class: "grow", text: `${project.icon} ${project.name} · Board`.trim() }),
+      features.length > 0 &&
+        select(
+          [["", "Every feature"], ["none", "No feature"], ...features.map((f) => [f.id, f.name])],
+          state.feature,
+          (feature) => {
+            state.feature = feature;
+            refresh();
+          },
+          "Feature",
+        ),
       narrowControls(),
       lineForm("New ticket", "Add", (title) =>
         act("tickets.ticket-create", { project: state.project, title }),
@@ -351,6 +371,97 @@ async function boardView() {
             act("catalog.column-add", { project: state.project, name, kind }),
           ),
         ),
+    ),
+  ];
+}
+
+// ---- features ----
+
+async function featuresView() {
+  if (!state.project)
+    return [h("div", { class: "stack" }, newProjectPanel("Create your first project"))];
+  const project = state.catalog.projects.find((p) => p.id === state.project);
+  const features =
+    (await read("tickets.feature-find", {
+      project: state.project,
+      archived: state.archivedFeatures,
+    })) ?? [];
+  return [
+    h(
+      "div",
+      { class: "stack" },
+      h(
+        "section",
+        { class: "panel" },
+        h(
+          "div",
+          { class: "row spread wrap" },
+          h("h2", { text: `${project.icon} ${project.name} · Features`.trim() }),
+          h("button", {
+            type: "button",
+            text: "Show archived",
+            "aria-pressed": String(state.archivedFeatures),
+            onclick: () => {
+              state.archivedFeatures = !state.archivedFeatures;
+              refresh();
+            },
+          }),
+        ),
+        h("p", {
+          class: "muted",
+          text: "A feature is one part of the project. It groups the tickets for that part.",
+        }),
+        features.length > 0
+          ? h(
+              "ul",
+              { class: "list" },
+              features.map((f) =>
+                h(
+                  "li",
+                  {},
+                  h("button", {
+                    type: "button",
+                    class: "small",
+                    text: f.favourite ? "★" : "☆",
+                    "aria-pressed": String(f.favourite),
+                    "aria-label": `Favourite ${f.name}`,
+                    onclick: () =>
+                      act("tickets.feature-edit", { feature: f.id, favourite: !f.favourite }),
+                  }),
+                  lineForm(
+                    "Name",
+                    "Rename",
+                    (name) => act("tickets.feature-edit", { feature: f.id, name }),
+                    f.name,
+                  ),
+                  h("span", { class: "caption", text: `${f.tickets} open` }),
+                  button(
+                    "Open on the board",
+                    () => {
+                      state.feature = f.id;
+                      location.hash = `#/board/${f.project}`;
+                    },
+                    "small",
+                  ),
+                  f.archived
+                    ? button(
+                        "Restore",
+                        () => act("tickets.feature-restore", { feature: f.id }),
+                        "small",
+                      )
+                    : button(
+                        "Archive",
+                        () => act("tickets.feature-archive", { feature: f.id }),
+                        "small",
+                      ),
+                ),
+              ),
+            )
+          : h("p", { class: "muted", text: "No features yet." }),
+        lineForm("New feature, such as Voice", "Add feature", (name) =>
+          act("tickets.feature-create", { project: state.project, name }),
+        ),
+      ),
     ),
   ];
 }
@@ -572,6 +683,7 @@ async function renderTicket() {
   fill("tk-images", ...(await Promise.all(images.map(imageThumb))), addImage(id));
 
   const project = state.catalog.projects.find((p) => p.id === ticket.project);
+  const features = (await read("tickets.feature-find", { project: ticket.project })) ?? [];
   const actors = state.catalog.actors.filter((a) => !a.archived);
   fill(
     "tk-actions",
@@ -589,6 +701,14 @@ async function renderTicket() {
             (actor) => act("tickets.ticket-assign", { ticket: id, actor: actor || null }),
             "Assign",
           ),
+          features.length > 0 &&
+            select(
+              [["", "In no feature"], ...features.map((f) => [f.id, `In ${f.name}`])],
+              ticket.feature ?? "",
+              (feature) =>
+                act("tickets.ticket-feature-set", { ticket: id, feature: feature || null }),
+              "Feature",
+            ),
           ticket.blocked
             ? button("Unblock", () => act("tickets.ticket-unblock", { ticket: id }))
             : button("Mark blocked", () => {
@@ -1507,6 +1627,7 @@ async function settingsView() {
 const VIEWS = {
   overview: overviewView,
   board: boardView,
+  features: featuresView,
   archive: archiveView,
   inbox: inboxView,
   changes: changesView,
@@ -1515,7 +1636,7 @@ const VIEWS = {
 };
 
 // The screens that show one project; their address ends in the project's id.
-const PROJECT_VIEWS = ["board"];
+const PROJECT_VIEWS = ["board", "features"];
 
 function showSignIn() {
   for (const id of ["view", "setup", "side", "menu", "sign-out"]) $(id).hidden = true;

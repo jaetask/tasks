@@ -44,6 +44,8 @@
           "project": "TLK",
           "title": "Voice notes on the phone",
           "description": "",
+          "feature": null,
+          "featureName": "",
           "column": {
             "id": "c1",
             "name": "To do",
@@ -111,11 +113,15 @@ None.
 
 None.
 
+### Features
+
+None.
+
 ### Tickets
 
-| id | title | column | assigned | labels | blocked | state |
-| --- | --- | --- | --- | --- | --- | --- |
-| TLK-1 | Voice notes on the phone | To do |  |  |  | open |
+| id | title | feature | column | assigned | labels | blocked | state |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| TLK-1 | Voice notes on the phone |  | To do |  |  |  | open |
 
 ### Comments
 

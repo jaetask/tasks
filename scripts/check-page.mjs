@@ -218,6 +218,25 @@ try {
   });
   await page.evaluate(() => document.getElementById("ticket").scrollTo(0, 0));
   await shot("ticket");
+  await step("features: add one, put a ticket in it, and narrow the board to it", async () => {
+    await page.click("#tk-close");
+    await page.click('.side-sub a[href="#/features/TLK"]');
+    await page.waitForSelector("text=No features yet");
+    await page.fill('[aria-label="New feature, such as Voice"]', "Voice");
+    await page.press('[aria-label="New feature, such as Voice"]', "Enter");
+    await page.waitForSelector("text=0 open");
+    await page.click('.side-sub a[href="#/board/TLK"]');
+    await page.click(".card >> text=Voice notes on the phone");
+    await page.waitForSelector("#ticket[open] h2");
+    await page.selectOption('#tk-actions [aria-label="Feature"]', { label: "In Voice" });
+    await page.click("#tk-close");
+    await page.selectOption('.board-head [aria-label="Feature"]', { label: "Voice" });
+    await until(() => document.querySelectorAll(".card").length === 1);
+    await page.selectOption('.board-head [aria-label="Feature"]', { label: "Every feature" });
+    await until(() => document.querySelectorAll(".card").length === 3);
+    await page.click(".card >> text=Voice notes on the phone");
+    await page.waitForSelector("#ticket[open] h2");
+  });
   await step("drag a ticket to another column", async () => {
     await page.click("#tk-close");
     await page.dragAndDrop("text=Show the recording length", ".column >> nth=3");
@@ -324,7 +343,19 @@ try {
     const wide = await page.evaluate(
       () => document.documentElement.scrollWidth > window.innerWidth + 1,
     );
-    if (wide) throw new Error("the page scrolls sideways");
+    if (wide) {
+      const widest = await page.evaluate(() =>
+        [...document.querySelectorAll("body *")]
+          .filter((e) => e.getBoundingClientRect().right > window.innerWidth + 1)
+          .slice(0, 4)
+          .map(
+            (e) =>
+              `${e.tagName}.${e.className}[${e.textContent.slice(0, 20)}] in ${e.parentElement.className} at ${Math.round(e.getBoundingClientRect().left)}-${Math.round(e.getBoundingClientRect().right)}`,
+          )
+          .join(", "),
+      );
+      throw new Error(`the page scrolls sideways: ${widest}`);
+    }
   });
 } finally {
   await browser.close();

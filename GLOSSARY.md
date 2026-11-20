@@ -8,6 +8,9 @@ Tasks is built on [open-agent-kit](https://github.com/jaetask/open-agent-kit); t
 **Project**: A body of work, such as an app. Holds tickets and gives them their prefix, like `TLK`.
 _Avoid_: workspace, team, space
 
+**Feature**: One part of a project, such as Voice. Groups the tickets for that part; a ticket belongs to one feature or to none.
+_Avoid_: epic, component, module
+
 **Ticket**: One piece of work: a title, a description, labels, images and comments. Has an id like `TLK-529`.
 _Avoid_: task, issue, item, card
 

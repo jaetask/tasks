@@ -5,7 +5,7 @@ import { defineCard, defineDomain } from "@jaetask/open-agent-kit";
 import { z } from "zod";
 import { type Base, readAction, writeAction } from "../actions.js";
 import { type Catalog, OWNER } from "../catalog/catalog.js";
-import { Board, Find, Narrow, Overview, Ticket, type Tickets } from "./tickets.js";
+import { Board, Feature, Find, Narrow, Overview, Ticket, type Tickets } from "./tickets.js";
 
 export type TicketsDeps = Base & {
   catalog: Catalog;
@@ -150,6 +150,7 @@ const ticketCreate = write({
     column: z.string().optional().describe("A column id on the project's board."),
     labels: z.array(z.string()).max(20).default([]).describe("Label ids."),
     assignee: z.string().optional().describe("An actor id."),
+    feature: z.string().optional().describe("The id of a feature of the project."),
   }),
   run: (input, { tickets, actor, now }) => {
     const ticket = tickets.create(actor, new Date(now()).toISOString(), input);
@@ -238,6 +239,137 @@ const ticketAssign = write({
         ? `assigned ${ticket} to ${assigned.assigneeName}`
         : `assigned ${ticket} to nobody`,
     };
+  },
+});
+
+const ticketFeatureSet = write({
+  name: "ticket-feature-set",
+  description: "Put a ticket in a feature of its project, or in no feature with null.",
+  input: z.object({ ticket: id, feature: z.string().nullable() }),
+  run: ({ ticket, feature }, { tickets }) => {
+    const changed = tickets.setFeature(ticket, feature);
+    return {
+      ticket: changed,
+      summary: feature
+        ? `put ${ticket} in the feature ${changed.featureName}`
+        : `took ${ticket} out of its feature`,
+    };
+  },
+});
+
+// ---- features ----
+
+export const featureList = defineCard({
+  name: "features",
+  version: 1,
+  about: "A list of a project's features.",
+  view: {
+    kind: "list",
+    title: "Features",
+    fields: [
+      { label: "Id", path: "id" },
+      { label: "Feature", path: "name" },
+      { label: "Open tickets", path: "tickets" },
+    ],
+  },
+});
+
+export const featureChanged = defineCard({
+  name: "feature-changed",
+  version: 1,
+  about: "What a Call changed in a project's features.",
+  view: { kind: "change", title: "Features changed" },
+});
+
+const featureName = z.string().trim().min(1).max(80);
+
+const featureWrite = <Input extends z.ZodType>(
+  definition: Omit<Parameters<typeof writeAction<Input, typeof Feature, TicketsDeps>>[1], "output">,
+) =>
+  writeAction<Input, typeof Feature, TicketsDeps>("tickets", {
+    card: featureChanged,
+    output: Feature,
+    ...definition,
+  });
+
+const featureFind = read({
+  name: "feature-find",
+  description: "List a project's features, each with how many open tickets belong to it.",
+  input: z.object({
+    project: z.string(),
+    archived: z.boolean().default(false).describe("True to include archived features."),
+  }),
+  output: z.array(Feature),
+  card: featureList,
+  run: ({ project, archived }, { tickets }) => tickets.features(project, archived),
+});
+
+const featureCreate = featureWrite({
+  name: "feature-create",
+  description: "Create a feature: one part of a project, which groups the tickets for that part.",
+  input: z.object({
+    project: z.string(),
+    name: featureName,
+    description: z.string().max(2000).default(""),
+  }),
+  run: ({ project, name, description }, { tickets, log }) => {
+    const feature = tickets.createFeature(project, name, description);
+    log(`created the feature ${name} in ${project}`, {
+      kind: "created",
+      subject: "feature",
+      id: feature.id,
+    });
+    return feature;
+  },
+});
+
+const featureEdit = featureWrite({
+  name: "feature-edit",
+  description: "Change a feature's name or description, or mark it as a favourite.",
+  input: z.object({
+    feature: z.string(),
+    name: featureName.optional(),
+    description: z.string().max(2000).optional(),
+    favourite: z.boolean().optional(),
+  }),
+  run: ({ feature: featureId, ...patch }, { tickets, log }) => {
+    const feature = tickets.editFeature(featureId, patch);
+    log(`changed the feature ${feature.name}`, {
+      kind: "updated",
+      subject: "feature",
+      id: featureId,
+    });
+    return feature;
+  },
+});
+
+const featureArchive = featureWrite({
+  name: "feature-archive",
+  description: "Archive a feature. Its tickets keep it; no new ticket can be put in it.",
+  input: z.object({ feature: z.string() }),
+  run: ({ feature: featureId }, { tickets, log }) => {
+    const feature = tickets.archiveFeature(featureId, true);
+    log(`archived the feature ${feature.name}`, {
+      kind: "updated",
+      subject: "feature",
+      id: featureId,
+    });
+    return feature;
+  },
+});
+
+const featureRestore = featureWrite({
+  name: "feature-restore",
+  description: "Restore an archived feature.",
+  input: z.object({ feature: z.string() }),
+  run: ({ feature: featureId }, { tickets, log }) => {
+    const feature = tickets.archiveFeature(featureId, false);
+    log(`restored the feature ${feature.name}`, {
+      kind: "updated",
+      subject: "feature",
+      id: featureId,
+    });
+    return feature;
   },
 });
 
@@ -361,6 +493,7 @@ export const ticketsDomain = defineDomain<TicketsDeps>({
     ticketFinish,
     ticketAssign,
     ticketEdit,
+    ticketFeatureSet,
     ticketLabelAdd,
     ticketLabelRemove,
     ticketBlock,
@@ -369,7 +502,12 @@ export const ticketsDomain = defineDomain<TicketsDeps>({
     ticketCancel,
     ticketRestore,
     ticketDelete,
+    featureFind,
+    featureCreate,
+    featureEdit,
+    featureArchive,
+    featureRestore,
   ],
-  cards: [ticketList, ticketCard, ticketChanged],
+  cards: [ticketList, ticketCard, ticketChanged, featureList, featureChanged],
   authorise: (principal, action) => principal.id === OWNER || !OWNER_ONLY.includes(action.name),
 });

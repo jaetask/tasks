@@ -160,11 +160,15 @@
 
 None.
 
+### Features
+
+None.
+
 ### Tickets
 
-| id | title | column | assigned | labels | blocked | state |
-| --- | --- | --- | --- | --- | --- | --- |
-| TLK-1 | Voice notes on the phone | Review | Coder |  |  | open |
+| id | title | feature | column | assigned | labels | blocked | state |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| TLK-1 | Voice notes on the phone |  | Review | Coder |  |  | open |
 
 ### Comments
 

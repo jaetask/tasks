@@ -122,9 +122,9 @@ r4 on n4: there are no steps: the item is received
 
 ### Tickets
 
-| id | title | column | assigned | labels | blocked | state |
-| --- | --- | --- | --- | --- | --- | --- |
-| TLK-1 | the board crashes when I drag a ticket to review | To do |  |  |  | open |
+| id | title | feature | column | assigned | labels | blocked | state |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| TLK-1 | the board crashes when I drag a ticket to review |  | To do |  |  |  | open |
 
 ### Changes
 

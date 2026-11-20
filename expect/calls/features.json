@@ -1,0 +1,74 @@
+{
+  "steps": [
+    { "call": "catalog.actor-create", "input": { "name": "Coder" } },
+    { "call": "catalog.project-create", "input": { "name": "Talk", "prefix": "TLK" } },
+    { "call": "catalog.project-create", "input": { "name": "Money", "prefix": "MNY" } },
+    {
+      "as": "a1",
+      "call": "tickets.feature-create",
+      "input": {
+        "project": "TLK",
+        "name": "Voice",
+        "description": "Recording and playing voice notes."
+      }
+    },
+    { "call": "tickets.feature-create", "input": { "project": "TLK", "name": "Search" } },
+    { "call": "tickets.feature-create", "input": { "project": "MNY", "name": "Export" } },
+    { "call": "tickets.feature-create", "input": { "project": "TLK", "name": "voice" } },
+    { "call": "tickets.feature-create", "input": { "project": "NOPE", "name": "x" } },
+    {
+      "call": "tickets.ticket-create",
+      "input": { "project": "TLK", "title": "Voice notes on the phone", "feature": "f1" }
+    },
+    {
+      "call": "tickets.ticket-create",
+      "input": { "project": "TLK", "title": "Fix the crash on send" }
+    },
+    {
+      "call": "tickets.ticket-create",
+      "input": { "project": "TLK", "title": "Wrong project", "feature": "f3" }
+    },
+    {
+      "as": "a1",
+      "call": "tickets.ticket-feature-set",
+      "input": { "ticket": "TLK-2", "feature": "f1" }
+    },
+    {
+      "as": "a1",
+      "call": "tickets.ticket-feature-set",
+      "input": { "ticket": "TLK-2", "feature": "f2" }
+    },
+    {
+      "as": "a1",
+      "call": "tickets.ticket-feature-set",
+      "input": { "ticket": "TLK-2", "feature": "f3" }
+    },
+    {
+      "as": "a1",
+      "call": "tickets.ticket-feature-set",
+      "input": { "ticket": "TLK-2", "feature": "f9" }
+    },
+    {
+      "call": "tickets.feature-edit",
+      "input": { "feature": "f1", "name": "Voice notes", "favourite": true }
+    },
+    { "call": "tickets.feature-edit", "input": { "feature": "f2", "name": "Voice notes" } },
+    { "as": "a1", "call": "tickets.feature-find", "input": { "project": "TLK" } },
+    { "as": "a1", "call": "tickets.board-read", "input": { "project": "TLK", "feature": "f1" } },
+    { "as": "a1", "call": "tickets.ticket-find", "input": { "feature": null } },
+    { "call": "tickets.feature-archive", "input": { "feature": "f2" } },
+    {
+      "as": "a1",
+      "call": "tickets.ticket-create",
+      "input": { "project": "TLK", "title": "Too late", "feature": "f2" }
+    },
+    { "as": "a1", "call": "tickets.feature-find", "input": { "project": "TLK" } },
+    { "as": "a1", "call": "tickets.feature-find", "input": { "project": "TLK", "archived": true } },
+    { "call": "tickets.feature-restore", "input": { "feature": "f2" } },
+    {
+      "as": "a1",
+      "call": "tickets.ticket-feature-set",
+      "input": { "ticket": "TLK-2", "feature": null }
+    }
+  ]
+}

@@ -32,6 +32,8 @@
           "project": "TLK",
           "title": "Voice notes",
           "description": "",
+          "feature": null,
+          "featureName": "",
           "column": {
             "id": "c1",
             "name": "To do",
@@ -57,6 +59,8 @@
           "project": "TLK",
           "title": "Crash on send",
           "description": "A voice note crashes the app.",
+          "feature": null,
+          "featureName": "",
           "column": {
             "id": "c2",
             "name": "Doing",
@@ -82,6 +86,8 @@
           "project": "MNY",
           "title": "Export to CSV",
           "description": "",
+          "feature": null,
+          "featureName": "",
           "column": {
             "id": "c9",
             "name": "Sign-off",
@@ -120,6 +126,8 @@
           "project": "TLK",
           "title": "Voice notes",
           "description": "",
+          "feature": null,
+          "featureName": "",
           "column": {
             "id": "c1",
             "name": "To do",
@@ -145,6 +153,8 @@
           "project": "TLK",
           "title": "Crash on send",
           "description": "A voice note crashes the app.",
+          "feature": null,
+          "featureName": "",
           "column": {
             "id": "c2",
             "name": "Doing",
@@ -191,6 +201,8 @@
           "project": "TLK",
           "title": "Crash on send",
           "description": "A voice note crashes the app.",
+          "feature": null,
+          "featureName": "",
           "column": {
             "id": "c2",
             "name": "Doing",
@@ -239,6 +251,8 @@
           "project": "TLK",
           "title": "Voice notes",
           "description": "",
+          "feature": null,
+          "featureName": "",
           "column": {
             "id": "c1",
             "name": "To do",
@@ -303,6 +317,8 @@
           "project": "TLK",
           "title": "Crash on send",
           "description": "A voice note crashes the app.",
+          "feature": null,
+          "featureName": "",
           "column": {
             "id": "c2",
             "name": "Doing",
@@ -350,6 +366,8 @@
           "project": "TLK",
           "title": "Voice notes",
           "description": "",
+          "feature": null,
+          "featureName": "",
           "column": {
             "id": "c1",
             "name": "To do",
@@ -375,6 +393,8 @@
           "project": "TLK",
           "title": "Crash on send",
           "description": "A voice note crashes the app.",
+          "feature": null,
+          "featureName": "",
           "column": {
             "id": "c2",
             "name": "Doing",
@@ -423,14 +443,18 @@
 
 None.
 
+### Features
+
+None.
+
 ### Tickets
 
-| id | title | column | assigned | labels | blocked | state |
-| --- | --- | --- | --- | --- | --- | --- |
-| TLK-1 | Voice notes | To do |  |  |  | open |
-| TLK-2 | Crash on send | Doing | Coder |  |  | open |
-| MNY-1 | Export to CSV | Sign-off |  |  |  | open |
-| MNY-2 | Archived one | To do |  |  |  | archived |
+| id | title | feature | column | assigned | labels | blocked | state |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| TLK-1 | Voice notes |  | To do |  |  |  | open |
+| TLK-2 | Crash on send |  | Doing | Coder |  |  | open |
+| MNY-1 | Export to CSV |  | Sign-off |  |  |  | open |
+| MNY-2 | Archived one |  | To do |  |  |  | archived |
 
 ### Comments
 

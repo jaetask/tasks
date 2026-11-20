@@ -158,9 +158,9 @@ r2 on n2: Bugs to tickets ended the run: the item was promoted
 
 ### Tickets
 
-| id | title | column | assigned | labels | blocked | state |
-| --- | --- | --- | --- | --- | --- | --- |
-| TLK-1 | the board crashes when I drag a ticket to review | To do |  |  |  | open |
+| id | title | feature | column | assigned | labels | blocked | state |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| TLK-1 | the board crashes when I drag a ticket to review |  | To do |  |  |  | open |
 
 ### Changes
 

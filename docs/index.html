@@ -350,7 +350,7 @@ details.prob .attack b{color:var(--bad)} details.prob .answer2 b{color:var(--ok)
     <div class="stack prose">
       <span class="eyebrow">2 · The basics</span>
       <h2>Projects hold tickets</h2>
-      <p>A <b>project</b> is a body of work, such as an app. A <b>ticket</b> is one piece of work inside a project, small enough for one agent to finish.</p>
+      <p>A <b>project</b> is a body of work, such as an app. A <b>ticket</b> is one piece of work inside a project, small enough for one agent to finish. A <b>feature</b> is one part of a project, such as "Voice": a ticket can belong to one feature, and the board can show one feature's tickets at a time.</p>
       <p>A new ticket starts in the first to-do column of its project's <b>board</b>. On the board, a ticket moves through the columns as it gets worked on.</p>
     </div>
     <figure class="fig">
@@ -596,6 +596,7 @@ const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls)
 /* words */
 const WORDS = [
   ["Project", "A body of work, such as an app. Holds tickets, and gives them their prefix, like TLK."],
+  ["Feature", "One part of a project, such as Voice. Groups the tickets for that part."],
   ["Ticket", "One piece of work: a title, a description, labels, images and comments. Has an id like TLK-529."],
   ["Label", "A coloured tag on a ticket, such as bug or voice. You make your own."],
   ["Board", "Where a project's tickets move through its columns."],

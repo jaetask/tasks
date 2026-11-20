@@ -25,6 +25,8 @@
     "project": "TLK",
     "title": "Voice notes on the phone",
     "description": "Record a voice note and attach it to a chat.",
+    "feature": null,
+    "featureName": "",
     "column": {
       "id": "c1",
       "name": "To do",
@@ -68,6 +70,8 @@
   "project": "TLK",
   "title": "Voice notes on the phone",
   "description": "Record a voice note and attach it to a chat.",
+  "feature": null,
+  "featureName": "",
   "column": {
     "id": "c3",
     "name": "Review",
@@ -200,12 +204,16 @@
 | l1 | voice | teal |
 | l2 | bug | red |
 
+### Features
+
+None.
+
 ### Tickets
 
-| id | title | column | assigned | labels | blocked | state |
-| --- | --- | --- | --- | --- | --- | --- |
-| TLK-1 | Voice notes on the phone | Done | Reviewer | voice |  | open |
-| TLK-2 | Fix the crash on send | Doing | Reviewer | bug |  | open |
+| id | title | feature | column | assigned | labels | blocked | state |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| TLK-1 | Voice notes on the phone |  | Done | Reviewer | voice |  | open |
+| TLK-2 | Fix the crash on send |  | Doing | Reviewer | bug |  | open |
 
 ### Comments
 

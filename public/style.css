@@ -717,6 +717,12 @@ ol.list {
   list-style: decimal inside;
 }
 
+/* In the board's head each growing part keeps a usable width, and wraps below it. */
+.board-head > .grow,
+.board-head > input[type="text"] {
+  flex: 1 1 200px;
+}
+
 /* Last, so that it wins over the display of any class above. */
 [hidden] {
   display: none;

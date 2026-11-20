@@ -3,7 +3,10 @@
 import { $, h } from "./kit.js";
 
 // A project's own screens, in the order they show under it.
-const PROJECT_SCREENS = [["board", "Board"]];
+const PROJECT_SCREENS = [
+  ["board", "Board"],
+  ["features", "Features"],
+];
 const TOP = [
   ["overview", "Overview"],
   ["inbox", "Inbox"],

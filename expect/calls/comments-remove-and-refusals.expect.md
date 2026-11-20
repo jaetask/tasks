@@ -49,11 +49,15 @@
 
 None.
 
+### Features
+
+None.
+
 ### Tickets
 
-| id | title | column | assigned | labels | blocked | state |
-| --- | --- | --- | --- | --- | --- | --- |
-| TLK-2 | Second | To do |  |  |  | open |
+| id | title | feature | column | assigned | labels | blocked | state |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| TLK-2 | Second |  | To do |  |  |  | open |
 
 ### Comments
 

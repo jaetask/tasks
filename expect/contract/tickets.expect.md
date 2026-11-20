@@ -28,6 +28,7 @@
 | tickets.ticket-finish | write | ticket-changed | Finish a ticket: move it to the first done column. |
 | tickets.ticket-assign | write | ticket-changed | Assign a ticket to an actor, to hand it on, or to nobody with null. |
 | tickets.ticket-edit | write | ticket-changed | Change a ticket's title, its description, or both. |
+| tickets.ticket-feature-set | write | ticket-changed | Put a ticket in a feature of its project, or in no feature with null. |
 | tickets.ticket-label-add | write | ticket-changed | Add a label to a ticket. |
 | tickets.ticket-label-remove | write | ticket-changed | Remove a label from a ticket. |
 | tickets.ticket-block | write | ticket-changed | Mark a ticket blocked, with a note saying why. It stays in its column; agents looking for work skip it. |
@@ -36,6 +37,11 @@
 | tickets.ticket-cancel | write | ticket-changed | Cancel a ticket. It goes to the Archive as canceled; the owner can restore it. |
 | tickets.ticket-restore | write | ticket-changed | Restore an archived or canceled ticket to the column it was in. Only the owner can. |
 | tickets.ticket-delete | write | ticket-changed | Delete a ticket for good, with its comments and images. It cannot be undone. Only the owner can. |
+| tickets.feature-find | read | features | List a project's features, each with how many open tickets belong to it. |
+| tickets.feature-create | write | feature-changed | Create a feature: one part of a project, which groups the tickets for that part. |
+| tickets.feature-edit | write | feature-changed | Change a feature's name or description, or mark it as a favourite. |
+| tickets.feature-archive | write | feature-changed | Archive a feature. Its tickets keep it; no new ticket can be put in it. |
+| tickets.feature-restore | write | feature-changed | Restore an archived feature. |
 
 ### Cards
 
@@ -44,6 +50,8 @@
 | tickets | 1 | list | A list of tickets. |
 | ticket | 1 | record | One ticket. |
 | ticket-changed | 1 | change | What a Call changed on a ticket. |
+| features | 1 | list | A list of a project's features. |
+| feature-changed | 1 | change | What a Call changed in a project's features. |
 
 #### Card tickets
 
@@ -112,6 +120,38 @@
 }
 ```
 
+#### Card features
+
+```json
+{
+  "kind": "list",
+  "title": "Features",
+  "fields": [
+    {
+      "label": "Id",
+      "path": "id"
+    },
+    {
+      "label": "Feature",
+      "path": "name"
+    },
+    {
+      "label": "Open tickets",
+      "path": "tickets"
+    }
+  ]
+}
+```
+
+#### Card feature-changed
+
+```json
+{
+  "kind": "change",
+  "title": "Features changed"
+}
+```
+
 ### Agent context
 
 ```text
@@ -129,6 +169,7 @@ Tools:
 - tickets__ticket-finish (changes): Finish a ticket: move it to the first done column.
 - tickets__ticket-assign (changes): Assign a ticket to an actor, to hand it on, or to nobody with null.
 - tickets__ticket-edit (changes): Change a ticket's title, its description, or both.
+- tickets__ticket-feature-set (changes): Put a ticket in a feature of its project, or in no feature with null.
 - tickets__ticket-label-add (changes): Add a label to a ticket.
 - tickets__ticket-label-remove (changes): Remove a label from a ticket.
 - tickets__ticket-block (changes): Mark a ticket blocked, with a note saying why. It stays in its column; agents looking for work skip it.
@@ -137,6 +178,11 @@ Tools:
 - tickets__ticket-cancel (changes): Cancel a ticket. It goes to the Archive as canceled; the owner can restore it.
 - tickets__ticket-restore (changes): Restore an archived or canceled ticket to the column it was in. Only the owner can.
 - tickets__ticket-delete (changes): Delete a ticket for good, with its comments and images. It cannot be undone. Only the owner can.
+- tickets__feature-find (reads): List a project's features, each with how many open tickets belong to it.
+- tickets__feature-create (changes): Create a feature: one part of a project, which groups the tickets for that part.
+- tickets__feature-edit (changes): Change a feature's name or description, or mark it as a favourite.
+- tickets__feature-archive (changes): Archive a feature. Its tickets keep it; no new ticket can be put in it.
+- tickets__feature-restore (changes): Restore an archived feature.
 A tool that changes something after the person says yes waits for them; tell them what you asked for.
 ```
 
@@ -186,6 +232,13 @@ A tool that changes something after the person says yes waits for them; tell the
     "label": {
       "description": "A label id.",
       "type": "string"
+    },
+    "feature": {
+      "description": "A feature id, or null for tickets in no feature.",
+      "type": [
+        "string",
+        "null"
+      ]
     },
     "text": {
       "description": "Words to look for in the title and description.",
@@ -243,6 +296,13 @@ A tool that changes something after the person says yes waits for them; tell the
         "null"
       ]
     },
+    "feature": {
+      "description": "A feature id, or null for tickets in no feature.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
     "project": {
       "type": "string",
       "description": "A project id, like TLK."
@@ -267,6 +327,13 @@ A tool that changes something after the person says yes waits for them; tell the
     },
     "assignee": {
       "description": "An actor id, or null for tickets assigned to nobody.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "feature": {
+      "description": "A feature id, or null for tickets in no feature.",
       "type": [
         "string",
         "null"
@@ -311,6 +378,10 @@ A tool that changes something after the person says yes waits for them; tell the
     },
     "assignee": {
       "description": "An actor id.",
+      "type": "string"
+    },
+    "feature": {
+      "description": "The id of a feature of the project.",
       "type": "string"
     }
   },
@@ -446,6 +517,31 @@ A tool that changes something after the person says yes waits for them; tell the
   },
   "required": [
     "ticket"
+  ]
+}
+```
+
+#### tickets.ticket-feature-set
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "ticket": {
+      "type": "string",
+      "description": "A ticket id, like TLK-529."
+    },
+    "feature": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "required": [
+    "ticket",
+    "feature"
   ]
 }
 ```
@@ -606,6 +702,119 @@ A tool that changes something after the person says yes waits for them; tell the
   },
   "required": [
     "ticket"
+  ]
+}
+```
+
+#### tickets.feature-find
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string"
+    },
+    "archived": {
+      "default": false,
+      "description": "True to include archived features.",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "project"
+  ]
+}
+```
+
+#### tickets.feature-create
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80
+    },
+    "description": {
+      "default": "",
+      "type": "string",
+      "maxLength": 2000
+    }
+  },
+  "required": [
+    "project",
+    "name"
+  ]
+}
+```
+
+#### tickets.feature-edit
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "feature": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 2000
+    },
+    "favourite": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "feature"
+  ]
+}
+```
+
+#### tickets.feature-archive
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "feature": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "feature"
+  ]
+}
+```
+
+#### tickets.feature-restore
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "feature": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "feature"
   ]
 }
 ```

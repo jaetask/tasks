@@ -70,6 +70,8 @@
     "project": "TLK",
     "title": "Voice notes on the phone",
     "description": "",
+    "feature": null,
+    "featureName": "",
     "column": {
       "id": "c2",
       "name": "Doing",
@@ -233,11 +235,15 @@ updated connection <Coding agent> (connections.connection-revoke, caller ui)
 
 None.
 
+### Features
+
+None.
+
 ### Tickets
 
-| id | title | column | assigned | labels | blocked | state |
-| --- | --- | --- | --- | --- | --- | --- |
-| TLK-1 | Voice notes on the phone | Review | Coder |  |  | open |
+| id | title | feature | column | assigned | labels | blocked | state |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| TLK-1 | Voice notes on the phone |  | Review | Coder |  |  | open |
 
 ### Comments
 

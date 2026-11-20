@@ -33,6 +33,8 @@
   "project": "TLK",
   "title": "Voice notes",
   "description": "",
+  "feature": null,
+  "featureName": "",
   "column": {
     "id": "c1",
     "name": "To do",
@@ -76,11 +78,15 @@
 | --- | --- | --- |
 | l1 | voice | teal |
 
+### Features
+
+None.
+
 ### Tickets
 
-| id | title | column | assigned | labels | blocked | state |
-| --- | --- | --- | --- | --- | --- | --- |
-| TLK-1 | Voice notes | To do | Coder | voice |  | open |
+| id | title | feature | column | assigned | labels | blocked | state |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| TLK-1 | Voice notes |  | To do | Coder | voice |  | open |
 
 ### Comments
 

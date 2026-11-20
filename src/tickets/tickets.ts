@@ -4,7 +4,7 @@
 import type { DatabaseSync } from "node:sqlite";
 import { z } from "zod";
 import { type Catalog, Column, KINDS, Kind, Label } from "../catalog/catalog.js";
-import { nextNumber } from "../ids.js";
+import { nextId, nextNumber } from "../ids.js";
 import type { Rows } from "../journal.js";
 import { Refusal } from "../refusal.js";
 
@@ -12,11 +12,24 @@ export const STATES = ["open", "archived", "canceled"] as const;
 export const State = z.enum(STATES);
 export type State = z.infer<typeof State>;
 
+export const Feature = z.object({
+  id: z.string(),
+  project: z.string(),
+  name: z.string(),
+  description: z.string(),
+  favourite: z.boolean(),
+  archived: z.boolean(),
+  tickets: z.number().describe("How many open tickets belong to it."),
+});
+export type Feature = z.infer<typeof Feature>;
+
 export const Ticket = z.object({
   id: z.string(),
   project: z.string(),
   title: z.string(),
   description: z.string(),
+  feature: z.string().nullable().describe("The id of the feature it belongs to, or null."),
+  featureName: z.string(),
   column: Column,
   assignee: z.string().nullable().describe("The actor id it is assigned to, or null."),
   assigneeName: z.string(),
@@ -49,6 +62,11 @@ export const Narrow = z.object({
     .nullable()
     .optional()
     .describe("An actor id, or null for tickets assigned to nobody."),
+  feature: z
+    .string()
+    .nullable()
+    .optional()
+    .describe("A feature id, or null for tickets in no feature."),
 });
 export type Narrow = z.infer<typeof Narrow>;
 
@@ -61,6 +79,11 @@ export const Find = z.object({
     .optional()
     .describe("An actor id, or null for tickets assigned to nobody."),
   label: z.string().optional().describe("A label id."),
+  feature: z
+    .string()
+    .nullable()
+    .optional()
+    .describe("A feature id, or null for tickets in no feature."),
   text: z.string().optional().describe("Words to look for in the title and description."),
   blocked: z.boolean().optional(),
   state: State.optional().describe("open if left out."),
@@ -83,8 +106,24 @@ export type Tickets = {
       column?: string | undefined;
       labels: string[];
       assignee?: string | undefined;
+      feature?: string | undefined;
     },
   ): Ticket;
+  /** Puts a ticket in a feature of its project, or in none with null. */
+  setFeature(id: string, feature: string | null): Ticket;
+  /** A project's features, oldest first; archived ones only when asked. */
+  features(project: string, archived?: boolean): Feature[];
+  feature(id: string): Feature;
+  createFeature(project: string, name: string, description: string): Feature;
+  editFeature(
+    id: string,
+    patch: {
+      name?: string | undefined;
+      description?: string | undefined;
+      favourite?: boolean | undefined;
+    },
+  ): Feature;
+  archiveFeature(id: string, archived: boolean): Feature;
   edit(id: string, patch: { title?: string | undefined; description?: string | undefined }): Ticket;
   /** Moves an open ticket to any column of its board. */
   move(id: string, column: string): Ticket;
@@ -106,6 +145,14 @@ export function migrateTickets(db: DatabaseSync): void {
     "CREATE TABLE IF NOT EXISTS tickets (id TEXT PRIMARY KEY, project TEXT NOT NULL REFERENCES projects (id), number INTEGER NOT NULL, title TEXT NOT NULL, description TEXT NOT NULL, column_id TEXT NOT NULL REFERENCES columns (id), assignee TEXT REFERENCES actors (id), blocked TEXT, state TEXT NOT NULL DEFAULT 'open', created_at TEXT NOT NULL, created_by TEXT NOT NULL)",
   );
   db.exec(
+    "CREATE TABLE IF NOT EXISTS features (id TEXT PRIMARY KEY, project TEXT NOT NULL REFERENCES projects (id), name TEXT NOT NULL, description TEXT NOT NULL, favourite INTEGER NOT NULL DEFAULT 0, archived INTEGER NOT NULL DEFAULT 0)",
+  );
+  // Added after the first version: a database made before it gets the column here.
+  const columns = db.prepare("PRAGMA table_info(tickets)").all() as { name: string }[];
+  if (!columns.some((c) => c.name === "feature")) {
+    db.exec("ALTER TABLE tickets ADD COLUMN feature TEXT REFERENCES features (id)");
+  }
+  db.exec(
     "CREATE TABLE IF NOT EXISTS ticket_labels (id TEXT PRIMARY KEY, ticket TEXT NOT NULL REFERENCES tickets (id), label TEXT NOT NULL REFERENCES labels (id))",
   );
 }
@@ -117,6 +164,7 @@ type TicketRow = {
   title: string;
   description: string;
   column_id: string;
+  feature: string | null;
   assignee: string | null;
   blocked: string | null;
   state: State;
@@ -133,6 +181,50 @@ export function sqliteTickets(
   catalog: Catalog,
   counts: Counts,
 ): Tickets {
+  type FeatureRow = {
+    id: string;
+    project: string;
+    name: string;
+    description: string;
+    favourite: number;
+    archived: number;
+  };
+  const featureRow = (id: string) =>
+    db.prepare("SELECT * FROM features WHERE id = ?").get(id) as FeatureRow | undefined;
+  const toFeature = (r: FeatureRow): Feature => ({
+    id: r.id,
+    project: r.project,
+    name: r.name,
+    description: r.description,
+    favourite: r.favourite === 1,
+    archived: r.archived === 1,
+    tickets: (
+      db
+        .prepare("SELECT count(*) AS n FROM tickets WHERE feature = ? AND state = 'open'")
+        .get(r.id) as { n: number }
+    ).n,
+  });
+  const feature = (id: string) => {
+    const found = featureRow(id);
+    if (!found) throw new Refusal("unknown-feature", `No feature has id ${id}.`);
+    return toFeature(found);
+  };
+  // A feature a ticket of `project` can be put in: of that project, not archived.
+  const featureOf = (project: string, id: string) => {
+    const found = feature(id);
+    if (found.project !== project) {
+      throw new Refusal("other-project", `Feature ${id} is not in project ${project}.`);
+    }
+    if (found.archived) throw new Refusal("archived-feature", `${found.name} is archived.`);
+    return found;
+  };
+  const freeFeatureName = (project: string, name: string, except?: string) => {
+    const taken = (
+      db.prepare("SELECT * FROM features WHERE project = ?").all(project) as FeatureRow[]
+    ).some((f) => f.id !== except && f.name.toLowerCase() === name.toLowerCase());
+    if (taken) throw new Refusal("name-taken", `This project already has a feature named ${name}.`);
+  };
+
   const toTicket = (r: TicketRow): Ticket => {
     const { project: _, ...column } = catalog.column(r.column_id);
     const labels = db
@@ -145,6 +237,8 @@ export function sqliteTickets(
       project: r.project,
       title: r.title,
       description: r.description,
+      feature: r.feature,
+      featureName: r.feature ? (featureRow(r.feature)?.name ?? "") : "",
       column,
       assignee: r.assignee,
       assigneeName: r.assignee ? catalog.actor(r.assignee).name : "",
@@ -188,6 +282,7 @@ export function sqliteTickets(
   const narrowed = (all: TicketRow[], narrow: Narrow = {}) => {
     const words = (narrow.text ?? "").toLowerCase().split(/\s+/).filter(Boolean);
     return all
+      .filter((t) => narrow.feature === undefined || t.feature === narrow.feature)
       .filter((t) => narrow.assignee === undefined || t.assignee === narrow.assignee)
       .filter((t) =>
         words.every((w) => `${t.id} ${t.title} ${t.description}`.toLowerCase().includes(w)),
@@ -238,6 +333,7 @@ export function sqliteTickets(
       return all
         .filter((t) => filter.project === undefined || t.project === filter.project)
         .filter((t) => filter.assignee === undefined || t.assignee === filter.assignee)
+        .filter((t) => filter.feature === undefined || t.feature === filter.feature)
         .filter((t) => filter.blocked === undefined || (t.blocked !== null) === filter.blocked)
         .filter((t) => words.every((w) => `${t.title} ${t.description}`.toLowerCase().includes(w)))
         .map(toTicket)
@@ -255,6 +351,7 @@ export function sqliteTickets(
           : columnOn(project.id, ticket.column);
       if (!column) throw new Refusal("no-column", `The board of ${project.id} has no columns.`);
       if (ticket.assignee !== undefined) activeActor(ticket.assignee);
+      if (ticket.feature !== undefined) featureOf(project.id, ticket.feature);
       const number = nextNumber(db, `ticket:${project.id}`);
       const id = `${project.id}-${number}`;
       rows.insert("tickets", {
@@ -264,6 +361,7 @@ export function sqliteTickets(
         title: ticket.title,
         description: ticket.description,
         column_id: column.id,
+        feature: ticket.feature ?? null,
         assignee: ticket.assignee ?? null,
         blocked: null,
         state: "open",
@@ -272,6 +370,52 @@ export function sqliteTickets(
       });
       for (const label of ticket.labels) attach(id, label);
       return get(id);
+    },
+    setFeature: (id, featureId) => {
+      const found = open(id);
+      if (featureId !== null) featureOf(found.project, featureId);
+      rows.update("tickets", id, { feature: featureId });
+      return get(id);
+    },
+    features: (projectId, archived = false) => {
+      catalog.project(projectId);
+      return (
+        db
+          .prepare("SELECT * FROM features WHERE project = ? ORDER BY rowid")
+          .all(projectId) as FeatureRow[]
+      )
+        .filter((f) => archived || f.archived === 0)
+        .map(toFeature);
+    },
+    feature,
+    createFeature: (projectId, name, description) => {
+      catalog.project(projectId);
+      freeFeatureName(projectId, name);
+      const id = nextId(db, "f");
+      rows.insert("features", {
+        id,
+        project: projectId,
+        name,
+        description,
+        favourite: 0,
+        archived: 0,
+      });
+      return feature(id);
+    },
+    editFeature: (id, patch) => {
+      const found = feature(id);
+      if (patch.name !== undefined) freeFeatureName(found.project, patch.name, id);
+      rows.update("features", id, {
+        ...(patch.name === undefined ? {} : { name: patch.name }),
+        ...(patch.description === undefined ? {} : { description: patch.description }),
+        ...(patch.favourite === undefined ? {} : { favourite: patch.favourite ? 1 : 0 }),
+      });
+      return feature(id);
+    },
+    archiveFeature: (id, archived) => {
+      feature(id);
+      rows.update("features", id, { archived: archived ? 1 : 0 });
+      return feature(id);
     },
     edit: (id, patch) => {
       open(id);

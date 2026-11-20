@@ -60,6 +60,7 @@
 | tickets__ticket-finish |  | Finish a ticket: move it to the first done column. |
 | tickets__ticket-assign |  | Assign a ticket to an actor, to hand it on, or to nobody with null. |
 | tickets__ticket-edit |  | Change a ticket's title, its description, or both. |
+| tickets__ticket-feature-set |  | Put a ticket in a feature of its project, or in no feature with null. |
 | tickets__ticket-label-add |  | Add a label to a ticket. |
 | tickets__ticket-label-remove |  | Remove a label from a ticket. |
 | tickets__ticket-block |  | Mark a ticket blocked, with a note saying why. It stays in its column; agents looking for work skip it. |
@@ -68,6 +69,11 @@
 | tickets__ticket-cancel |  | Cancel a ticket. It goes to the Archive as canceled; the owner can restore it. |
 | tickets__ticket-restore |  | Restore an archived or canceled ticket to the column it was in. Only the owner can. |
 | tickets__ticket-delete |  | Delete a ticket for good, with its comments and images. It cannot be undone. Only the owner can. |
+| tickets__feature-find | yes | List a project's features, each with how many open tickets belong to it. |
+| tickets__feature-create |  | Create a feature: one part of a project, which groups the tickets for that part. |
+| tickets__feature-edit |  | Change a feature's name or description, or mark it as a favourite. |
+| tickets__feature-archive |  | Archive a feature. Its tickets keep it; no new ticket can be put in it. |
+| tickets__feature-restore |  | Restore an archived feature. |
 | comments__conversation-read | yes | Read a ticket's conversation: its comments with replies and reactions, and a line for each change to the ticket, oldest first. |
 | comments__comment-add |  | Comment on a ticket: say what you did or found, or ask. With reply_to, it is a reply to that comment. |
 | comments__comment-edit |  | Change the text of a comment you wrote. |
@@ -128,6 +134,10 @@ updated connection <Coding agent> (connections.connection-approve, caller ui)
 None.
 
 ### Labels
+
+None.
+
+### Features
 
 None.
 

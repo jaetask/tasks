@@ -29,6 +29,8 @@
     "project": "TLK",
     "title": "Voice notes",
     "description": "",
+    "feature": null,
+    "featureName": "",
     "column": {
       "id": "c1",
       "name": "To do",
@@ -55,6 +57,8 @@
     "project": "TLK",
     "title": "Crash on send",
     "description": "The app crashes when a voice note is sent.",
+    "feature": null,
+    "featureName": "",
     "column": {
       "id": "c2",
       "name": "Doing",
@@ -93,6 +97,8 @@
     "project": "TLK",
     "title": "Crash on send",
     "description": "The app crashes when a voice note is sent.",
+    "feature": null,
+    "featureName": "",
     "column": {
       "id": "c2",
       "name": "Doing",
@@ -131,6 +137,8 @@
     "project": "TLK",
     "title": "Crash on send",
     "description": "The app crashes when a voice note is sent.",
+    "feature": null,
+    "featureName": "",
     "column": {
       "id": "c2",
       "name": "Doing",
@@ -169,6 +177,8 @@
     "project": "TLK",
     "title": "Voice notes",
     "description": "",
+    "feature": null,
+    "featureName": "",
     "column": {
       "id": "c1",
       "name": "To do",
@@ -202,6 +212,8 @@
     "project": "MNY",
     "title": "Export to CSV",
     "description": "",
+    "feature": null,
+    "featureName": "",
     "column": {
       "id": "c5",
       "name": "To do",
@@ -229,6 +241,8 @@
     "project": "MNY",
     "title": "Export to CSV",
     "description": "",
+    "feature": null,
+    "featureName": "",
     "column": {
       "id": "c5",
       "name": "To do",
@@ -256,6 +270,8 @@
     "project": "TLK",
     "title": "Voice notes",
     "description": "",
+    "feature": null,
+    "featureName": "",
     "column": {
       "id": "c1",
       "name": "To do",
@@ -304,13 +320,17 @@
 | l1 | voice | teal |
 | l2 | bug | red |
 
+### Features
+
+None.
+
 ### Tickets
 
-| id | title | column | assigned | labels | blocked | state |
-| --- | --- | --- | --- | --- | --- | --- |
-| TLK-1 | Voice notes | To do |  | voice |  | open |
-| TLK-2 | Crash on send | Doing | Coder | voice, bug |  | open |
-| MNY-1 | Export to CSV | To do | Reviewer |  | needs a sample file | open |
+| id | title | feature | column | assigned | labels | blocked | state |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| TLK-1 | Voice notes |  | To do |  | voice |  | open |
+| TLK-2 | Crash on send |  | Doing | Coder | voice, bug |  | open |
+| MNY-1 | Export to CSV |  | To do | Reviewer |  | needs a sample file | open |
 
 ### Comments
 

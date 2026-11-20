@@ -47,6 +47,7 @@ export function renderData(db: DatabaseSync): string[] {
   const all = (["open", "archived", "canceled"] as const).flatMap((state) =>
     tickets.find({ state }),
   );
+  const features = catalog.projects.flatMap((p) => tickets.features(p.id, true));
   const nameOf = (id: string) => catalog.actors.find((a) => a.id === id)?.name || id;
   const comments = all.flatMap((t) =>
     sqliteComments(db, journal.rows, nameOf)
@@ -80,13 +81,28 @@ export function renderData(db: DatabaseSync): string[] {
           catalog.labels.map((l) => [l.id, l.name, l.colour]),
         )
       : "None.",
+    "### Features",
+    features.length
+      ? table(
+          ["id", "project", "name", "favourite", "archived", "open tickets"],
+          features.map((f) => [
+            f.id,
+            f.project,
+            f.name,
+            f.favourite ? "yes" : "",
+            f.archived ? "yes" : "",
+            f.tickets,
+          ]),
+        )
+      : "None.",
     "### Tickets",
     all.length
       ? table(
-          ["id", "title", "column", "assigned", "labels", "blocked", "state"],
+          ["id", "title", "feature", "column", "assigned", "labels", "blocked", "state"],
           all.map((t) => [
             t.id,
             t.title,
+            t.featureName,
             t.column.name,
             t.assigneeName,
             t.labels.map((l) => l.name).join(", "),

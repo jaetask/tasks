@@ -55,6 +55,11 @@
 | inbox.step-move | write |
 | inbox.step-remove | write |
 | tickets.board-read | read |
+| tickets.feature-archive | write |
+| tickets.feature-create | write |
+| tickets.feature-edit | write |
+| tickets.feature-find | read |
+| tickets.feature-restore | write |
 | tickets.overview-read | read |
 | tickets.ticket-archive | write |
 | tickets.ticket-assign | write |
@@ -63,6 +68,7 @@
 | tickets.ticket-create | write |
 | tickets.ticket-delete | write |
 | tickets.ticket-edit | write |
+| tickets.ticket-feature-set | write |
 | tickets.ticket-find | read |
 | tickets.ticket-label-add | write |
 | tickets.ticket-label-remove | write |
