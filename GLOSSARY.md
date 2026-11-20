@@ -47,6 +47,9 @@ _Avoid_: trash, bin
 **Human input**: A question an agent asks the owner on a ticket. It awaits an answer, is resolved by the owner's answer, or is taken back.
 _Avoid_: approval, prompt, blocker
 
+**Agent inbox**: What was said to an agent: a reply to its comment, a comment on a ticket assigned to it, or the owner's answer to its question. Each one is unread until the agent acknowledges it.
+_Avoid_: notifications, mentions
+
 **Inbox**: Where new ideas and requests arrive before they become tickets.
 _Avoid_: intake queue, triage
 
@@ -63,6 +66,7 @@ _Avoid_: processor, stage, rule
 
 ## Flagged ambiguities
 
+- "Inbox" alone is a project's inbox of new ideas and requests, shown as Intake in the sidebar. The "agent inbox" is a different thing: what was said to an agent.
 - "Card" is the Kit's word for how an Outcome is shown. A ticket on the board is a ticket, never a card.
 - "Step" is an inbox step. A column is a step on the board only in plain speech; in code and docs it is a column.
 - "Change" here is a recorded change with its actor. The Kit's Change (created, updated or deleted, on an Outcome) is what a page uses to fetch things again.

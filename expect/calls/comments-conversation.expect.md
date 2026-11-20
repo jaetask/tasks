@@ -187,6 +187,12 @@ None.
 
 None.
 
+### Agent inboxes
+
+| id | for | from | kind | ticket | about | text | state |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| r1 | Coder | Sam | reply | TLK-1 | m2 | Nice. Keep the record button big on the lock screen. | unread |
+
 ### Changes
 
 | id | at | actor | action | summary | ticket | undone by |

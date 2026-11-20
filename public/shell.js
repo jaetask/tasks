@@ -12,6 +12,7 @@ const PROJECT_SCREENS = [
 const TOP = [
   ["overview", "Overview"],
   ["input", "Human input"],
+  ["replies", "Agent inbox"],
 ];
 const BOTTOM = [
   ["archive", "Archive"],

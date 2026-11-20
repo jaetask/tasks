@@ -256,11 +256,22 @@ try {
       await page.waitForSelector("text=No agent is waiting for you");
       await page.click("button >> text=Resolved");
       await page.waitForSelector("text=You answered: Keep them for 30 days.");
-      await page.click('.side-row a[href="#/board/TLK"]');
-      await page.click(".card >> text=Voice notes on the phone");
-      await page.waitForSelector("#ticket[open] h2");
     },
   );
+  await step("agent inbox: the owner's replies and answer wait there for the agent", async () => {
+    await page.click('a[href="#/replies"]');
+    await page.waitForSelector("text=Sam answered Coder");
+    await page.waitForSelector("text=Sam replied to Coder");
+    await shot("agent-inbox");
+    const before = await count(".items > li");
+    await page.click(".items button >> text=Acknowledge >> nth=0");
+    await until((n) => document.querySelectorAll(".items > li").length === n - 1, before);
+    await page.click("button >> text=Acknowledged");
+    await page.waitForSelector("text=· acknowledged");
+    await page.click('.side-row a[href="#/board/TLK"]');
+    await page.click(".card >> text=Voice notes on the phone");
+    await page.waitForSelector("#ticket[open] h2");
+  });
   await step("backlog: a new ticket waits there, then goes to the board", async () => {
     await page.click("#tk-close");
     await page.click('.side-sub a[href="#/backlog/TLK"]');

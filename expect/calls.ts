@@ -11,6 +11,7 @@ import { sqliteComments } from "../src/comments/comments.js";
 import { sqliteImages } from "../src/images/images.js";
 import { sqliteInputs } from "../src/input/input.js";
 import { openJournal } from "../src/journal.js";
+import { sqliteReplies } from "../src/replies/replies.js";
 import { sqliteTickets } from "../src/tickets/tickets.js";
 
 type Step = {
@@ -59,6 +60,7 @@ export function renderData(db: DatabaseSync): string[] {
       .thread(t.id)
       .flatMap((c) => [c, ...c.replies]),
   );
+  const replies = sqliteReplies(db, journal.rows, nameOf).list();
   const requests = sqliteInputs(db, journal.rows, nameOf).list();
   const images = all.flatMap((t) => sqliteImages(db, journal.rows).list(t.id));
   return [
@@ -143,6 +145,22 @@ export function renderData(db: DatabaseSync): string[] {
       ? table(
           ["id", "ticket", "asked by", "question", "state", "answer"],
           requests.map((q) => [q.id, q.ticket, q.askedByName, q.question, q.state, q.answer ?? ""]),
+        )
+      : "None.",
+    "### Agent inboxes",
+    replies.length
+      ? table(
+          ["id", "for", "from", "kind", "ticket", "about", "text", "state"],
+          replies.map((r) => [
+            r.id,
+            r.toName,
+            r.fromName,
+            r.kind,
+            r.ticket,
+            r.about,
+            r.text,
+            r.state,
+          ]),
         )
       : "None.",
     "### Changes",

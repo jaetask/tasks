@@ -11,6 +11,8 @@ import { Comment, type Comments, Reply } from "./comments.js";
 export type CommentsDeps = Base & {
   tickets: Pick<Tickets, "get">;
   comments: Comments;
+  /** Tells the agents a new comment concerns: see the replies Domain. */
+  said(comment: Reply, assignee: string | null, repliedTo: string | undefined): void;
   /** An actor's name, or its id when it has none. */
   nameOf(actor: string): string;
   now(): number;
@@ -113,9 +115,10 @@ const commentAdd = write({
     text,
     reply_to: z.string().optional().describe("The id of the comment to reply to."),
   }),
-  run: ({ ticket, text, reply_to }, { tickets, comments, actor, at }) => {
-    tickets.get(ticket);
+  run: ({ ticket, text, reply_to }, { tickets, comments, said, actor, at }) => {
+    const { assignee } = tickets.get(ticket);
     const comment = comments.add(actor, at, ticket, text, reply_to);
+    said(comment, assignee, reply_to);
     return {
       comment,
       summary: comment.replyTo

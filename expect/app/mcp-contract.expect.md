@@ -23,6 +23,7 @@
 | open-agent-kit://contract/images | images Contract |
 | open-agent-kit://contract/inbox | inbox Contract |
 | open-agent-kit://contract/input | input Contract |
+| open-agent-kit://contract/replies | replies Contract |
 | open-agent-kit://contract/connections | connections Contract |
 | open-agent-kit://contract/history | history Contract |
 
@@ -113,6 +114,8 @@
 | input__input-request |  | Ask the owner a question on a ticket when you cannot go on without a person's answer. Then wait: read the request again later, or look in your agent inbox. |
 | input__input-resolve |  | Answer an input request. Only the owner can. |
 | input__input-withdraw |  | Take back an input request that no longer needs an answer. Whoever asked or the owner can. |
+| replies__reply-list | yes | Read your agent inbox, oldest first: replies to your comments, comments on tickets assigned to you, and the owner's answers to your questions. The owner can read any agent's, or everyone's. |
+| replies__reply-acknowledge |  | Mark a reply in your agent inbox as read and dealt with. |
 | connections__connection-list | yes | List the Connections: those waiting for approval, connected and revoked. |
 | connections__connection-approve |  | Approve a Connection that asked to connect: pick the actor it acts as, and whether it may change things or only read. |
 | connections__connection-revoke |  | Revoke a Connection, or turn down one that is waiting. It is cut off at once; what it did stays visible. |
@@ -163,6 +166,10 @@ None.
 None.
 
 ### Input requests
+
+None.
+
+### Agent inboxes
 
 None.
 

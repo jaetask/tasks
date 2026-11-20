@@ -24,6 +24,8 @@ const state = {
   archive: "all",
   inbox: "received",
   input: "awaiting",
+  replies: "unread",
+  repliesActor: "",
   inputProject: "",
   openRuns: new Set(),
   editingStep: null,
@@ -474,6 +476,98 @@ async function inputView() {
               text:
                 state.input === "awaiting" ? "No agent is waiting for you." : "Nothing here yet.",
             }),
+      ),
+    ),
+  ];
+}
+
+// ---- agent inbox ----
+
+const REPLY_KINDS = {
+  reply: "replied to",
+  comment: "commented on a ticket of",
+  answer: "answered",
+};
+
+async function repliesView() {
+  const agents = state.catalog.actors.filter((a) => a.id !== OWNER);
+  const replies =
+    (await read("replies.reply-list", {
+      ...(state.replies === "all" ? {} : { state: state.replies }),
+      ...(state.repliesActor ? { actor: state.repliesActor } : {}),
+    })) ?? [];
+  const tab = (value, text) =>
+    h("button", {
+      type: "button",
+      text,
+      "aria-pressed": String(state.replies === value),
+      onclick: () => {
+        state.replies = value;
+        refresh();
+      },
+    });
+  return [
+    h(
+      "div",
+      { class: "stack" },
+      h(
+        "section",
+        { class: "panel" },
+        h(
+          "div",
+          { class: "row spread wrap" },
+          h("h2", { text: "Agent inbox" }),
+          h(
+            "div",
+            { class: "row" },
+            tab("unread", "Unread"),
+            tab("acknowledged", "Acknowledged"),
+            tab("all", "All"),
+            select(
+              [["", "Every agent"], ...agents.map((a) => [a.id, a.name])],
+              state.repliesActor,
+              (actor) => {
+                state.repliesActor = actor;
+                refresh();
+              },
+              "Agent",
+            ),
+          ),
+        ),
+        h("p", {
+          class: "muted",
+          text: "What was said to your agents: replies to their comments, comments on their tickets, and your answers to their questions. An agent acknowledges each one when it has dealt with it.",
+        }),
+        replies.length > 0
+          ? h(
+              "ul",
+              { class: "list items" },
+              replies.map((r) =>
+                h(
+                  "li",
+                  {},
+                  h(
+                    "div",
+                    { class: "row wrap" },
+                    h("b", { text: `${r.fromName} ${REPLY_KINDS[r.kind]} ${r.toName}` }),
+                    h("span", { class: "caption", text: `${when(r.at)} · ${r.state}` }),
+                  ),
+                  h("p", { class: "description", text: r.text }),
+                  h(
+                    "div",
+                    { class: "row" },
+                    button(`Open ${r.ticket}`, () => openTicket(r.ticket), "small"),
+                    r.state === "unread" &&
+                      button(
+                        "Acknowledge",
+                        () => act("replies.reply-acknowledge", { reply: r.id }),
+                        "small",
+                      ),
+                  ),
+                ),
+              ),
+            )
+          : h("p", { class: "muted", text: "Nothing here." }),
       ),
     ),
   ];
@@ -1786,6 +1880,7 @@ async function settingsView() {
 const VIEWS = {
   overview: overviewView,
   input: inputView,
+  replies: repliesView,
   board: boardView,
   backlog: backlogView,
   features: featuresView,

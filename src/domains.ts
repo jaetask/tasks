@@ -19,6 +19,8 @@ import { migrateInput, sqliteInputs } from "./input/input.js";
 import { migrateIds } from "./ids.js";
 import { migrateJournal, openJournal } from "./journal.js";
 import { ticketsDomain } from "./tickets/domain.js";
+import { repliesDomain } from "./replies/domain.js";
+import { migrateReplies, sqliteReplies } from "./replies/replies.js";
 import { migrateTickets, sqliteTickets } from "./tickets/tickets.js";
 
 const migrated = new WeakSet<DatabaseSync>();
@@ -34,6 +36,7 @@ export function migrate(db: DatabaseSync): void {
   migrateComments(db);
   migrateImages(db);
   migrateInput(db);
+  migrateReplies(db);
   migrateInbox(db);
   migrateRuns(db);
   migrated.add(db);
@@ -61,7 +64,8 @@ function open(db: DatabaseSync, now: () => number) {
     images: images.list(ticket).length,
     awaiting: inputs.awaiting(ticket),
   }));
-  return { ...base, catalog, tickets, comments, images, inputs, nameOf, now };
+  const replies = sqliteReplies(db, journal.rows, nameOf);
+  return { ...base, catalog, tickets, comments, images, inputs, replies, nameOf, now };
 }
 
 export function domains(now: () => number = Date.now): Provided<DatabaseSync>[] {
@@ -75,17 +79,54 @@ export function domains(now: () => number = Date.now): Provided<DatabaseSync>[] 
       const purge = (ticket: string) => {
         deps.comments.purge(ticket);
         deps.inputs.purge(ticket);
+        deps.replies.purge(ticket);
         deps.images.purge(ticket);
       };
       return { ...deps, purge };
     }),
-    provide(commentsDomain, (db: DatabaseSync) => open(db, now)),
+    provide(commentsDomain, (db: DatabaseSync) => {
+      const deps = open(db, now);
+      return {
+        ...deps,
+        // A reply goes to whoever wrote the comment it answers. Any other
+        // comment goes to the agent the ticket is assigned to.
+        said: (comment, assignee, repliedTo) => {
+          const about = { ticket: comment.ticket, about: comment.id, text: comment.text };
+          const from = { from: comment.author, at: comment.at };
+          if (repliedTo) {
+            const to = deps.comments.get(repliedTo).author;
+            deps.replies.leave({ ...about, ...from, to, kind: "reply" });
+            if (assignee && assignee !== to) {
+              deps.replies.leave({ ...about, ...from, to: assignee, kind: "comment" });
+            }
+          } else if (assignee) {
+            deps.replies.leave({ ...about, ...from, to: assignee, kind: "comment" });
+          }
+        },
+      };
+    }),
     provide(imagesDomain, (db: DatabaseSync) => open(db, now)),
     provide(inboxDomain, (db: DatabaseSync) => {
       const deps = open(db, now);
       return { ...deps, inbox: sqliteInbox(db, deps.journal.rows), runs: sqliteRuns(db).of };
     }),
-    provide(inputDomain, (db: DatabaseSync) => ({ ...open(db, now), answered: () => {} })),
+    provide(inputDomain, (db: DatabaseSync) => {
+      const deps = open(db, now);
+      return {
+        ...deps,
+        answered: (request, by, at) =>
+          deps.replies.leave({
+            to: request.askedBy,
+            from: by,
+            kind: "answer",
+            ticket: request.ticket,
+            about: request.id,
+            text: request.answer ?? "",
+            at,
+          }),
+      };
+    }),
+    provide(repliesDomain, (db: DatabaseSync) => open(db, now)),
     provide(connectionsDomain, (db: DatabaseSync) => ({
       ...open(db, now),
       connections: sqliteConnections(db, now),

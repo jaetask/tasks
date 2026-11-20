@@ -243,6 +243,10 @@ None.
 | q1 | TLK-1 | Coder | Should recordings be kept after they are sent? | awaiting |  |
 | q2 | TLK-1 | Coder | Which file format? | withdrawn |  |
 
+### Agent inboxes
+
+None.
+
 ### Changes
 
 | id | at | actor | action | summary | ticket | undone by |

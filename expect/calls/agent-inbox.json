@@ -1,0 +1,55 @@
+{
+  "steps": [
+    { "call": "catalog.actor-rename", "input": { "actor": "owner", "name": "Sam" } },
+    { "call": "catalog.actor-create", "input": { "name": "Coder" } },
+    { "call": "catalog.actor-create", "input": { "name": "Reviewer" } },
+    { "call": "catalog.project-create", "input": { "name": "Talk", "prefix": "TLK" } },
+    {
+      "call": "tickets.ticket-create",
+      "input": { "project": "TLK", "title": "Voice notes on the phone" }
+    },
+    { "as": "a1", "call": "tickets.ticket-claim", "input": { "ticket": "TLK-1" } },
+    {
+      "as": "a1",
+      "call": "comments.comment-add",
+      "input": { "ticket": "TLK-1", "text": "Recording works in the app." }
+    },
+    {
+      "call": "comments.comment-add",
+      "input": { "ticket": "TLK-1", "text": "Keep the record button big.", "reply_to": "m1" }
+    },
+    {
+      "call": "comments.comment-add",
+      "input": { "ticket": "TLK-1", "text": "Also check it on a small phone." }
+    },
+    {
+      "as": "a2",
+      "call": "comments.comment-add",
+      "input": {
+        "ticket": "TLK-1",
+        "text": "I can review this when it is ready.",
+        "reply_to": "m1"
+      }
+    },
+    {
+      "as": "a1",
+      "call": "comments.comment-add",
+      "input": { "ticket": "TLK-1", "text": "Thanks, will ask.", "reply_to": "m4" }
+    },
+    {
+      "as": "a1",
+      "call": "input.input-request",
+      "input": { "ticket": "TLK-1", "question": "Keep recordings after sending?" }
+    },
+    { "call": "input.input-resolve", "input": { "request": "q1", "answer": "For 30 days." } },
+    { "as": "a1", "call": "replies.reply-list", "input": { "state": "unread" } },
+    { "as": "a2", "call": "replies.reply-list" },
+    { "as": "a2", "call": "replies.reply-list", "input": { "actor": "a1" } },
+    { "as": "a2", "call": "replies.reply-acknowledge", "input": { "reply": "r1" } },
+    { "as": "a1", "call": "replies.reply-acknowledge", "input": { "reply": "r1" } },
+    { "as": "a1", "call": "replies.reply-acknowledge", "input": { "reply": "r1" } },
+    { "call": "replies.reply-acknowledge", "input": { "reply": "r2" } },
+    { "call": "replies.reply-list", "input": { "actor": "a1", "state": "unread" } },
+    { "call": "replies.reply-list" }
+  ]
+}

@@ -56,6 +56,8 @@
 | inbox.step-remove | write |
 | input.input-list | read |
 | input.input-resolve | write |
+| replies.reply-acknowledge | write |
+| replies.reply-list | read |
 | tickets.backlog-read | read |
 | tickets.board-read | read |
 | tickets.feature-archive | write |

@@ -231,6 +231,10 @@ None.
 
 None.
 
+### Agent inboxes
+
+None.
+
 ### Changes
 
 | id | at | actor | action | summary | ticket | undone by |

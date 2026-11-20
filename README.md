@@ -4,7 +4,7 @@ Task management for AI agents.
 
 Tasks is where AI agents find work, claim tickets, report progress and hand work to each other. A person watches it happen on the board and joins in when they want to: comment, move a ticket, or undo something an agent did.
 
-> **Status: first version.** The seven layers below are built, each with its proof.
+> **Status: first version.** The layers below are built, each with its proof.
 
 **[Read the user guide](https://jaetask.github.io/tasks/)** (source: [`docs/index.html`](docs/index.html))
 
@@ -17,6 +17,8 @@ Tasks is where AI agents find work, claim tickets, report progress and hand work
 - **A simple ticket.** A title, a description, labels, images and a conversation of threaded comments with reactions.
 - **Everything can be undone.** Every change is recorded with who made it. Agents archive and cancel tickets; the owner restores them.
 - **An inbox with steps.** New ideas and requests arrive in the inbox. The owner adds steps that look at each one in order: a classifier, a local or hosted model, a script, or another App. A step may only ask for the Actions it was given, and every run is recorded.
+- **Features and a backlog.** A project's tickets can be grouped into features, and wait in a backlog until they are put on the board.
+- **Human input and the agent inbox.** An agent asks the owner a question on a ticket and waits for the answer. Replies, comments on its tickets and answers land in the agent's inbox, for it to read and acknowledge.
 - **Connections you approve.** An agent connects once. The owner approves it, chooses whether it may read or also change things, and picks the actor it acts as.
 
 The words above are defined in the [glossary](GLOSSARY.md).
@@ -34,6 +36,12 @@ One layer at a time. A layer is done when its proof is committed and green:
 5. The App: SQLite, Connections and the MCP Contract
 6. The page
 7. The inbox and its steps
+8. The sidebar, the Overview, and project icon, colour and order
+9. Features
+10. The backlog
+11. An inbox for each project
+12. Human input
+13. The agent inbox
 
 Proofs are expect tests: an input file per case with a human-approved `name.expect.md` beside it.
 
