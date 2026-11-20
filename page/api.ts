@@ -35,6 +35,7 @@ export type Ticket = {
   type: "task" | "bug" | "improvement" | "specification";
   priority: "none" | "urgent" | "high" | "medium" | "low";
   links: { id: string; url: string }[];
+  reactions: { emoji: string; actors: string[] }[];
   location: string | null;
   locationName: string;
   labels: Label[];

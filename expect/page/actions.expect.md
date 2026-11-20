@@ -99,6 +99,8 @@
 | tickets.ticket-location-set | write |
 | tickets.ticket-move | write |
 | tickets.ticket-priority-set | write |
+| tickets.ticket-reaction-add | write |
+| tickets.ticket-reaction-remove | write |
 | tickets.ticket-read | read |
 | tickets.ticket-restore | write |
 | tickets.ticket-type-set | write |

@@ -22,7 +22,12 @@
 12. owner calls tickets.ticket-link-remove {"ticket":"TLK-1","link":"u2"} → rejected: unknown-link: TLK-1 has no link with id u2.
 13. owner calls tickets.ticket-link-remove {"ticket":"TLK-1","link":"u1"} → succeeded; updated ticket TLK-1
 14. owner calls history.change-undo {"change":"h8"} → succeeded; updated change h8
-15. owner calls tickets.ticket-find {"priority":"high"} → succeeded:
+15. owner calls tickets.ticket-reaction-add {"ticket":"TLK-1","emoji":"👍"} → succeeded; updated ticket TLK-1
+16. owner calls tickets.ticket-reaction-add {"ticket":"TLK-1","emoji":"🚀"} → succeeded; updated ticket TLK-1
+17. owner calls tickets.ticket-reaction-add {"ticket":"TLK-1","emoji":"👍"} → succeeded
+18. a1 calls tickets.ticket-reaction-add {"ticket":"TLK-1","emoji":"👍"} → succeeded; updated ticket TLK-1
+19. owner calls tickets.ticket-reaction-remove {"ticket":"TLK-1","emoji":"🚀"} → succeeded; updated ticket TLK-1
+20. owner calls tickets.ticket-find {"priority":"high"} → succeeded:
 
 ```json
 [
@@ -43,6 +48,15 @@
     "labels": [],
     "type": "bug",
     "priority": "high",
+    "reactions": [
+      {
+        "emoji": "👍",
+        "actors": [
+          "owner",
+          "a1"
+        ]
+      }
+    ],
     "links": [],
     "location": null,
     "locationName": "",
@@ -54,7 +68,7 @@
     "awaiting": 0,
     "createdAt": "2026-01-01T09:04:00.000Z",
     "createdBy": "owner",
-    "updatedAt": "2026-01-01T09:13:00.000Z"
+    "updatedAt": "2026-01-01T09:19:00.000Z"
   }
 ]
 ```
@@ -126,3 +140,7 @@ None.
 | h8 | 09:08 | a1 | tickets.ticket-link-add | added a link to TLK-2: https://example.com/pull/7 | TLK-2 | h10 |
 | h9 | 09:13 | owner | tickets.ticket-link-remove | removed a link from TLK-1 | TLK-1 |  |
 | h10 | 09:14 | owner | history.change-undo | undid: added a link to TLK-2: https://example.com/pull/7 | TLK-2 |  |
+| h11 | 09:15 | owner | tickets.ticket-reaction-add | reacted 👍 to TLK-1 | TLK-1 |  |
+| h12 | 09:16 | owner | tickets.ticket-reaction-add | reacted 🚀 to TLK-1 | TLK-1 |  |
+| h13 | 09:18 | a1 | tickets.ticket-reaction-add | reacted 👍 to TLK-1 | TLK-1 |  |
+| h14 | 09:19 | owner | tickets.ticket-reaction-remove | took back 🚀 from TLK-1 | TLK-1 |  |

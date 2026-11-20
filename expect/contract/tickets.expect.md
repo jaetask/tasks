@@ -37,6 +37,8 @@
 | tickets.ticket-priority-set | write | ticket-changed | Set a ticket's priority: none, urgent, high, medium or low. |
 | tickets.ticket-link-add | write | ticket-changed | Add a link to a ticket: a web address that belongs to it, such as a pull request. |
 | tickets.ticket-link-remove | write | ticket-changed | Remove a link from a ticket. |
+| tickets.ticket-reaction-add | write | ticket-changed | React to a ticket with an emoji. An actor can add several different emoji to one ticket, each one once. |
+| tickets.ticket-reaction-remove | write | ticket-changed | Take back your reaction to a ticket. |
 | tickets.ticket-label-add | write | ticket-changed | Add a label to a ticket. |
 | tickets.ticket-label-remove | write | ticket-changed | Remove a label from a ticket. |
 | tickets.ticket-block | write | ticket-changed | Mark a ticket blocked, with a note saying why. It stays in its column; agents looking for work skip it. |
@@ -186,6 +188,8 @@ Tools:
 - tickets__ticket-priority-set (changes): Set a ticket's priority: none, urgent, high, medium or low.
 - tickets__ticket-link-add (changes): Add a link to a ticket: a web address that belongs to it, such as a pull request.
 - tickets__ticket-link-remove (changes): Remove a link from a ticket.
+- tickets__ticket-reaction-add (changes): React to a ticket with an emoji. An actor can add several different emoji to one ticket, each one once.
+- tickets__ticket-reaction-remove (changes): Take back your reaction to a ticket.
 - tickets__ticket-label-add (changes): Add a label to a ticket.
 - tickets__ticket-label-remove (changes): Remove a label from a ticket.
 - tickets__ticket-block (changes): Mark a ticket blocked, with a note saying why. It stays in its column; agents looking for work skip it.
@@ -828,6 +832,56 @@ A tool that changes something after the person says yes waits for them; tell the
   "required": [
     "ticket",
     "link"
+  ]
+}
+```
+
+#### tickets.ticket-reaction-add
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "ticket": {
+      "type": "string",
+      "description": "A ticket id, like TLK-529."
+    },
+    "emoji": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 16,
+      "description": "One emoji, such as 👍."
+    }
+  },
+  "required": [
+    "ticket",
+    "emoji"
+  ]
+}
+```
+
+#### tickets.ticket-reaction-remove
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "ticket": {
+      "type": "string",
+      "description": "A ticket id, like TLK-529."
+    },
+    "emoji": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 16,
+      "description": "One emoji, such as 👍."
+    }
+  },
+  "required": [
+    "ticket",
+    "emoji"
   ]
 }
 ```

@@ -104,6 +104,42 @@
       }
     },
     {
+      "call": "tickets.ticket-reaction-add",
+      "input": {
+        "ticket": "TLK-1",
+        "emoji": "\ud83d\udc4d"
+      }
+    },
+    {
+      "call": "tickets.ticket-reaction-add",
+      "input": {
+        "ticket": "TLK-1",
+        "emoji": "\ud83d\ude80"
+      }
+    },
+    {
+      "call": "tickets.ticket-reaction-add",
+      "input": {
+        "ticket": "TLK-1",
+        "emoji": "\ud83d\udc4d"
+      }
+    },
+    {
+      "as": "a1",
+      "call": "tickets.ticket-reaction-add",
+      "input": {
+        "ticket": "TLK-1",
+        "emoji": "\ud83d\udc4d"
+      }
+    },
+    {
+      "call": "tickets.ticket-reaction-remove",
+      "input": {
+        "ticket": "TLK-1",
+        "emoji": "\ud83d\ude80"
+      }
+    },
+    {
       "call": "tickets.ticket-find",
       "input": {
         "priority": "high"

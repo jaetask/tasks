@@ -47,6 +47,9 @@ export const Ticket = z.object({
   labels: z.array(Label),
   type: Type,
   priority: Priority,
+  reactions: z
+    .array(z.object({ emoji: z.string(), actors: z.array(z.string()) }))
+    .describe("Reactions to the ticket itself, each emoji with the ids of the actors who gave it."),
   links: z.array(Link).describe("Web addresses that belong to it, such as a pull request."),
   location: z.string().nullable().describe("The id of the location its work is done at, or null."),
   locationName: z.string(),
@@ -163,6 +166,9 @@ export type Tickets = {
   assign(id: string, actor: string | null): Ticket;
   setType(id: string, type: Type): Ticket;
   setPriority(id: string, priority: Priority): Ticket;
+  /** Adds an actor's reaction to a ticket. The same emoji again changes nothing. */
+  react(id: string, actor: string, emoji: string): Ticket;
+  unreact(id: string, actor: string, emoji: string): Ticket;
   addLink(id: string, url: string): Ticket;
   removeLink(id: string, link: string): Ticket;
   /** Gives a ticket a location, or none with null. */
@@ -198,6 +204,9 @@ export function migrateTickets(db: DatabaseSync): void {
   if (!columns.some((c) => c.name === "priority")) {
     db.exec("ALTER TABLE tickets ADD COLUMN priority TEXT NOT NULL DEFAULT 'none'");
   }
+  db.exec(
+    "CREATE TABLE IF NOT EXISTS ticket_reactions (id TEXT PRIMARY KEY, ticket TEXT NOT NULL REFERENCES tickets (id), actor TEXT NOT NULL, emoji TEXT NOT NULL)",
+  );
   db.exec(
     "CREATE TABLE IF NOT EXISTS ticket_links (id TEXT PRIMARY KEY, ticket TEXT NOT NULL REFERENCES tickets (id), url TEXT NOT NULL)",
   );
@@ -281,6 +290,15 @@ export function sqliteTickets(
     if (taken) throw new Refusal("name-taken", `This project already has a feature named ${name}.`);
   };
 
+  const reactionsOf = (ticket: string) => {
+    const given = db
+      .prepare("SELECT actor, emoji FROM ticket_reactions WHERE ticket = ? ORDER BY rowid")
+      .all(ticket) as { actor: string; emoji: string }[];
+    return [...new Set(given.map((g) => g.emoji))].map((emoji) => ({
+      emoji,
+      actors: given.filter((g) => g.emoji === emoji).map((g) => g.actor),
+    }));
+  };
   const toTicket = (r: TicketRow): Ticket => {
     const { project: _, ...column } = catalog.column(r.column_id);
     const labels = db
@@ -301,6 +319,7 @@ export function sqliteTickets(
       labels,
       type: r.type,
       priority: r.priority,
+      reactions: reactionsOf(r.id),
       links: db
         .prepare("SELECT id, url FROM ticket_links WHERE ticket = ? ORDER BY rowid")
         .all(r.id) as Link[],
@@ -584,6 +603,19 @@ export function sqliteTickets(
       rows.update("tickets", id, { priority });
       return get(id);
     },
+    react: (id, actor, emoji) => {
+      row(id);
+      const key = `${id}:${actor}:${emoji}`;
+      if (!rows.get("ticket_reactions", key)) {
+        rows.insert("ticket_reactions", { id: key, ticket: id, actor, emoji });
+      }
+      return get(id);
+    },
+    unreact: (id, actor, emoji) => {
+      row(id);
+      rows.remove("ticket_reactions", `${id}:${actor}:${emoji}`);
+      return get(id);
+    },
     addLink: (id, url) => {
       open(id);
       link(id, url);
@@ -638,6 +670,7 @@ export function sqliteTickets(
       row(id);
       db.prepare("DELETE FROM ticket_labels WHERE ticket = ?").run(id);
       db.prepare("DELETE FROM ticket_links WHERE ticket = ?").run(id);
+      db.prepare("DELETE FROM ticket_reactions WHERE ticket = ?").run(id);
       db.prepare("DELETE FROM tickets WHERE id = ?").run(id);
     },
   };

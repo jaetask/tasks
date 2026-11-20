@@ -308,6 +308,29 @@ const ticketPrioritySet = write({
   }),
 });
 
+const emoji = z.string().min(1).max(16).describe("One emoji, such as 👍.");
+
+const ticketReactionAdd = write({
+  name: "ticket-reaction-add",
+  description:
+    "React to a ticket with an emoji. An actor can add several different emoji to one ticket, each one once.",
+  input: z.object({ ticket: id, emoji }),
+  run: ({ ticket, emoji }, { tickets, actor }) => ({
+    ticket: tickets.react(ticket, actor, emoji),
+    summary: `reacted ${emoji} to ${ticket}`,
+  }),
+});
+
+const ticketReactionRemove = write({
+  name: "ticket-reaction-remove",
+  description: "Take back your reaction to a ticket.",
+  input: z.object({ ticket: id, emoji }),
+  run: ({ ticket, emoji }, { tickets, actor }) => ({
+    ticket: tickets.unreact(ticket, actor, emoji),
+    summary: `took back ${emoji} from ${ticket}`,
+  }),
+});
+
 const ticketLinkAdd = write({
   name: "ticket-link-add",
   description: "Add a link to a ticket: a web address that belongs to it, such as a pull request.",
@@ -618,6 +641,8 @@ export const ticketsDomain = defineDomain<TicketsDeps>({
     ticketPrioritySet,
     ticketLinkAdd,
     ticketLinkRemove,
+    ticketReactionAdd,
+    ticketReactionRemove,
     ticketLabelAdd,
     ticketLabelRemove,
     ticketBlock,

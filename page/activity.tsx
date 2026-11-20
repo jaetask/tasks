@@ -37,6 +37,7 @@ import {
 import { type ReactNode, useRef, useState } from "react";
 import { type Comment, type Conversation, OWNER, type Reply, type Ticket, when } from "./api.js";
 import { useApp } from "./app.js";
+import { Editor } from "./editor.js";
 
 /** How long ago, in the shortest form: now, 5m ago, 3h ago, 18d ago. */
 export function ago(at: string): string {
@@ -304,63 +305,56 @@ function Write({
   onSend: (text: string) => Promise<unknown>;
 }) {
   const [text, setText] = useState("");
+  // The editor starts again, empty, after each send.
+  const [sent, setSent] = useState(0);
   const send = () => {
     const wanted = text.trim();
     if (!wanted) return;
     setText("");
+    setSent(sent + 1);
     void onSend(wanted);
   };
-  const tools = (
-    <span className="flex items-center gap-1">
-      <Attach ticket={ticket} />
-      <Button
-        type="submit"
-        variant={text.trim() ? "default" : "ghost"}
-        size="icon-sm"
-        aria-label="Send"
-        className="rounded-full"
-      >
-        <IconArrowUp aria-hidden />
-      </Button>
-    </span>
-  );
   return (
     <form
       className={
-        tall ? "grid gap-1 rounded-xl border bg-card p-3" : "flex items-center gap-2 px-4 py-2"
+        tall
+          ? "write grid gap-1 rounded-xl border bg-card p-3"
+          : "write flex items-start gap-2 px-4 py-2"
       }
       onSubmit={(e) => {
         e.preventDefault();
         send();
       }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+          e.preventDefault();
+          send();
+        }
+      }}
     >
       {lead}
-      {tall ? (
-        <>
-          <Textarea
-            aria-label={label}
-            placeholder={`${label}...`}
-            className="min-h-16 resize-none border-0 p-1 shadow-none focus-visible:ring-0"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) send();
-            }}
-          />
-          <div className="flex justify-end">{tools}</div>
-        </>
-      ) : (
-        <>
-          <Input
-            aria-label={label}
-            placeholder={`${label}...`}
-            className="h-8 flex-1 border-0 px-1 shadow-none focus-visible:ring-0"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-          />
-          {tools}
-        </>
-      )}
+      <div className={`min-w-0 flex-1 ${tall ? "min-h-16" : "pt-0.5"}`}>
+        <Editor
+          key={sent}
+          label={label}
+          placeholder={`${label}...`}
+          value={text}
+          onChange={setText}
+          className="text-sm outline-none"
+        />
+      </div>
+      <span className={`flex items-center gap-1 ${tall ? "justify-end" : ""}`}>
+        <Attach ticket={ticket} />
+        <Button
+          type="submit"
+          variant={text.trim() ? "default" : "ghost"}
+          size="icon-sm"
+          aria-label="Send"
+          className="rounded-full"
+        >
+          <IconArrowUp aria-hidden />
+        </Button>
+      </span>
     </form>
   );
 }

@@ -40,6 +40,7 @@
   "labels": [],
   "type": "task",
   "priority": "none",
+  "reactions": [],
   "links": [],
   "location": "p2",
   "locationName": "Laptop",
