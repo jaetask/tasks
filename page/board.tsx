@@ -42,10 +42,10 @@ import { Nothing, Picker, projectEmoji } from "./local.js";
 import { TicketView } from "./ticket.js";
 
 const VIEWS = [
-  { id: "status", label: "Status", Icon: IconCircleCheck },
-  { id: "features", label: "Features", Icon: IconStack2 },
-  { id: "actors", label: "Actors", Icon: IconUsers },
-  { id: "locations", label: "Locations", Icon: IconMapPin },
+  { id: "features", label: "Features", Icon: IconStack2, heading: "Features" },
+  { id: "actors", label: "Actors", Icon: IconUsers, heading: "Who is working" },
+  { id: "locations", label: "Locations", Icon: IconMapPin, heading: "Where work happens" },
+  { id: "status", label: "Status", Icon: IconCircleCheck, heading: "Progress" },
 ] as const;
 type View = (typeof VIEWS)[number]["id"];
 
@@ -63,7 +63,7 @@ type Filters = {
   hideEmpty: boolean;
 };
 const ALL: Filters = {
-  view: "status",
+  view: "features",
   text: "",
   actor: "",
   feature: "",
@@ -436,10 +436,11 @@ export function BoardPage({ project }: { project: Project }) {
     }));
   } else if (view === "actors") {
     groups = [
+      none("Unassigned"),
       ...catalog.actors
         .filter((a) => !a.archived)
-        .map((a) => ({ id: a.id as string | null, title: `${a.icon} ${a.name}`.trim() })),
-      none("Unassigned"),
+        .map((a) => ({ id: a.id as string | null, title: a.name }))
+        .sort((a, b) => a.title.localeCompare(b.title)),
     ].map((g) => ({
       id: g.id ?? "none",
       title: g.title,
@@ -448,10 +449,11 @@ export function BoardPage({ project }: { project: Project }) {
     }));
   } else if (view === "locations") {
     groups = [
+      none("Unassigned"),
       ...catalog.locations
         .filter((l) => !l.archived)
-        .map((l) => ({ id: l.id as string | null, title: l.name })),
-      none("No location"),
+        .map((l) => ({ id: l.id as string | null, title: l.name }))
+        .sort((a, b) => a.title.localeCompare(b.title)),
     ].map((g) => ({
       id: g.id ?? "none",
       title: g.title,
@@ -538,6 +540,9 @@ export function BoardPage({ project }: { project: Project }) {
       />
       {missing.length > 0 && (
         <p className="tk-muted">{`This board has ${missing.map((k) => warn[k]).join("; ")}.`}</p>
+      )}
+      {groups.length > 0 && (
+        <h2 className="m-0 text-sm font-semibold">{VIEWS.find((v) => v.id === view)?.heading}</h2>
       )}
       {groups.length > 0 ? (
         <Lanes label={`The board of ${project.name}, by ${view}`}>

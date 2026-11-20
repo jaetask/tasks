@@ -151,6 +151,8 @@ try {
       .or(page.getByRole("group", { name: "Board view" }))
       .first()
       .waitFor();
+    // A board opens grouped by feature; the status view shows the project's columns.
+    await page.getByRole("radio", { name: "Status view" }).click();
     await until(() => document.querySelectorAll(".lane").length === 4);
     await page
       .getByRole("link", { name: /Intake/ })
