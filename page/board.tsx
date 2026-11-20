@@ -420,7 +420,7 @@ export function TicketCard({
         onKeyDown={(e) => {
           if (e.key === "Enter" && e.target === e.currentTarget) open();
         }}
-        className={`ticket grid cursor-pointer gap-3 rounded-xl border bg-card shadow-sm transition-shadow hover:shadow-md focus-visible:outline-2 focus-visible:outline-ring ${bare ? "px-3 py-2" : "p-4"}`}
+        className={`ticket grid cursor-pointer gap-3 rounded-xl border bg-card shadow-sm transition-shadow hover:shadow-md ${bare ? "px-3 py-2" : "p-4"}`}
       >
         {top && (
           <div className="-mb-1 flex items-center justify-between gap-2 text-xs text-muted-foreground">
