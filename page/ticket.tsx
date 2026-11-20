@@ -518,9 +518,6 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
               <DropdownMenuContent align="end">
                 {open ? (
                   <>
-                    <DropdownMenuItem onSelect={() => go(`/t/${id}/edit`)}>
-                      Edit ticket
-                    </DropdownMenuItem>
                     <DropdownMenuItem
                       onSelect={() =>
                         void act(

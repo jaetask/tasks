@@ -198,18 +198,19 @@ try {
       await until((n) => document.querySelectorAll(".lane .ticket").length === n, i + 1);
     }
   });
-  await step("open a ticket; edit it on its own page; comment and react", async () => {
+  await step("open a ticket; edit it where it is shown; comment and react", async () => {
     await page.locator(".ticket").getByText("Voice notes on the phone").click();
     await page.getByRole("dialog").waitFor();
-    await button("Actions").click();
-    await page.getByRole("menuitem", { name: "Edit ticket" }).click();
+    // The description is edited in place and saved on leaving it.
     await page.fill(
-      "#description",
+      '[aria-label="Description"]',
       "Record a voice note from the phone and attach it to a chat. It should work with the screen locked.",
     );
-    await page.getByRole("button", { name: "voice", exact: true }).click();
-    await shot("ticket-edit");
-    await button("Save").click();
+    await button("Change or add labels").click();
+    await page.getByRole("option", { name: "voice", exact: true }).click();
+    await page.keyboard.press("Escape");
+    await see("Record a voice note");
+    await open("/t/TLK-1");
     await see("Record a voice note");
     await page.locator("#place").getByText("voice").waitFor();
     await page.fill(
@@ -432,9 +433,9 @@ try {
     await page.fill("#name", "Voice");
     await button("Add feature").click();
     await see("0 open");
-    await open("/t/TLK-1/edit");
-    await pick("#feature", "Voice");
-    await button("Save").click();
+    await open("/t/TLK-1");
+    await page.locator('[data-property="feature"]').click();
+    await page.getByRole("option", { name: "Voice", exact: true }).click();
     await page.locator('[data-property="feature"]', { hasText: "Voice" }).waitFor();
     await open("/p/TLK/board");
     await page.getByRole("button", { name: /More filters/ }).click();
@@ -681,9 +682,10 @@ try {
     await page.getByRole("tab", { name: "Promoted" }).click();
     await link("Open TLK-5").waitFor();
   });
-  await step("archive a ticket from its edit page, then restore it from the Archive", async () => {
-    await open("/t/TLK-3/place");
-    await button("Archive").click();
+  await step("archive a ticket from its Actions, then restore it from the Archive", async () => {
+    await open("/t/TLK-3");
+    await button("Actions").click();
+    await page.getByRole("menuitem", { name: "Archive", exact: true }).click();
     await page.locator("#place").getByText("archived").waitFor();
     await link("Archive").click();
     await see("Show the recording length");

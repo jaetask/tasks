@@ -42,7 +42,6 @@ import {
   OwnerEdit,
   ProjectEdit,
   StepEdit,
-  TicketEdit,
   TicketNew,
 } from "./edits.js";
 import { IntakePage } from "./inbox.js";
@@ -178,7 +177,6 @@ function Page({ path, onSignOut }: { path: string; onSignOut: () => void }) {
     return <BoardPage project={project} />;
   }
   if (a === "t" && b) {
-    if (c === "edit" || c === "place") return <TicketEdit id={b} part={c} />;
     return <TicketPage key={b} id={b} />;
   }
   if (a === "steps" && b) return <StepEdit id={b === "new" ? null : b} />;
