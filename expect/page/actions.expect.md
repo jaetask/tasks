@@ -31,6 +31,7 @@
 | catalog.project-create | write |
 | catalog.project-edit | write |
 | catalog.project-move | write |
+| catalog.project-ordering-set | write |
 | catalog.project-restore | write |
 | comments.comment-add | write |
 | comments.comment-edit | write |

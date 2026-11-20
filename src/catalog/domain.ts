@@ -6,6 +6,7 @@ import { type Base, readAction, writeAction } from "../actions.js";
 import {
   Actor,
   CardProperty,
+  Ordering,
   type Catalog,
   CatalogView,
   Colour,
@@ -177,6 +178,23 @@ const projectCardSet = write({
   run: ({ project: id, show }, { catalog, log }) => {
     const project = catalog.setCard(id, show === null ? null : [...new Set(show)]);
     log(`chose what cards show on the board of ${project.name}`, {
+      kind: "updated",
+      subject: "project",
+      id,
+    });
+    return project;
+  },
+});
+
+const projectOrderingSet = write({
+  name: "project-ordering-set",
+  description:
+    "Choose how the cards of a project's columns are ordered: created (oldest first), priority (most urgent first), due (soonest first) or updated (latest first).",
+  input: z.object({ project: z.string(), ordering: Ordering }),
+  output: Project,
+  run: ({ project: id, ordering }, { catalog, log }) => {
+    const project = catalog.setOrdering(id, ordering);
+    log(`ordered the cards of ${project.name} by ${ordering}`, {
       kind: "updated",
       subject: "project",
       id,
@@ -431,6 +449,7 @@ export const catalogDomain = defineDomain<CatalogDeps>({
     projectCreate,
     projectEdit,
     projectCardSet,
+    projectOrderingSet,
     projectMove,
     projectArchive,
     projectRestore,

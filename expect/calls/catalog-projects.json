@@ -147,6 +147,20 @@
       }
     },
     {
+      "call": "catalog.project-ordering-set",
+      "input": {
+        "project": "TLK",
+        "ordering": "priority"
+      }
+    },
+    {
+      "call": "catalog.project-ordering-set",
+      "input": {
+        "project": "TLK",
+        "ordering": "manual"
+      }
+    },
+    {
       "call": "catalog.catalog-read"
     }
   ]

@@ -86,7 +86,8 @@
         "actor",
         "feature",
         "updated"
-      ]
+      ],
+      "ordering": "created"
     }
   ],
   "labels": [

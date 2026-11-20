@@ -417,6 +417,32 @@ try {
     );
   });
   await shot("board-display");
+  await step("Display orders the cards of a column, and a column has a menu", async () => {
+    await page.getByRole("radio", { name: "Status view" }).click();
+    await page.locator(".lane", { hasText: "To do" }).waitFor();
+    await page.mouse.move(0, 0);
+    // Opened from the keyboard: the dropdown sits in a popover.
+    const choose = async (name) => {
+      await page.locator('[aria-label="Ordering"]').press("Enter");
+      await page.getByRole("option", { name, exact: true }).press("Enter");
+    };
+    const chosen = (name) =>
+      page.waitForFunction(
+        (n) => document.querySelector('[aria-label="Ordering"]')?.textContent?.includes(n),
+        name,
+      );
+    await button("Display").click();
+    await choose("Priority");
+    await page.keyboard.press("Escape");
+    await button("Display").click();
+    await chosen("Priority");
+    await choose("Created");
+    await chosen("Created");
+    await page.keyboard.press("Escape");
+    await page.getByRole("button", { name: "Column To do" }).click();
+    await page.getByRole("menuitem", { name: "Move right" }).waitFor();
+    await page.keyboard.press("Escape");
+  });
   await step("back to the status view", async () => {
     await page.getByRole("radio", { name: "Status view" }).click();
     await page.locator(".lane", { hasText: "To do" }).waitFor();
