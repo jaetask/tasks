@@ -1,5 +1,5 @@
 import { IconUserOff } from "@tabler/icons-react";
-import { type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { DueDatePicker } from "@jaetask/toolkit/suite";
 import { type Feature, OWNER, PRIORITIES, type Ticket, TYPES } from "./api.js";
 import { useApp, useRead } from "./app.js";
