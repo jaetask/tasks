@@ -64,8 +64,33 @@ function Who({ id, name }: { id: string; name: string }) {
 }
 
 /** A paperclip that picks image files and attaches them to the ticket. */
-export function Attach({ ticket }: { ticket: string }) {
+const IMAGES = ["image/png", "image/jpeg", "image/gif", "image/webp"];
+/** The images among some files, as the paperclip, a paste or a drop hands them over. */
+const imagesIn = (files: Iterable<File> | null | undefined) =>
+  [...(files ?? [])].filter((f) => IMAGES.includes(f.type));
+
+/** Attaches images to a ticket. */
+function useAttach(ticket: string) {
   const { act } = useApp();
+  return (files: File[]) => {
+    for (const picked of files) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const data = String(reader.result).split(",")[1] ?? "";
+        void act("images.image-add", {
+          ticket,
+          name: picked.name || "pasted image",
+          type: picked.type,
+          data,
+        });
+      };
+      reader.readAsDataURL(picked);
+    }
+  };
+}
+
+export function Attach({ ticket }: { ticket: string }) {
+  const attach = useAttach(ticket);
   const picker = useRef<HTMLInputElement>(null);
   return (
     <>
@@ -73,18 +98,11 @@ export function Attach({ ticket }: { ticket: string }) {
         ref={picker}
         type="file"
         aria-label="Attach an image"
-        accept="image/png,image/jpeg,image/gif,image/webp"
+        accept={IMAGES.join(",")}
         multiple
         className="hidden"
         onChange={(e) => {
-          for (const picked of e.target.files ?? []) {
-            const reader = new FileReader();
-            reader.onload = () => {
-              const data = String(reader.result).split(",")[1] ?? "";
-              void act("images.image-add", { ticket, name: picked.name, type: picked.type, data });
-            };
-            reader.readAsDataURL(picked);
-          }
+          attach(imagesIn(e.target.files));
           e.target.value = "";
         }}
       />
@@ -92,6 +110,7 @@ export function Attach({ ticket }: { ticket: string }) {
         variant="ghost"
         size="icon-sm"
         aria-label="Attach an image"
+        title="Attach images. You can also paste or drop them into the box."
         onClick={() => picker.current?.click()}
       >
         <IconPaperclip aria-hidden />
@@ -308,6 +327,14 @@ function Write({
   const [text, setText] = useState("");
   // The editor starts again, empty, after each send.
   const [sent, setSent] = useState(0);
+  const attach = useAttach(ticket);
+  // An image pasted or dropped into the box is attached to the ticket; anything else is the editor's.
+  const take = (e: { preventDefault(): void }, files: FileList | undefined) => {
+    const images = imagesIn(files);
+    if (images.length === 0) return;
+    e.preventDefault();
+    attach(images);
+  };
   const send = () => {
     const wanted = text.trim();
     if (!wanted) return;
@@ -332,6 +359,8 @@ function Write({
           send();
         }
       }}
+      onPasteCapture={(e) => take(e, e.clipboardData.files)}
+      onDropCapture={(e) => take(e, e.dataTransfer.files)}
     >
       {lead}
       <div className={`min-w-0 flex-1 ${tall ? "min-h-16" : "pt-0.5"}`}>
