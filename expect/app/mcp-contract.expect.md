@@ -55,6 +55,7 @@
 | tickets__ticket-type-set |  | Set what kind of work a ticket is: task, bug, improvement or specification. |
 | tickets__ticket-priority-set |  | Set a ticket's priority: none, urgent, high, medium or low. |
 | tickets__ticket-link-add |  | Add a link to a ticket: a web address that belongs to it, such as a pull request. |
+| tickets__ticket-link-describe |  | Set the title and the description shown for a link on a ticket. Tasks does this itself when a link is added and its page states a title; use it to correct one. Both are shown as plain text. |
 | tickets__ticket-link-remove |  | Remove a link from a ticket. |
 | tickets__ticket-reaction-add |  | React to a ticket with an emoji. An actor can add several different emoji to one ticket, each one once. |
 | tickets__ticket-reaction-remove |  | Take back your reaction to a ticket. |

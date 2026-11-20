@@ -16,7 +16,12 @@ export const PRIORITIES = ["none", "urgent", "high", "medium", "low"] as const;
 export const Priority = z.enum(PRIORITIES);
 export type Priority = z.infer<typeof Priority>;
 
-export const Link = z.object({ id: z.string(), url: z.string() });
+export const Link = z.object({
+  id: z.string(),
+  url: z.string(),
+  title: z.string().describe("The title of the page it points to, or empty when not known."),
+  description: z.string().describe("A line about the page, as plain text, or empty."),
+});
 export type Link = z.infer<typeof Link>;
 
 export const STATES = ["open", "archived", "canceled"] as const;
@@ -206,6 +211,8 @@ export type Tickets = {
   unreact(id: string, actor: string, emoji: string): Ticket;
   addLink(id: string, url: string): Ticket;
   removeLink(id: string, link: string): Ticket;
+  /** Sets the title and description shown for a link. */
+  describeLink(link: string, title: string, description: string): Ticket;
   /** Gives a ticket a location, or none with null. */
   setLocation(id: string, location: string | null): Ticket;
   addLabel(id: string, label: string): Ticket;
@@ -251,6 +258,11 @@ export function migrateTickets(db: DatabaseSync): void {
   db.exec(
     "CREATE TABLE IF NOT EXISTS ticket_links (id TEXT PRIMARY KEY, ticket TEXT NOT NULL REFERENCES tickets (id), url TEXT NOT NULL)",
   );
+  const linkColumns = db.prepare("PRAGMA table_info(ticket_links)").all() as { name: string }[];
+  if (!linkColumns.some((c) => c.name === "title")) {
+    db.exec("ALTER TABLE ticket_links ADD COLUMN title TEXT NOT NULL DEFAULT ''");
+    db.exec("ALTER TABLE ticket_links ADD COLUMN description TEXT NOT NULL DEFAULT ''");
+  }
   if (!columns.some((c) => c.name === "location")) {
     db.exec("ALTER TABLE tickets ADD COLUMN location TEXT REFERENCES locations (id)");
   }
@@ -367,7 +379,9 @@ export function sqliteTickets(
       evidence: r.evidence ? (JSON.parse(r.evidence) as Evidence) : null,
       reactions: reactionsOf(r.id),
       links: db
-        .prepare("SELECT id, url FROM ticket_links WHERE ticket = ? ORDER BY rowid")
+        .prepare(
+          "SELECT id, url, title, description FROM ticket_links WHERE ticket = ? ORDER BY rowid",
+        )
         .all(r.id) as Link[],
       location: r.location,
       locationName: r.location ? catalog.location(r.location).name : "",
@@ -441,7 +455,7 @@ export function sqliteTickets(
       .prepare("SELECT id FROM ticket_links WHERE ticket = ? AND url = ?")
       .get(ticket, url);
     if (has) throw new Refusal("link-there", `${ticket} already has this link.`);
-    rows.insert("ticket_links", { id: nextId(db, "u"), ticket, url });
+    rows.insert("ticket_links", { id: nextId(db, "u"), ticket, url, title: "", description: "" });
   };
 
   const narrowed = (all: TicketRow[], narrow: Narrow = {}) => {
@@ -705,6 +719,13 @@ export function sqliteTickets(
       }
       rows.remove("ticket_links", linkId);
       return get(id);
+    },
+    describeLink: (linkId, title, description) => {
+      const found = rows.get("ticket_links", linkId) as { ticket: string } | undefined;
+      if (!found) throw new Refusal("unknown-link", `No link has id ${linkId}.`);
+      open(found.ticket);
+      rows.update("ticket_links", linkId, { title, description });
+      return get(found.ticket);
     },
     setLocation: (id, location) => {
       open(id);

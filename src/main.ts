@@ -6,6 +6,7 @@ import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createTasks } from "./app.js";
+import { readTitle } from "./tickets/page-title.js";
 
 const env = process.env;
 const dataDir = env.DATA_DIR ?? "data";
@@ -17,6 +18,8 @@ const app = await createTasks({
   connect: (env.KIT_CONNECT ?? "").split(",").filter(Boolean),
   page: fileURLToPath(new URL("../public", import.meta.url)),
   stepsDir: join(dataDir, "steps"),
+  // With LINK_TITLES=1 Tasks reads the title of the page each new link points to.
+  ...(env.LINK_TITLES === "1" ? { readTitle } : {}),
 });
 
 const url = await app.listen(Number(env.PORT ?? 8081), env.HOST ?? "127.0.0.1");

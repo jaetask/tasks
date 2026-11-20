@@ -372,6 +372,21 @@ const ticketLinkAdd = write({
   }),
 });
 
+const ticketLinkDescribe = write({
+  name: "ticket-link-describe",
+  description:
+    "Set the title and the description shown for a link on a ticket. Tasks does this itself when a link is added and its page states a title; use it to correct one. Both are shown as plain text.",
+  input: z.object({
+    link: z.string().describe("The id of the link."),
+    title: z.string().trim().max(200),
+    description: z.string().trim().max(500).default(""),
+  }),
+  run: ({ link, title, description }, { tickets }) => {
+    const ticket = tickets.describeLink(link, title, description);
+    return { ticket, summary: `named a link on ${ticket.id}: ${title || "no title"}` };
+  },
+});
+
 const ticketLinkRemove = write({
   name: "ticket-link-remove",
   description: "Remove a link from a ticket.",
@@ -673,6 +688,7 @@ export const ticketsDomain = defineDomain<TicketsDeps>({
     ticketTypeSet,
     ticketPrioritySet,
     ticketLinkAdd,
+    ticketLinkDescribe,
     ticketLinkRemove,
     ticketReactionAdd,
     ticketReactionRemove,
