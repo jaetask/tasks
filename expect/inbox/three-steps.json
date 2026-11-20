@@ -36,15 +36,19 @@
     },
     {
       "call": "inbox.item-capture",
-      "input": { "text": "Need export to CSV for the Money app pls!!", "source": "email" }
+      "input": {
+        "project": "TLK",
+        "text": "Need export to CSV for the Money app pls!!",
+        "source": "email"
+      }
     },
     {
       "call": "inbox.item-capture",
-      "input": { "text": "the board crashes when I drag a ticket to review" }
+      "input": { "project": "TLK", "text": "the board crashes when I drag a ticket to review" }
     },
     {
       "call": "inbox.item-capture",
-      "input": { "text": "CHEAP WATCHES click here now", "source": "email" }
+      "input": { "project": "TLK", "text": "CHEAP WATCHES click here now", "source": "email" }
     },
     { "call": "inbox.item-read", "input": { "item": "n1" } }
   ]

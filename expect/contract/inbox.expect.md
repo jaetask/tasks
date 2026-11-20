@@ -16,9 +16,9 @@
 
 | action | effect | card | description |
 | --- | --- | --- | --- |
-| inbox.inbox-read | read | inbox-items | List inbox items, oldest first: all of them, or those in one state. |
+| inbox.inbox-read | read | inbox-items | List inbox items, oldest first: all of them, those sent to one project, those in one state, or both. |
 | inbox.item-read | read |  | Read one inbox item, with the record of each run of the steps on it. |
-| inbox.item-capture | write | inbox-changed | Put a new idea or request in the inbox. The owner's steps look at it before it lands there. |
+| inbox.item-capture | write | inbox-changed | Put a new idea or request in a project's inbox. The owner's steps look at it before it lands there. |
 | inbox.item-tag | write | inbox-changed | Add tags to an inbox item. |
 | inbox.item-untag | write | inbox-changed | Remove tags from an inbox item. |
 | inbox.item-category-set | write | inbox-changed | Sort an inbox item into a category, or out of its category with null. |
@@ -28,7 +28,7 @@
 | inbox.item-accept | write | inbox-changed | Accept an inbox item: it is worth keeping, and stays in the inbox as accepted. |
 | inbox.item-reject | write | inbox-changed | Reject an inbox item, such as spam, with the reason. |
 | inbox.item-dismiss | write | inbox-changed | Dismiss an inbox item that needs nothing done, with the reason. |
-| inbox.item-promote | write | inbox-changed | Turn an inbox item into a ticket in a project's first to-do column. |
+| inbox.item-promote | write | inbox-changed | Turn an inbox item into a ticket in its project's backlog, or on the board in the first to-do column. |
 | inbox.item-link | write | inbox-changed | Link an inbox item to a ticket that already covers it. |
 | inbox.item-run | write |  | Run the steps on an inbox item again, such as after changing the steps. |
 | inbox.pipeline-read | read |  | List the inbox steps, in the order they run. |
@@ -85,9 +85,9 @@
 ```text
 inbox: The inbox: new ideas and requests before they become tickets, and the owner's steps that look at each one.
 Tools:
-- inbox__inbox-read (reads): List inbox items, oldest first: all of them, or those in one state.
+- inbox__inbox-read (reads): List inbox items, oldest first: all of them, those sent to one project, those in one state, or both.
 - inbox__item-read (reads): Read one inbox item, with the record of each run of the steps on it.
-- inbox__item-capture (changes): Put a new idea or request in the inbox. The owner's steps look at it before it lands there.
+- inbox__item-capture (changes): Put a new idea or request in a project's inbox. The owner's steps look at it before it lands there.
 - inbox__item-tag (changes): Add tags to an inbox item.
 - inbox__item-untag (changes): Remove tags from an inbox item.
 - inbox__item-category-set (changes): Sort an inbox item into a category, or out of its category with null.
@@ -97,7 +97,7 @@ Tools:
 - inbox__item-accept (changes): Accept an inbox item: it is worth keeping, and stays in the inbox as accepted.
 - inbox__item-reject (changes): Reject an inbox item, such as spam, with the reason.
 - inbox__item-dismiss (changes): Dismiss an inbox item that needs nothing done, with the reason.
-- inbox__item-promote (changes): Turn an inbox item into a ticket in a project's first to-do column.
+- inbox__item-promote (changes): Turn an inbox item into a ticket in its project's backlog, or on the board in the first to-do column.
 - inbox__item-link (changes): Link an inbox item to a ticket that already covers it.
 - inbox__item-run (changes): Run the steps on an inbox item again, such as after changing the steps.
 - inbox__pipeline-read (reads): List the inbox steps, in the order they run.
@@ -117,6 +117,9 @@ A tool that changes something after the person says yes waits for them; tell the
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "properties": {
+    "project": {
+      "type": "string"
+    },
     "state": {
       "type": "string",
       "enum": [
@@ -157,6 +160,10 @@ A tool that changes something after the person says yes waits for them; tell the
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "properties": {
+    "project": {
+      "type": "string",
+      "description": "The project it is for."
+    },
     "text": {
       "type": "string",
       "minLength": 1,
@@ -176,6 +183,7 @@ A tool that changes something after the person says yes waits for them; tell the
     }
   },
   "required": [
+    "project",
     "text"
   ]
 }
@@ -435,13 +443,14 @@ A tool that changes something after the person says yes waits for them; tell the
       "type": "string",
       "description": "An inbox item id, like n12."
     },
-    "project": {
-      "type": "string"
+    "backlog": {
+      "default": true,
+      "description": "False to put the ticket straight on the board.",
+      "type": "boolean"
     }
   },
   "required": [
-    "item",
-    "project"
+    "item"
   ]
 }
 ```
@@ -549,6 +558,10 @@ A tool that changes something after the person says yes waits for them; tell the
         {
           "type": "object",
           "properties": {
+            "project": {
+              "description": "The item was sent to this project.",
+              "type": "string"
+            },
             "tag": {
               "description": "The item has this tag.",
               "type": "string"
@@ -653,6 +666,10 @@ A tool that changes something after the person says yes waits for them; tell the
         {
           "type": "object",
           "properties": {
+            "project": {
+              "description": "The item was sent to this project.",
+              "type": "string"
+            },
             "tag": {
               "description": "The item has this tag.",
               "type": "string"

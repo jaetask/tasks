@@ -14,15 +14,16 @@
 4. owner calls inbox.step-add {"name":"Spam check","kind":"script","actor":"a1","actions":["item-reject","item-tag"],"config":{"file":"spam-check.mjs"}} → succeeded; created step s1
 5. owner calls inbox.step-add {"name":"Pull out details","kind":"script","actor":"a1","actions":["item-untag","item-edit","item-fields-set"],"config":{"file":"details.mjs"}} → succeeded; created step s2
 6. owner calls inbox.step-add {"name":"Sort it","kind":"script","actor":"a1","actions":["item-category-set"],"config":{"file":"sort.mjs"},"condition":{"tag":"request"}} → succeeded; created step s3
-7. owner calls inbox.item-capture {"text":"Need export to CSV for the Money app pls!!","source":"email"} → succeeded; created item n1
-8. owner calls inbox.item-capture {"text":"the board crashes when I drag a ticket to review"} → succeeded; created item n2
-9. owner calls inbox.item-capture {"text":"CHEAP WATCHES click here now","source":"email"} → succeeded; created item n3
+7. owner calls inbox.item-capture {"project":"TLK","text":"Need export to CSV for the Money app pls!!","source":"email"} → succeeded; created item n1
+8. owner calls inbox.item-capture {"project":"TLK","text":"the board crashes when I drag a ticket to review"} → succeeded; created item n2
+9. owner calls inbox.item-capture {"project":"TLK","text":"CHEAP WATCHES click here now","source":"email"} → succeeded; created item n3
 10. owner calls inbox.item-read {"item":"n1"} → succeeded:
 
 ```json
 {
   "item": {
     "id": "n1",
+    "project": "TLK",
     "title": "Export to CSV in Money",
     "text": "Need export to CSV for the Money app pls!!",
     "original": {
@@ -135,11 +136,11 @@
 
 ### Inbox
 
-| id | title | as captured | state | tags | category | fields | reason | ticket |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| n1 | Export to CSV in Money | Need export to CSV for the Money app pls!! | received | request | export | app: Money, format: CSV |  |  |
-| n2 | the board crashes when I drag a ticket to review |  | received | bug |  |  |  |  |
-| n3 | CHEAP WATCHES click here now |  | rejected |  |  |  | looks like spam |  |
+| id | project | title | as captured | state | tags | category | fields | reason | ticket |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| n1 | TLK | Export to CSV in Money | Need export to CSV for the Money app pls!! | received | request | export | app: Money, format: CSV |  |  |
+| n2 | TLK | the board crashes when I drag a ticket to review |  | received | bug |  |  |  |  |
+| n3 | TLK | CHEAP WATCHES click here now |  | rejected |  |  |  | looks like spam |  |
 
 ### Runs
 
@@ -178,14 +179,14 @@ None.
 | h4 | 09:04 | owner | inbox.step-add | added the inbox step Spam check |  |  |
 | h5 | 09:05 | owner | inbox.step-add | added the inbox step Pull out details |  |  |
 | h6 | 09:06 | owner | inbox.step-add | added the inbox step Sort it |  |  |
-| h7 | 09:07 | owner | inbox.item-capture | captured n1: Need export to CSV for the Money app pls!! |  |  |
+| h7 | 09:07 | owner | inbox.item-capture | captured n1 for TLK: Need export to CSV for the Money app pls!! |  |  |
 | h8 | 09:07 | a1 | inbox.item-tag | tagged n1 request, unsorted |  |  |
 | h9 | 09:07 | a1 | inbox.item-untag | removed the tags unsorted from n1 |  |  |
 | h10 | 09:07 | a1 | inbox.item-edit | edited n1 |  |  |
 | h11 | 09:07 | a1 | inbox.item-fields-set | set app, format on n1 |  |  |
 | h12 | 09:07 | a1 | inbox.item-category-set | sorted n1 into export |  |  |
-| h13 | 09:08 | owner | inbox.item-capture | captured n2: the board crashes when I drag a ticket to review |  |  |
+| h13 | 09:08 | owner | inbox.item-capture | captured n2 for TLK: the board crashes when I drag a ticket to review |  |  |
 | h14 | 09:08 | a1 | inbox.item-tag | tagged n2 bug, unsorted |  |  |
 | h15 | 09:08 | a1 | inbox.item-untag | removed the tags unsorted from n2 |  |  |
-| h16 | 09:09 | owner | inbox.item-capture | captured n3: CHEAP WATCHES click here now |  |  |
+| h16 | 09:09 | owner | inbox.item-capture | captured n3 for TLK: CHEAP WATCHES click here now |  |  |
 | h17 | 09:09 | a1 | inbox.item-reject | rejected n3: looks like spam |  |  |

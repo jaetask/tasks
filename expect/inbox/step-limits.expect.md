@@ -17,8 +17,8 @@
 7. owner calls inbox.step-add {"name":"Switched off","kind":"script","actor":"a1","actions":["item-reject"],"config":{"file":"spam-check.mjs"},"on":false} → succeeded; created step s4
 8. owner calls inbox.step-add {"name":"Bugs to tickets","kind":"script","actor":"a1","actions":["item-promote"],"config":{"file":"promote-bugs.mjs"},"condition":{"word":"crash"}} → succeeded; created step s5
 9. owner calls inbox.step-add {"name":"Never reached","kind":"script","actor":"a1","actions":["item-tag"],"config":{"file":"greedy.mjs"}} → succeeded; created step s6
-10. owner calls inbox.item-capture {"text":"A calm first item."} → succeeded; created item n1
-11. owner calls inbox.item-capture {"text":"the board crashes when I drag a ticket to review"} → succeeded; created item n2
+10. owner calls inbox.item-capture {"project":"TLK","text":"A calm first item."} → succeeded; created item n1
+11. owner calls inbox.item-capture {"project":"TLK","text":"the board crashes when I drag a ticket to review"} → succeeded; created item n2
 12. owner calls inbox.step-add {"name":"As the owner","kind":"script","actor":"owner","actions":["item-tag"],"config":{"file":"sort.mjs"}} → refused: owner: A step cannot act as the owner. Pick another actor.
 13. owner calls inbox.step-add {"name":"Board access","kind":"script","actor":"a1","actions":["ticket-delete"],"config":{}} → rejected: invalid-input: actions.0: Invalid option: expected one of "item-tag"|"item-untag"|"item-category-set"|"item-fields-set"|"item-fields-clear"|"item-edit"|"item-accept"|"item-reject"|"item-dismiss"|"item-promote"|"item-link"
 14. a1 calls inbox.step-add {"name":"Mine","kind":"script","actor":"a1","actions":["item-tag"],"config":{"file":"sort.mjs"}} → rejected: not-allowed: a1 may not run inbox.step-add
@@ -106,10 +106,10 @@
 
 ### Inbox
 
-| id | title | as captured | state | tags | category | fields | reason | ticket |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| n1 | A calm first item. |  | received | seen, reached another item, request, unsorted |  |  |  |  |
-| n2 | the board crashes when I drag a ticket to review |  | promoted | seen, reached another item |  |  |  | TLK-1 |
+| id | project | title | as captured | state | tags | category | fields | reason | ticket |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| n1 | TLK | A calm first item. |  | received | seen, reached another item, request, unsorted |  |  |  |  |
+| n2 | TLK | the board crashes when I drag a ticket to review |  | promoted | seen, reached another item |  |  |  | TLK-1 |
 
 ### Runs
 
@@ -154,7 +154,7 @@ r2 on n2: Bugs to tickets ended the run: the item was promoted
 - Outside: ran. failed: the step's file is outside the steps folder
 - Switched off: did not run. skipped: switched off
 - Bugs to tickets: ran. bugs become tickets
-  - item-promote {"project":"TLK"} → done
+  - item-promote {"backlog":false} → done
 
 ### Tickets
 
@@ -175,10 +175,10 @@ r2 on n2: Bugs to tickets ended the run: the item was promoted
 | h7 | 09:07 | owner | inbox.step-add | added the inbox step Switched off |  |  |
 | h8 | 09:08 | owner | inbox.step-add | added the inbox step Bugs to tickets |  |  |
 | h9 | 09:09 | owner | inbox.step-add | added the inbox step Never reached |  |  |
-| h10 | 09:10 | owner | inbox.item-capture | captured n1: A calm first item. |  |  |
+| h10 | 09:10 | owner | inbox.item-capture | captured n1 for TLK: A calm first item. |  |  |
 | h11 | 09:10 | a1 | inbox.item-tag | tagged n1 seen |  |  |
 | h12 | 09:10 | a1 | inbox.item-tag | tagged n1 reached another item |  |  |
-| h13 | 09:11 | owner | inbox.item-capture | captured n2: the board crashes when I drag a ticket to review |  |  |
+| h13 | 09:11 | owner | inbox.item-capture | captured n2 for TLK: the board crashes when I drag a ticket to review |  |  |
 | h14 | 09:11 | a1 | inbox.item-tag | tagged n2 seen |  |  |
 | h15 | 09:11 | a1 | inbox.item-tag | tagged n2 reached another item |  |  |
 | h16 | 09:11 | a1 | inbox.item-promote | turned n2 into TLK-1: the board crashes when I drag a ticket to review | TLK-1 |  |

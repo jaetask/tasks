@@ -87,9 +87,9 @@
 | images__image-read | yes | Read one image, with its data as base64. |
 | images__image-add |  | Attach an image to a ticket, such as a screenshot of the result. |
 | images__image-remove |  | Remove an image from a ticket. Whoever attached it or the owner can. |
-| inbox__inbox-read | yes | List inbox items, oldest first: all of them, or those in one state. |
+| inbox__inbox-read | yes | List inbox items, oldest first: all of them, those sent to one project, those in one state, or both. |
 | inbox__item-read | yes | Read one inbox item, with the record of each run of the steps on it. |
-| inbox__item-capture |  | Put a new idea or request in the inbox. The owner's steps look at it before it lands there. |
+| inbox__item-capture |  | Put a new idea or request in a project's inbox. The owner's steps look at it before it lands there. |
 | inbox__item-tag |  | Add tags to an inbox item. |
 | inbox__item-untag |  | Remove tags from an inbox item. |
 | inbox__item-category-set |  | Sort an inbox item into a category, or out of its category with null. |
@@ -99,7 +99,7 @@
 | inbox__item-accept |  | Accept an inbox item: it is worth keeping, and stays in the inbox as accepted. |
 | inbox__item-reject |  | Reject an inbox item, such as spam, with the reason. |
 | inbox__item-dismiss |  | Dismiss an inbox item that needs nothing done, with the reason. |
-| inbox__item-promote |  | Turn an inbox item into a ticket in a project's first to-do column. |
+| inbox__item-promote |  | Turn an inbox item into a ticket in its project's backlog, or on the board in the first to-do column. |
 | inbox__item-link |  | Link an inbox item to a ticket that already covers it. |
 | inbox__item-run |  | Run the steps on an inbox item again, such as after changing the steps. |
 | inbox__pipeline-read | yes | List the inbox steps, in the order they run. |

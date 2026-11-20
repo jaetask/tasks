@@ -287,7 +287,8 @@ try {
     await page.waitForSelector(".column-head");
   });
   await step("inbox: capture an item; with no steps it lands as received", async () => {
-    await page.click('a[href="#/inbox"]');
+    await page.click('.side-row a[href="#/board/TLK"]');
+    await page.click('.side-sub a[href="#/intake/TLK"]');
     await page.waitForSelector("text=No steps yet");
     await page.fill(
       '[aria-label="A new idea or request"]',
@@ -323,7 +324,7 @@ try {
   await step("inbox: turn an item into a ticket", async () => {
     await page.click("button >> text=received");
     await page.waitForSelector(".items li");
-    await page.selectOption('[aria-label="Turn into a ticket"] >> nth=0', { label: "Talk" });
+    await page.click("text=Add to the backlog >> nth=0");
     await until(() => document.querySelectorAll(".items > li").length === 1);
     await page.click("button >> text=promoted");
     await page.waitForSelector("text=Open TLK-5");

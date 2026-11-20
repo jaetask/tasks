@@ -16,8 +16,8 @@
 6. owner calls inbox.step-add {"name":"Hosted sorter","kind":"hosted-model","actor":"a1","actions":["item-tag"],"config":{"url":"$MODEL","model":"hosted-llm","key_env":"EXPECT_MODEL_KEY"}} → succeeded; created step s3
 7. owner calls inbox.step-add {"name":"Hosted, no key","kind":"hosted-model","actor":"a1","actions":["item-tag"],"config":{"url":"$MODEL","model":"hosted-llm","key_env":"NOT_SET"}} → succeeded; created step s4
 8. owner calls inbox.step-add {"name":"No address","kind":"local-model","actor":"a1","actions":["item-tag"],"config":{"model":"local-llm"}} → succeeded; created step s5
-9. owner calls inbox.item-capture {"text":"the board crashes when I drag a ticket to review"} → succeeded; created item n1
-10. owner calls inbox.item-capture {"text":"CHEAP WATCHES click here now","source":"email"} → succeeded; created item n2
+9. owner calls inbox.item-capture {"project":"TLK","text":"the board crashes when I drag a ticket to review"} → succeeded; created item n1
+10. owner calls inbox.item-capture {"project":"TLK","text":"CHEAP WATCHES click here now","source":"email"} → succeeded; created item n2
 
 ### The inbox steps, in order
 
@@ -31,10 +31,10 @@
 
 ### Inbox
 
-| id | title | as captured | state | tags | category | fields | reason | ticket |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| n1 | the board crashes when I drag a ticket to review |  | received | checked, bug |  |  |  |  |
-| n2 | CHEAP WATCHES click here now |  | rejected |  |  |  | classified as spam |  |
+| id | project | title | as captured | state | tags | category | fields | reason | ticket |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| n1 | TLK | the board crashes when I drag a ticket to review |  | received | checked, bug |  |  |  |  |
+| n2 | TLK | CHEAP WATCHES click here now |  | rejected |  |  |  | classified as spam |  |
 
 ### Runs
 
@@ -68,8 +68,8 @@ None.
 | h6 | 09:06 | owner | inbox.step-add | added the inbox step Hosted sorter |  |  |
 | h7 | 09:07 | owner | inbox.step-add | added the inbox step Hosted, no key |  |  |
 | h8 | 09:08 | owner | inbox.step-add | added the inbox step No address |  |  |
-| h9 | 09:09 | owner | inbox.item-capture | captured n1: the board crashes when I drag a ticket to review |  |  |
+| h9 | 09:09 | owner | inbox.item-capture | captured n1 for TLK: the board crashes when I drag a ticket to review |  |  |
 | h10 | 09:09 | a1 | inbox.item-tag | tagged n1 checked |  |  |
 | h11 | 09:09 | a1 | inbox.item-tag | tagged n1 bug |  |  |
-| h12 | 09:10 | owner | inbox.item-capture | captured n2: CHEAP WATCHES click here now |  |  |
+| h12 | 09:10 | owner | inbox.item-capture | captured n2 for TLK: CHEAP WATCHES click here now |  |  |
 | h13 | 09:10 | a1 | inbox.item-reject | rejected n2: classified as spam |  |  |

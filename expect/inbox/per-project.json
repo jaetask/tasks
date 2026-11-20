@@ -1,0 +1,36 @@
+{
+  "steps": [
+    { "call": "catalog.actor-create", "input": { "name": "Sorter" } },
+    { "call": "catalog.project-create", "input": { "name": "Talk", "prefix": "TLK" } },
+    { "call": "catalog.project-create", "input": { "name": "Money", "prefix": "MNY" } },
+    {
+      "call": "inbox.step-add",
+      "input": {
+        "name": "Talk bugs to the board",
+        "kind": "script",
+        "actor": "a1",
+        "actions": ["item-promote"],
+        "config": { "file": "promote-bugs.mjs" },
+        "condition": { "project": "TLK" }
+      }
+    },
+    {
+      "call": "inbox.item-capture",
+      "input": { "project": "TLK", "text": "the board crashes when I drag a ticket" }
+    },
+    { "call": "inbox.item-capture", "input": { "project": "MNY", "text": "Need export to CSV" } },
+    {
+      "as": "a1",
+      "call": "inbox.item-capture",
+      "input": { "project": "MNY", "text": "Totals are wrong in May", "source": "agent" }
+    },
+    { "call": "inbox.item-capture", "input": { "project": "NOPE", "text": "No such project" } },
+    { "call": "inbox.item-capture", "input": { "text": "No project given" } },
+    { "as": "a1", "call": "inbox.inbox-read", "input": { "project": "MNY" } },
+    { "as": "a1", "call": "inbox.inbox-read", "input": { "project": "TLK", "state": "received" } },
+    { "call": "inbox.item-promote", "input": { "item": "n2" } },
+    { "as": "a1", "call": "tickets.backlog-read", "input": { "project": "MNY" } },
+    { "call": "catalog.project-archive", "input": { "project": "MNY" } },
+    { "call": "inbox.item-capture", "input": { "project": "MNY", "text": "Too late" } }
+  ]
+}

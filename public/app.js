@@ -1141,6 +1141,7 @@ const STEP_KINDS = {
 };
 const CONDITIONS = {
   "": "every item",
+  project: "items for the project",
   tag: "items tagged",
   category: "items in the category",
   source: "items from",
@@ -1149,7 +1150,6 @@ const CONDITIONS = {
 
 function itemView(item) {
   const live = item.state === "received" || item.state === "accepted";
-  const projects = state.catalog.projects.filter((p) => !p.archived);
   const why = (verb, action) =>
     button(verb, () => {
       const reason = window.prompt(`Why ${verb.toLowerCase()} it?`);
@@ -1236,12 +1236,12 @@ function itemView(item) {
         item.state !== "accepted" &&
         button("Accept", () => act("inbox.item-accept", { item: item.id }), "small"),
       live &&
-        projects.length > 0 &&
-        select(
-          [["", "Turn into a ticket in…"], ...projects.map((p) => [p.id, p.name])],
-          "",
-          (project) => project && act("inbox.item-promote", { item: item.id, project }),
-          "Turn into a ticket",
+        button("Add to the backlog", () => act("inbox.item-promote", { item: item.id }), "small"),
+      live &&
+        button(
+          "Put on the board",
+          () => act("inbox.item-promote", { item: item.id, backlog: false }),
+          "small",
         ),
       live && why("Reject", "inbox.item-reject"),
       live && why("Dismiss", "inbox.item-dismiss"),
@@ -1411,8 +1411,11 @@ function stepForm(steps) {
 }
 
 async function inboxView() {
+  if (!state.project)
+    return [h("div", { class: "stack" }, newProjectPanel("Create your first project"))];
+  const project = state.catalog.projects.find((p) => p.id === state.project);
   const [items, steps] = await Promise.all([
-    read("inbox.inbox-read", { state: state.inbox }),
+    read("inbox.inbox-read", { project: state.project, state: state.inbox }),
     read("inbox.pipeline-read"),
   ]);
   const tab = (value) =>
@@ -1432,8 +1435,10 @@ async function inboxView() {
       h(
         "section",
         { class: "panel" },
-        h("h2", { text: "Inbox" }),
-        lineForm("A new idea or request", "Capture", (text) => act("inbox.item-capture", { text })),
+        h("h2", { text: `${project.icon} ${project.name} · Intake`.trim() }),
+        lineForm("A new idea or request", "Capture", (text) =>
+          act("inbox.item-capture", { project: state.project, text }),
+        ),
         h(
           "div",
           { class: "row wrap" },
@@ -1449,7 +1454,7 @@ async function inboxView() {
         h("h2", { text: "Steps" }),
         h("p", {
           class: "muted",
-          text: "Steps look at each new item, one after another. Each one may only do what you allow, and every run is recorded on the item.",
+          text: "Steps look at each new item, one after another. Each one may only do what you allow, and every run is recorded on the item. The steps are the same for every project; a step can be set to run on one project's items only.",
         }),
         (steps ?? []).length > 0
           ? h(
@@ -1680,14 +1685,14 @@ const VIEWS = {
   backlog: backlogView,
   features: featuresView,
   archive: archiveView,
-  inbox: inboxView,
+  intake: inboxView,
   changes: changesView,
   connections: connectionsView,
   settings: settingsView,
 };
 
 // The screens that show one project; their address ends in the project's id.
-const PROJECT_VIEWS = ["backlog", "board", "features"];
+const PROJECT_VIEWS = ["intake", "backlog", "board", "features"];
 
 function showSignIn() {
   for (const id of ["view", "setup", "side", "menu", "sign-out"]) $(id).hidden = true;

@@ -32,6 +32,9 @@ const ENDING = ["rejected", "dismissed", "promoted"];
 
 function matches(condition: Condition | null, item: Item): string | null {
   if (!condition) return null;
+  if (condition.project !== undefined && item.project !== condition.project) {
+    return `only runs on items for ${condition.project}`;
+  }
   if (condition.tag !== undefined && !item.tags.includes(condition.tag)) {
     return `only runs on items tagged ${condition.tag}`;
   }

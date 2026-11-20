@@ -83,11 +83,15 @@ function write<Input extends z.ZodType>(definition: {
 
 const inboxRead = read({
   name: "inbox-read",
-  description: "List inbox items, oldest first: all of them, or those in one state.",
-  input: z.object({ state: ItemState.optional() }),
+  description:
+    "List inbox items, oldest first: all of them, those sent to one project, those in one state, or both.",
+  input: z.object({ project: z.string().optional(), state: ItemState.optional() }),
   output: z.array(Item),
   card: itemList,
-  run: ({ state }, { inbox }) => inbox.items(state),
+  run: ({ project, state }, { inbox, catalog }) => {
+    if (project !== undefined) catalog.project(project);
+    return inbox.items({ project, state });
+  },
 });
 
 const itemRead = read({
@@ -101,8 +105,9 @@ const itemRead = read({
 const itemCapture = write({
   name: "item-capture",
   description:
-    "Put a new idea or request in the inbox. The owner's steps look at it before it lands there.",
+    "Put a new idea or request in a project's inbox. The owner's steps look at it before it lands there.",
   input: z.object({
+    project: z.string().describe("The project it is for."),
     text: z.string().trim().min(1).max(20_000),
     title: z
       .string()
@@ -112,12 +117,15 @@ const itemCapture = write({
       .describe("The first line of the text if left out."),
     source: z.string().trim().min(1).max(40).default("page").describe("Where it came from."),
   }),
-  run: ({ text, title, source }, { inbox, actor, at }) => {
+  run: ({ project, text, title, source }, { inbox, catalog, actor, at }) => {
+    if (catalog.project(project).archived) {
+      throw new Refusal("archived-project", `Project ${project} is archived.`);
+    }
     const first = (text.split("\n")[0] as string).slice(0, 200);
-    const captured = inbox.capture(actor, at, { title: title || first, text, source });
+    const captured = inbox.capture(actor, at, { project, title: title || first, text, source });
     return {
       item: captured,
-      summary: `captured ${captured.id}: ${captured.title}`,
+      summary: `captured ${captured.id} for ${project}: ${captured.title}`,
       kind: "created",
     };
   },
@@ -228,15 +236,20 @@ const itemDismiss = write({
 
 const itemPromote = write({
   name: "item-promote",
-  description: "Turn an inbox item into a ticket in a project's first to-do column.",
-  input: z.object({ item, project: z.string() }),
-  run: ({ item: id, project }, { inbox, tickets, actor, at }) => {
+  description:
+    "Turn an inbox item into a ticket in its project's backlog, or on the board in the first to-do column.",
+  input: z.object({
+    item,
+    backlog: z.boolean().default(true).describe("False to put the ticket straight on the board."),
+  }),
+  run: ({ item: id, backlog }, { inbox, tickets, actor, at }) => {
     const found = inbox.item(id);
     const ticket = tickets.create(actor, at, {
-      project,
+      project: found.project,
       title: found.title,
       description: found.text,
       labels: [],
+      backlog,
     });
     return {
       item: inbox.settle(id, "promoted", null, ticket.id),

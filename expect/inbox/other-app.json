@@ -26,8 +26,12 @@
     },
     {
       "call": "inbox.item-capture",
-      "input": { "text": "Need export to CSV for the Money app pls!!", "source": "email" }
+      "input": {
+        "project": "TLK",
+        "text": "Need export to CSV for the Money app pls!!",
+        "source": "email"
+      }
     },
-    { "call": "inbox.item-capture", "input": { "text": "Short one." } }
+    { "call": "inbox.item-capture", "input": { "project": "TLK", "text": "Short one." } }
   ]
 }

@@ -22,6 +22,7 @@ const ENDED: readonly ItemState[] = ["rejected", "dismissed", "promoted", "linke
 
 export const Item = z.object({
   id: z.string(),
+  project: z.string().describe("The project it was sent to."),
   title: z.string(),
   text: z.string(),
   original: z
@@ -63,6 +64,7 @@ export type StepKind = z.infer<typeof StepKind>;
 /** Which items a step runs on. Every part that is given must match. */
 export const Condition = z
   .object({
+    project: z.string().optional().describe("The item was sent to this project."),
     tag: z.string().optional().describe("The item has this tag."),
     category: z.string().optional().describe("The item is in this category."),
     source: z.string().optional().describe("The item came from this source."),
@@ -84,9 +86,14 @@ export const Step = z.object({
 export type Step = z.infer<typeof Step>;
 
 export type Inbox = {
-  items(state?: ItemState): Item[];
+  /** Items, oldest first: of one state, of one project, or both. */
+  items(filter?: { state?: ItemState | undefined; project?: string | undefined }): Item[];
   item(id: string): Item;
-  capture(by: string, at: string, item: { title: string; text: string; source: string }): Item;
+  capture(
+    by: string,
+    at: string,
+    item: { project: string; title: string; text: string; source: string },
+  ): Item;
   /** Changes an item still in the inbox. Refused once it was rejected, dismissed, promoted or linked. */
   change(
     id: string,
@@ -106,6 +113,15 @@ export function migrateInbox(db: DatabaseSync): void {
   db.exec(
     "CREATE TABLE IF NOT EXISTS inbox_items (id TEXT PRIMARY KEY, title TEXT NOT NULL, text TEXT NOT NULL, original_title TEXT NOT NULL, original_text TEXT NOT NULL, source TEXT NOT NULL, state TEXT NOT NULL, tags TEXT NOT NULL, category TEXT, fields TEXT NOT NULL, reason TEXT, ticket TEXT, at TEXT NOT NULL, by TEXT NOT NULL)",
   );
+  // Added after the first version: a database made before it gets the column
+  // here, and its items go to the first project.
+  const columns = db.prepare("PRAGMA table_info(inbox_items)").all() as { name: string }[];
+  if (!columns.some((c) => c.name === "project")) {
+    db.exec("ALTER TABLE inbox_items ADD COLUMN project TEXT");
+  }
+  db.exec(
+    "UPDATE inbox_items SET project = (SELECT id FROM projects ORDER BY position LIMIT 1) WHERE project IS NULL",
+  );
   db.exec(
     "CREATE TABLE IF NOT EXISTS inbox_steps (id TEXT PRIMARY KEY, name TEXT NOT NULL, kind TEXT NOT NULL, actor TEXT NOT NULL, actions TEXT NOT NULL, condition TEXT, config TEXT NOT NULL, enabled INTEGER NOT NULL, position INTEGER NOT NULL)",
   );
@@ -113,6 +129,7 @@ export function migrateInbox(db: DatabaseSync): void {
 
 type ItemRow = {
   id: string;
+  project: string | null;
   title: string;
   text: string;
   original_title: string;
@@ -142,6 +159,7 @@ type StepRow = {
 export function sqliteInbox(db: DatabaseSync, rows: Rows): Inbox {
   const toItem = (r: ItemRow): Item => ({
     id: r.id,
+    project: r.project ?? "",
     title: r.title,
     text: r.text,
     original: { title: r.original_title, text: r.original_text },
@@ -209,19 +227,17 @@ export function sqliteInbox(db: DatabaseSync, rows: Rows): Inbox {
   });
 
   return {
-    items: (state) =>
-      (
-        (state === undefined
-          ? db.prepare("SELECT * FROM inbox_items ORDER BY rowid").all()
-          : db
-              .prepare("SELECT * FROM inbox_items WHERE state = ? ORDER BY rowid")
-              .all(state)) as ItemRow[]
-      ).map(toItem),
+    items: (filter = {}) =>
+      (db.prepare("SELECT * FROM inbox_items ORDER BY rowid").all() as ItemRow[])
+        .filter((r) => filter.state === undefined || r.state === filter.state)
+        .filter((r) => filter.project === undefined || r.project === filter.project)
+        .map(toItem),
     item: (id) => toItem(itemRow(id)),
     capture: (by, at, item) => {
       const id = nextId(db, "n");
       rows.insert("inbox_items", {
         id,
+        project: item.project,
         title: item.title,
         text: item.text,
         original_title: item.title,

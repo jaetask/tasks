@@ -167,6 +167,7 @@ export async function runInbox(input: string): Promise<string> {
         ? table(
             [
               "id",
+              "project",
               "title",
               "as captured",
               "state",
@@ -178,6 +179,7 @@ export async function runInbox(input: string): Promise<string> {
             ],
             items.map((n) => [
               n.id,
+              n.project,
               n.title,
               n.original.title === n.title ? "" : n.original.title,
               n.state,

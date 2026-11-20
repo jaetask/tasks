@@ -65,10 +65,10 @@
         "config": { "file": "greedy.mjs" }
       }
     },
-    { "call": "inbox.item-capture", "input": { "text": "A calm first item." } },
+    { "call": "inbox.item-capture", "input": { "project": "TLK", "text": "A calm first item." } },
     {
       "call": "inbox.item-capture",
-      "input": { "text": "the board crashes when I drag a ticket to review" }
+      "input": { "project": "TLK", "text": "the board crashes when I drag a ticket to review" }
     },
     {
       "call": "inbox.step-add",
