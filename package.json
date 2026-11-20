@@ -41,7 +41,7 @@
   "devDependencies": {
     "@biomejs/biome": "2.6.5",
     "@jaetask/snap": "0.1.0",
-    "@jaetask/toolkit": "0.1.0",
+    "@jaetask/toolkit": "0.2.0",
     "@types/node": "22.18.0",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",

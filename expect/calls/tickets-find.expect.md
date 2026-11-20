@@ -13,7 +13,7 @@
 3. owner calls catalog.actor-create {"name":"Reviewer"} → succeeded; created actor a2
 4. owner calls catalog.project-create {"name":"Talk","prefix":"TLK"} → succeeded; created project TLK
 5. owner calls catalog.label-create {"name":"voice","colour":"teal"} → succeeded; created label l1
-6. owner calls catalog.label-create {"name":"bug","colour":"red"} → succeeded; created label l2
+6. owner calls catalog.label-create {"name":"bug","colour":"pink"} → succeeded; created label l2
 7. owner calls catalog.project-create {"name":"Money","prefix":"MNY"} → succeeded; created project MNY
 8. owner calls tickets.ticket-create {"project":"TLK","title":"Voice notes","labels":["l1"]} → succeeded; created ticket TLK-1
 9. owner calls tickets.ticket-create {"project":"TLK","title":"Crash on send","description":"The app crashes when a voice note is sent.","labels":["l1","l2"],"assignee":"a1"} → succeeded; created ticket TLK-2
@@ -77,7 +77,7 @@
       {
         "id": "l2",
         "name": "bug",
-        "colour": "red"
+        "colour": "pink"
       }
     ],
     "blocked": null,
@@ -119,7 +119,7 @@
       {
         "id": "l2",
         "name": "bug",
-        "colour": "red"
+        "colour": "pink"
       }
     ],
     "blocked": null,
@@ -161,7 +161,7 @@
       {
         "id": "l2",
         "name": "bug",
-        "colour": "red"
+        "colour": "pink"
       }
     ],
     "blocked": null,
@@ -334,7 +334,7 @@
 | id | name | colour |
 | --- | --- | --- |
 | l1 | voice | teal |
-| l2 | bug | red |
+| l2 | bug | pink |
 
 ### Features
 

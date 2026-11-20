@@ -1,3 +1,4 @@
 # Built by scripts/build-page.mjs
 app.js
 app.css
+*.woff2

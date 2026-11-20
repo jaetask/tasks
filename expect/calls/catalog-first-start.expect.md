@@ -27,7 +27,7 @@
 2. owner calls catalog.actor-rename {"actor":"owner","name":"Sam"} → succeeded; updated actor owner
 3. owner calls catalog.actor-create {"name":"Coder"} → succeeded; created actor a1
 4. owner calls catalog.project-create {"name":"Talk","prefix":"TLK"} → succeeded; created project TLK
-5. owner calls catalog.label-create {"name":"bug","colour":"red"} → succeeded; created label l1
+5. owner calls catalog.label-create {"name":"bug","colour":"pink"} → succeeded; created label l1
 6. owner calls catalog.catalog-read → succeeded:
 
 ```json
@@ -79,7 +79,7 @@
     {
       "id": "l1",
       "name": "bug",
-      "colour": "red"
+      "colour": "pink"
     }
   ]
 }
@@ -103,7 +103,7 @@
 
 | id | name | colour |
 | --- | --- | --- |
-| l1 | bug | red |
+| l1 | bug | pink |
 
 ### Features
 

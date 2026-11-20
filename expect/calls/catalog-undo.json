@@ -3,7 +3,7 @@
     { "call": "catalog.project-create", "input": { "name": "Talk", "prefix": "TLK" } },
     { "call": "catalog.project-edit", "input": { "project": "TLK", "name": "Talk app" } },
     { "call": "catalog.column-remove", "input": { "column": "c3" } },
-    { "call": "catalog.label-create", "input": { "name": "bug", "colour": "red" } },
+    { "call": "catalog.label-create", "input": { "name": "bug", "colour": "pink" } },
     { "call": "catalog.label-remove", "input": { "label": "l1" } },
     { "call": "history.change-undo", "input": { "change": "h5" } },
     { "call": "history.change-undo", "input": { "change": "h3" } },

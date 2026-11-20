@@ -5,7 +5,7 @@
     { "call": "catalog.actor-create", "input": { "name": "Reviewer" } },
     { "call": "catalog.project-create", "input": { "name": "Talk", "prefix": "TLK" } },
     { "call": "catalog.label-create", "input": { "name": "voice", "colour": "teal" } },
-    { "call": "catalog.label-create", "input": { "name": "bug", "colour": "red" } },
+    { "call": "catalog.label-create", "input": { "name": "bug", "colour": "pink" } },
     { "call": "catalog.project-create", "input": { "name": "Money", "prefix": "MNY" } },
     {
       "call": "tickets.ticket-create",

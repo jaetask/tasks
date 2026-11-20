@@ -7,10 +7,11 @@ import {
   AppShell,
   Avatar,
   Button,
+  CenteredPage,
   type Group,
   Input,
   type LinkComponent,
-  Panel,
+  Notice,
   SideLink,
   SideSection,
   ToolkitProvider,
@@ -95,16 +96,6 @@ const ICONS = {
 
 // ---------- Signing in, and the first start ----------
 
-function Alone({ title, line, children }: { title: string; line: string; children: ReactNode }) {
-  return (
-    <div className="tk-root alone">
-      <Panel id="alone" title={title} line={line}>
-        {children}
-      </Panel>
-    </div>
-  );
-}
-
 function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
   const [secret, setSecret] = useState("");
   const [error, setError] = useState("");
@@ -119,7 +110,7 @@ function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
     if (answer.signedIn) onSignedIn();
   };
   return (
-    <Alone
+    <CenteredPage
       title="Sign in to Tasks"
       line="Enter the setup secret Tasks printed when it first started."
     >
@@ -142,14 +133,14 @@ function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
           {error}
         </p>
       )}
-    </Alone>
+    </CenteredPage>
   );
 }
 
 function Setup({ onNamed }: { onNamed: (name: string) => void }) {
   const [name, setName] = useState("");
   return (
-    <Alone
+    <CenteredPage
       title="What is your name?"
       line="Your changes show under this name. Your agents get their own names when they connect."
     >
@@ -172,7 +163,7 @@ function Setup({ onNamed }: { onNamed: (name: string) => void }) {
           Start
         </Button>
       </form>
-    </Alone>
+    </CenteredPage>
   );
 }
 
@@ -180,18 +171,18 @@ function Setup({ onNamed }: { onNamed: (name: string) => void }) {
 
 type Result = { html?: string; text?: string; refused?: boolean };
 
-function ResultCard({ result }: { result: Result | null }) {
+function ResultCard({ result, onDismiss }: { result: Result | null; onDismiss: () => void }) {
   if (!result) return null;
   return (
-    <div className={result.refused ? "result refused" : "result"} role="status">
+    <Notice tone={result.refused ? "refused" : "done"} floating onDismiss={onDismiss}>
       {result.html ? (
         // The Card arrives as HTML already escaped by the App's cardHtml.
         // biome-ignore lint/security/noDangerouslySetInnerHtml: escaped by the App
-        <div dangerouslySetInnerHTML={{ __html: result.html }} />
+        <span dangerouslySetInnerHTML={{ __html: result.html }} />
       ) : (
         result.text
       )}
-    </div>
+    </Notice>
   );
 }
 
@@ -237,71 +228,85 @@ function Page({ path, onSignOut }: { path: string; onSignOut: () => void }) {
 }
 
 function Shell({ path, onSignOut }: { path: string; onSignOut: () => void }) {
-  const { catalog } = useApp();
+  const { catalog, act } = useApp();
   const awaiting = useRead<InputRequest[]>("input.input-list", { state: "awaiting" }) ?? [];
   const asking = (useRead<Connection[]>("connections.connection-list") ?? []).filter(
     (c) => c.state === "pairing",
   );
   const parts = path.split("/").filter(Boolean);
   const top = parts[0] ?? "overview";
-  const counted = (label: string, n: number) => (n > 0 ? `${label} (${n})` : label);
   const nav = [
     { href: "/overview", label: "Overview", icon: ICONS.overview, current: top === "overview" },
     {
       href: "/input",
-      label: counted("Human input", awaiting.length),
+      label: "Human input",
       icon: ICONS.input,
       current: top === "input",
+      ...(awaiting.length > 0 ? { count: awaiting.length } : {}),
     },
     { href: "/replies", label: "Agent inbox", icon: ICONS.replies, current: top === "replies" },
+  ];
+  const bottom = [
     { href: "/archive", label: "Archive", icon: ICONS.archive, current: top === "archive" },
     {
       href: "/connections",
-      label: counted("Connections", asking.length),
+      label: "Connections",
       icon: ICONS.connections,
       current: top === "connections",
+      ...(asking.length > 0 ? { count: asking.length } : {}),
     },
     { href: "/changes", label: "Changes", icon: ICONS.changes, current: top === "changes" },
   ];
   const here = top === "p" ? parts[1] : undefined;
   const screen = parts[2] ?? "board";
+  const active = catalog.projects.filter((p) => !p.archived);
   const groups: Group[] = [
     {
       label: "Projects",
       href: "/settings",
       empty: "No projects yet. Create one in Settings.",
-      items: catalog.projects
-        .filter((p) => !p.archived)
-        .map((p) => ({
-          id: p.id,
-          href: `/p/${p.id}/board`,
-          label: p.name,
-          avatar: <Avatar name={p.name} />,
-          ...(here === p.id
-            ? {
-                open: (
-                  <SideSection label={p.id}>
-                    {(
-                      [
-                        ["intake", "Intake", "New ideas and requests"],
-                        ["backlog", "Backlog", "Waiting, off the board"],
-                        ["board", "Board", "Tickets being worked on"],
-                        ["features", "Features", "The parts of the project"],
-                      ] as const
-                    ).map(([id, label, line]) => (
-                      <SideLink
-                        key={id}
-                        href={`/p/${p.id}/${id}`}
-                        label={label}
-                        line={line}
-                        current={screen === id || (id === "board" && screen === "columns")}
-                      />
-                    ))}
-                  </SideSection>
-                ),
-              }
-            : {}),
-        })),
+      // The new order is saved one move at a time, from the end.
+      onReorder: (ids) => {
+        void (async () => {
+          for (let i = ids.length - 1; i >= 0; i--) {
+            const next = ids[i + 1];
+            await act("catalog.project-move", {
+              project: ids[i],
+              ...(next ? { before: next } : {}),
+            });
+          }
+        })();
+      },
+      items: active.map((p) => ({
+        id: p.id,
+        href: `/p/${p.id}/board`,
+        label: p.name,
+        avatar: <Avatar name={p.name} colour={p.colour} {...(p.icon ? { emoji: p.icon } : {})} />,
+        current: here === p.id,
+        defaultOpen: here === p.id,
+        children: (
+          <SideSection label={p.id}>
+            {(
+              [
+                ["intake", "Intake", "New ideas and requests"],
+                ["backlog", "Backlog", "Waiting, off the board"],
+                ["board", "Board", "Tickets being worked on"],
+                ["features", "Features", "The parts of the project"],
+              ] as const
+            ).map(([id, label, line]) => (
+              <SideLink
+                key={id}
+                href={`/p/${p.id}/${id}`}
+                label={label}
+                line={line}
+                current={
+                  here === p.id && (screen === id || (id === "board" && screen === "columns"))
+                }
+              />
+            ))}
+          </SideSection>
+        ),
+      })),
     },
   ];
   const project = catalog.projects.find((p) => p.id === here);
@@ -309,12 +314,14 @@ function Shell({ path, onSignOut }: { path: string; onSignOut: () => void }) {
     ? project.name
     : top === "t"
       ? (parts[1] ?? "Ticket")
-      : (nav.find((n) => n.current)?.label ?? (top === "settings" ? "Settings" : "Tasks"));
+      : ([...nav, ...bottom].find((n) => n.current)?.label ??
+        (top === "settings" ? "Settings" : "Tasks"));
   return (
     <AppShell
       app={{ name: "Tasks", href: "/overview" }}
       title={title}
       nav={nav}
+      bottom={bottom}
       groups={groups}
       settingsHref="/settings"
     >
@@ -386,7 +393,7 @@ function Signed({ path, onSignOut }: { path: string; onSignOut: () => void }) {
       ) : (
         <Setup onNamed={(name) => void act("catalog.actor-rename", { actor: OWNER, name })} />
       )}
-      <ResultCard result={result} />
+      <ResultCard result={result} onDismiss={() => setResult(null)} />
     </AppContext.Provider>
   );
 }
