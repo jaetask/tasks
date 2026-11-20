@@ -127,7 +127,7 @@ export function OverviewPage() {
             onDrop={(id) => drop(id, kind)}
           >
             {tickets.map((t) => (
-              <TicketCard key={t.id} ticket={t} />
+              <TicketCard key={t.id} ticket={t} across />
             ))}
           </Lane>
         ))}
