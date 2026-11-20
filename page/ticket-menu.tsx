@@ -21,9 +21,9 @@ import {
 } from "@jaetask/toolkit/ui/dialog";
 import { Input } from "@jaetask/toolkit/ui/input";
 import { type ReactElement, useRef, useState } from "react";
-import { day, endOfWeek } from "../src/due.js";
+
 import type { Ticket } from "./api.js";
-import { AddLinkDialog } from "@jaetask/toolkit/suite";
+import { AddLinkDialog, day, endOfWeek } from "@jaetask/toolkit/suite";
 import { useApp } from "./app.js";
 import { addLink, LINK_LINE } from "./local.js";
 

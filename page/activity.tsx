@@ -2,7 +2,7 @@
 // rows; a comment is a card that holds its replies and a row to add one.
 
 import { InlineMarkdown } from "@jaetask/toolkit/app/review";
-import { AddReactionButton, CommentReactionChips } from "@jaetask/toolkit/suite";
+import { AddReactionButton, AttachButton, CommentReactionChips } from "@jaetask/toolkit/suite";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,27 +21,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@jaetask/toolkit/ui/dropdown-menu";
-import { Input } from "@jaetask/toolkit/ui/input";
-import { Kbd } from "@jaetask/toolkit/ui/kbd";
 import { Textarea } from "@jaetask/toolkit/ui/textarea";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@jaetask/toolkit/ui/tooltip";
 import {
   IconArrowUp,
   IconCircleCheck,
   IconCopy,
   IconDots,
   IconLink,
-  IconPaperclip,
   IconPencil,
   IconPlus,
   IconTrash,
 } from "@tabler/icons-react";
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import { type ReactNode, useState } from "react";
 import { type Comment, type Conversation, OWNER, type Reply, type Ticket, when } from "./api.js";
 import { useApp } from "./app.js";
 import { Editor } from "./editor.js";
@@ -99,53 +90,10 @@ function useAttach(ticket: string) {
   };
 }
 
-/** The paperclip. With `shortcut`, Cmd or Ctrl with Shift and U opens it from anywhere. */
+/** The paperclip of a ticket: whatever is chosen is attached to it. */
 export function Attach({ ticket, shortcut }: { ticket: string; shortcut?: boolean }) {
   const attach = useAttach(ticket);
-  const picker = useRef<HTMLInputElement>(null);
-  useEffect(() => {
-    if (!shortcut) return;
-    const on = (e: KeyboardEvent) => {
-      if (!(e.metaKey || e.ctrlKey) || !e.shiftKey || e.key.toLowerCase() !== "u") return;
-      e.preventDefault();
-      picker.current?.click();
-    };
-    window.addEventListener("keydown", on);
-    return () => window.removeEventListener("keydown", on);
-  }, [shortcut]);
-  return (
-    <>
-      <Input
-        ref={picker}
-        type="file"
-        aria-label="Attach images, files, or videos"
-        multiple
-        className="hidden"
-        onChange={(e) => {
-          attach(e.target.files);
-          e.target.value = "";
-        }}
-      />
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              aria-label="Attach images, files, or videos"
-              onClick={() => picker.current?.click()}
-            >
-              <IconPaperclip aria-hidden />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent className="flex items-center gap-2">
-            Attach images, files, or videos
-            {shortcut && <Kbd>⌘⇧U</Kbd>}
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-    </>
-  );
+  return <AttachButton onFiles={attach} {...(shortcut ? { shortcut } : {})} />;
 }
 
 /** The reactions under a comment or a description: a pill for each emoji, then the add button. */
