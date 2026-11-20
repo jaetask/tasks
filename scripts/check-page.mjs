@@ -138,8 +138,10 @@ try {
     await shot("sidebar");
     await button("Toggle Money project").click();
     await until(() => document.querySelectorAll('.tk-side a[href$="/intake"]').length === 1);
-    await button("Toggle Money project").click();
+    // Clicking a closed project's name goes to it and opens it.
+    await page.getByRole("link", { name: "Money", exact: true }).click();
     await until(() => document.querySelectorAll('.tk-side a[href$="/intake"]').length === 2);
+    await until(() => window.location.hash.startsWith("#/p/MNY/board"));
     await open("/p/MNY/edit");
     await button("Archive").click();
     await see("Each has its own board");

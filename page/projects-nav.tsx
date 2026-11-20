@@ -163,6 +163,8 @@ export function ProjectsNav({ collapsed }: { collapsed: boolean }) {
                   href={`/p/${p.id}/board`}
                   title={p.name}
                   aria-label={p.name}
+                  // Going to a project opens it, even when it was closed by hand before.
+                  onClick={() => remember(`project:${p.id}`, true)}
                   aria-current={
                     selected === p.id && screen === "board" && !selectedFeature ? "page" : undefined
                   }
