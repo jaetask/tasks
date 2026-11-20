@@ -1,7 +1,7 @@
 // What every screen shares: the catalog, a way to make a change, and a way
 // to read that follows changes made by anyone.
 import { createContext, useContext, useEffect, useRef, useState } from "react";
-import { type Catalog, call, type Outcome, refusal } from "./api.js";
+import { type TicketFile, type Catalog, call, type Outcome, refusal } from "./api.js";
 
 export type App = {
   catalog: Catalog;
@@ -11,7 +11,7 @@ export type App = {
   act<T = unknown>(action: string, input: unknown): Promise<T | null>;
   go(path: string): void;
   /** Attaches a file to a ticket: its bytes are uploaded, then a Call records it. */
-  upload(ticket: string, file: File): Promise<boolean>;
+  upload(ticket: string, file: File): Promise<TicketFile | null>;
   /** The page's path, and what follows its question mark. */
   path: string;
   query: URLSearchParams;

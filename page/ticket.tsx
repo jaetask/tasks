@@ -1,8 +1,7 @@
 // A ticket's page: what it is, where it is, its images, the questions on it
 // and its conversation, all from toolkit parts.
 
-import { InlineMarkdown } from "@jaetask/toolkit/app/review";
-import { PageBody, Thumbs } from "@jaetask/toolkit/suite";
+import { PageBody, Thumbs, MarkdownText } from "@jaetask/toolkit/suite";
 import { Button } from "@jaetask/toolkit/ui/button";
 import { Checkbox } from "@jaetask/toolkit/ui/checkbox";
 import {
@@ -38,7 +37,7 @@ import {
   IconX,
 } from "@tabler/icons-react";
 import { useEffect, useRef, useState } from "react";
-import { Activity, Attach, ReactionRow } from "./activity.js";
+import { Activity, Attach, ReactionRow, usePictures } from "./activity.js";
 import {
   type Comment,
   type Conversation,
@@ -287,11 +286,19 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
   // What the description editor holds, until it is saved on leaving it.
   const draft = useRef<string | null>(null);
   const [blocked, setBlocked] = useState<string | null>(null);
+  const pictures = usePictures(id);
   if (!ticket) return <Nothing text={`No ticket has the id ${id}.`} />;
   const open = ticket.state === "open";
   const project = catalog.projects.find((p) => p.id === ticket.project);
   const actor = catalog.actors.find((a) => a.id === ticket.assignee);
   const entries = conversation?.entries ?? [];
+  // Everything written on the ticket: a file shown inside it is not listed again under it.
+  const written = [
+    ticket?.description ?? "",
+    ...entries.flatMap((e) =>
+      e.type === "comment" ? [e.comment.text, ...e.comment.replies.map((r) => r.text)] : [],
+    ),
+  ].join("\n");
   const comments = entries.filter((e) => e.type === "comment");
   const _changes = entries.length - comments.length;
   const _replying = comments.find((e) => e.type === "comment" && e.comment.id === replyTo) as
@@ -344,11 +351,12 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
                   }
                 }}
                 className="text-sm outline-none"
+                onImageUpload={pictures}
               />
             </div>
           ) : (
             <div className="body min-w-0 break-words">
-              <InlineMarkdown content={ticket.description || "No description."} renderLists />
+              <MarkdownText content={ticket.description || "No description."} />
             </div>
           )}
           <div className="flex flex-wrap items-center gap-1.5">
@@ -477,7 +485,7 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
           )}
         </section>
 
-        <FilesSection ticket={id} open={open} />
+        <FilesSection ticket={id} open={open} inText={written} />
 
         <Activity ticket={id} conversation={conversation} canWrite={open} />
 

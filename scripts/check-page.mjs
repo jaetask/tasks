@@ -258,23 +258,35 @@ try {
     await button("Remove the file build.log").click();
     await until(() => !document.querySelector("#files a"));
   });
-  await step("an image pasted into the comment box is attached too", async () => {
-    await page.evaluate(() => {
-      const bytes = Uint8Array.from(
-        atob(
-          "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
-        ),
-        (c) => c.charCodeAt(0),
-      );
-      const data = new DataTransfer();
-      data.items.add(new File([bytes], "pasted.png", { type: "image/png" }));
-      const forms = document.querySelectorAll("form.write");
-      forms[forms.length - 1]
-        .querySelector("[contenteditable], textarea, div")
-        .dispatchEvent(new ClipboardEvent("paste", { clipboardData: data, bubbles: true }));
-    });
-    await until(() => document.querySelectorAll(".tk-thumb img").length === 2);
-  });
+  await step(
+    "a picture pasted into a comment goes into its text, and shows when read",
+    async () => {
+      const box = page.locator('[aria-label="Leave a comment"]');
+      await box.click();
+      await page.evaluate(() => {
+        const bytes = Uint8Array.from(
+          atob(
+            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
+          ),
+          (c) => c.charCodeAt(0),
+        );
+        const data = new DataTransfer();
+        data.items.add(new File([bytes], "pasted.png", { type: "image/png" }));
+        document
+          .querySelector('[aria-label="Leave a comment"]')
+          .dispatchEvent(
+            new ClipboardEvent("paste", { clipboardData: data, bubbles: true, cancelable: true }),
+          );
+      });
+      await page.locator('form.write img[src^="/api/files/"]').waitFor();
+      await page.keyboard.type(" Here is the screen.");
+      await page.keyboard.press("Control+Enter");
+      await page.locator('.thread .comment img[src^="/api/files/"]').waitFor();
+      // It is part of the comment, so it is not listed again among the ticket's files.
+      if (await page.locator("#files a").count())
+        throw new Error("the picture is listed as a file");
+    },
+  );
   await step("record the evidence for the work, then read it back", async () => {
     await page.locator("#evidence").getByRole("button", { name: "Evidence" }).click();
     await page.fill('[aria-label="Result"]', "Voice notes record and send.");
