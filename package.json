@@ -18,7 +18,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json && node scripts/build-page.mjs",
     "typecheck": "tsc --noEmit && tsc -p page",
-    "test": "tsx --test src/*.test.ts",
+    "test": "tsx --test src/*.test.ts src/*/*.test.ts",
     "expect": "node scripts/build-page.mjs && tsx expect/snap.ts",
     "lint": "biome lint . && npm run check:docs && npm run check:toolkit",
     "format": "biome format --write .",

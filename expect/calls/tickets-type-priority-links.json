@@ -144,6 +144,35 @@
       "input": {
         "priority": "high"
       }
+    },
+    {
+      "call": "tickets.ticket-link-add",
+      "input": {
+        "ticket": "TLK-2",
+        "url": "https://example.com/guide"
+      }
+    },
+    {
+      "as": "a1",
+      "call": "tickets.ticket-link-describe",
+      "input": {
+        "link": "u3",
+        "title": "The Talk guide",
+        "description": "How to record a voice note"
+      }
+    },
+    {
+      "call": "tickets.ticket-link-describe",
+      "input": {
+        "link": "u99",
+        "title": "Nothing"
+      }
+    },
+    {
+      "call": "tickets.ticket-read",
+      "input": {
+        "ticket": "TLK-2"
+      }
     }
   ]
 }

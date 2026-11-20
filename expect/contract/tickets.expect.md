@@ -38,6 +38,7 @@
 | tickets.ticket-type-set | write | ticket-changed | Set what kind of work a ticket is: task, bug, improvement or specification. |
 | tickets.ticket-priority-set | write | ticket-changed | Set a ticket's priority: none, urgent, high, medium or low. |
 | tickets.ticket-link-add | write | ticket-changed | Add a link to a ticket: a web address that belongs to it, such as a pull request. |
+| tickets.ticket-link-describe | write | ticket-changed | Set the title and the description shown for a link on a ticket. Tasks does this itself when a link is added and its page states a title; use it to correct one. Both are shown as plain text. |
 | tickets.ticket-link-remove | write | ticket-changed | Remove a link from a ticket. |
 | tickets.ticket-reaction-add | write | ticket-changed | React to a ticket with an emoji. An actor can add several different emoji to one ticket, each one once. |
 | tickets.ticket-reaction-remove | write | ticket-changed | Take back your reaction to a ticket. |
@@ -191,6 +192,7 @@ Tools:
 - tickets__ticket-type-set (changes): Set what kind of work a ticket is: task, bug, improvement or specification.
 - tickets__ticket-priority-set (changes): Set a ticket's priority: none, urgent, high, medium or low.
 - tickets__ticket-link-add (changes): Add a link to a ticket: a web address that belongs to it, such as a pull request.
+- tickets__ticket-link-describe (changes): Set the title and the description shown for a link on a ticket. Tasks does this itself when a link is added and its page states a title; use it to correct one. Both are shown as plain text.
 - tickets__ticket-link-remove (changes): Remove a link from a ticket.
 - tickets__ticket-reaction-add (changes): React to a ticket with an emoji. An actor can add several different emoji to one ticket, each one once.
 - tickets__ticket-reaction-remove (changes): Take back your reaction to a ticket.
@@ -920,6 +922,34 @@ A tool that changes something after the person says yes waits for them; tell the
   "required": [
     "ticket",
     "url"
+  ]
+}
+```
+
+#### tickets.ticket-link-describe
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "link": {
+      "type": "string",
+      "description": "The id of the link."
+    },
+    "title": {
+      "type": "string",
+      "maxLength": 200
+    },
+    "description": {
+      "default": "",
+      "type": "string",
+      "maxLength": 500
+    }
+  },
+  "required": [
+    "link",
+    "title"
   ]
 }
 ```

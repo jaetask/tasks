@@ -112,6 +112,14 @@ export function TicketPage({ id }: { id: string }) {
   );
 }
 
+const linkHost = (url: string) => {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return "";
+  }
+};
+
 /** A small round button that goes to where a property's value is shown across tickets. */
 function GoTo({ label, onClick }: { label: string; onClick: () => void }) {
   return (
@@ -387,16 +395,24 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
         {(ticket.links.length > 0 || open) && (
           <section id="links" aria-label="Links" className="grid gap-1">
             {ticket.links.map((l) => (
-              <div key={l.id} className="group flex items-center gap-2">
-                <IconLink size={14} aria-hidden className="shrink-0 text-muted-foreground" />
-                <a
-                  href={l.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="min-w-0 break-all underline underline-offset-2"
-                >
-                  {l.url}
-                </a>
+              <div key={l.id} className="group flex items-start gap-2">
+                <IconLink size={14} aria-hidden className="mt-1 shrink-0 text-muted-foreground" />
+                <span className="grid min-w-0">
+                  <a
+                    href={l.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    title={l.url}
+                    className={`min-w-0 underline underline-offset-2 ${l.title ? "" : "break-all"}`}
+                  >
+                    {l.title || l.url}
+                  </a>
+                  {l.title && (
+                    <span className="truncate text-xs text-muted-foreground">
+                      {[linkHost(l.url), l.description].filter(Boolean).join(" · ")}
+                    </span>
+                  )}
+                </span>
                 {open && (
                   <Button
                     variant="ghost"

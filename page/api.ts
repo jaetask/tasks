@@ -36,7 +36,7 @@ export type Ticket = {
   assigneeName: string;
   type: "task" | "bug" | "improvement" | "specification";
   priority: "none" | "urgent" | "high" | "medium" | "low";
-  links: { id: string; url: string }[];
+  links: { id: string; url: string; title: string; description: string }[];
   due: string | null;
   evidence: {
     kind: "code" | "non-code";

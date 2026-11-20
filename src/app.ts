@@ -7,6 +7,8 @@ import { nodeListener, type RemoteOptions } from "@jaetask/open-agent-kit/mcp";
 import { OWNER } from "./catalog/catalog.js";
 import { domains, migrate } from "./domains.js";
 import { createPipeline, type Pipeline } from "./inbox/pipeline.js";
+import { createLinkTitles } from "./tickets/link-titles.js";
+import type { ReadTitle } from "./tickets/page-title.js";
 import { VERSION } from "./version.js";
 
 export type TasksOptions = {
@@ -22,6 +24,11 @@ export type TasksOptions = {
   page?: string;
   /** The folder the owner's script steps for the inbox are in. */
   stepsDir: string;
+  /**
+   * Reads the title of the page a new link points to. Without one, links keep their address as
+   * their name and Tasks asks no other site anything.
+   */
+  readTitle?: ReadTitle;
   /** Where steps find their keys. Defaults to the process environment. */
   env?: Record<string, string | undefined>;
   log?: (line: string) => void;
@@ -84,6 +91,10 @@ export async function createTasks(options: TasksOptions): Promise<Tasks> {
   });
   pipeline.catchUp().catch(failed);
 
+  const titles = options.readTitle
+    ? createLinkTitles({ app, read: options.readTitle, log: options.log ?? console.log })
+    : undefined;
+
   let http: Server | undefined;
   return {
     ...app,
@@ -96,6 +107,7 @@ export async function createTasks(options: TasksOptions): Promise<Tasks> {
     },
     close: async () => {
       await pipeline.idle();
+      await titles?.idle();
       if (http) {
         http.closeAllConnections();
         await new Promise((resolve) => http?.close(resolve));

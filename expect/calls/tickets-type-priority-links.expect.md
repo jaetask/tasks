@@ -76,6 +76,55 @@
 ]
 ```
 
+21. owner calls tickets.ticket-link-add {"ticket":"TLK-2","url":"https://example.com/guide"} → succeeded; updated ticket TLK-2
+22. a1 calls tickets.ticket-link-describe {"link":"u3","title":"The Talk guide","description":"How to record a voice note"} → succeeded; updated ticket TLK-2
+23. owner calls tickets.ticket-link-describe {"link":"u99","title":"Nothing"} → rejected: unknown-link: No link has id u99.
+24. owner calls tickets.ticket-read {"ticket":"TLK-2"} → succeeded:
+
+```json
+{
+  "id": "TLK-2",
+  "project": "TLK",
+  "title": "Voice notes on the phone",
+  "description": "",
+  "feature": null,
+  "featureName": "",
+  "column": {
+    "id": "c1",
+    "name": "To do",
+    "kind": "todo"
+  },
+  "assignee": null,
+  "assigneeName": "",
+  "labels": [],
+  "type": "improvement",
+  "priority": "medium",
+  "reactions": [],
+  "evidence": null,
+  "due": null,
+  "links": [
+    {
+      "id": "u3",
+      "url": "https://example.com/guide",
+      "title": "The Talk guide",
+      "description": "How to record a voice note"
+    }
+  ],
+  "location": null,
+  "locationName": "",
+  "blocked": null,
+  "state": "open",
+  "backlog": false,
+  "comments": 0,
+  "images": 0,
+  "awaiting": 0,
+  "createdAt": "2026-01-01T09:05:00.000Z",
+  "createdBy": "owner",
+  "updatedAt": "2026-01-01T09:22:00.000Z",
+  "columnSince": "2026-01-01T09:05:00.000Z"
+}
+```
+
 
 ### Actors
 
@@ -147,3 +196,5 @@ None.
 | h12 | 09:16 | owner | tickets.ticket-reaction-add | reacted 🚀 to TLK-1 | TLK-1 |  |
 | h13 | 09:18 | a1 | tickets.ticket-reaction-add | reacted 👍 to TLK-1 | TLK-1 |  |
 | h14 | 09:19 | owner | tickets.ticket-reaction-remove | took back 🚀 from TLK-1 | TLK-1 |  |
+| h15 | 09:21 | owner | tickets.ticket-link-add | added a link to TLK-2: https://example.com/guide | TLK-2 |  |
+| h16 | 09:22 | a1 | tickets.ticket-link-describe | named a link on TLK-2: The Talk guide | TLK-2 |  |
