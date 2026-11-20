@@ -1,6 +1,6 @@
 // The Overview: every project's open tickets on one board, grouped by project, actor, location or
 // status, with the same filters as a project's board.
-import { PageBody, PageLink, Panel, ProjectIcon } from "@jaetask/toolkit/suite";
+import { PageBody, PageLink, Panel, ProjectIcon, ViewToggle } from "@jaetask/toolkit/suite";
 import { Button } from "@jaetask/toolkit/ui/button";
 import {
   DropdownMenu,
@@ -28,7 +28,6 @@ import {
   TicketDialog,
   useFilters,
   type ViewChoice,
-  ViewToggle,
 } from "./board.js";
 import { Nothing, projectLook } from "./local.js";
 import { StatusIcon } from "./pickers.js";
