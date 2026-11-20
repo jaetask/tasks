@@ -1,0 +1,67 @@
+{
+  "steps": [
+    {
+      "call": "catalog.actor-rename",
+      "input": {
+        "actor": "owner",
+        "name": "Sam"
+      }
+    },
+    {
+      "call": "catalog.actor-create",
+      "input": {
+        "name": "Coder"
+      }
+    },
+    {
+      "call": "catalog.actor-create",
+      "input": {
+        "name": "Reviewer"
+      }
+    },
+    {
+      "call": "catalog.project-create",
+      "input": {
+        "name": "Talk",
+        "prefix": "TLK"
+      }
+    },
+    {
+      "call": "tickets.ticket-create",
+      "input": {
+        "project": "TLK",
+        "title": "Voice notes on the phone"
+      }
+    },
+    {
+      "call": "tickets.ticket-assign",
+      "input": {
+        "ticket": "TLK-1",
+        "actor": "a1",
+        "note": "Start with the lock screen; the design is in the description."
+      }
+    },
+    {
+      "as": "a1",
+      "call": "tickets.ticket-assign",
+      "input": {
+        "ticket": "TLK-1",
+        "actor": "a2",
+        "note": "Recording works. Please review the upload path."
+      }
+    },
+    {
+      "as": "a2",
+      "call": "replies.reply-list",
+      "input": {
+        "state": "unread"
+      }
+    },
+    {
+      "call": "comments.conversation-read",
+      "input": {
+        "ticket": "TLK-1"
+      }
+    }
+  ]
+}

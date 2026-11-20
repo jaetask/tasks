@@ -1,0 +1,19 @@
+/* The page's styles: Tailwind, the toolkit's parts and theme, then the few
+   classes Tasks adds for how text wraps. */
+@import "tailwindcss";
+@import "@jaetask/toolkit/styles.css";
+@source "./**/*.{ts,tsx}";
+
+.text {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.mono {
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  font-size: 0.85em;
+}
+.runs ul {
+  margin: 4px 0;
+  padding-left: 20px;
+}

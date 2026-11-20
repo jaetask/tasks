@@ -41,7 +41,8 @@
     "images": 0,
     "awaiting": 0,
     "createdAt": "2026-01-01T09:04:00.000Z",
-    "createdBy": "owner"
+    "createdBy": "owner",
+    "updatedAt": "2026-01-01T09:04:00.000Z"
   },
   {
     "id": "TLK-3",
@@ -67,7 +68,8 @@
     "images": 0,
     "awaiting": 0,
     "createdAt": "2026-01-01T09:05:00.000Z",
-    "createdBy": "a1"
+    "createdBy": "a1",
+    "updatedAt": "2026-01-01T09:05:00.000Z"
   }
 ]
 ```
@@ -100,7 +102,8 @@
     "images": 0,
     "awaiting": 0,
     "createdAt": "2026-01-01T09:03:00.000Z",
-    "createdBy": "owner"
+    "createdBy": "owner",
+    "updatedAt": "2026-01-01T09:03:00.000Z"
   }
 ]
 ```
@@ -143,7 +146,8 @@
           "images": 0,
           "awaiting": 0,
           "createdAt": "2026-01-01T09:03:00.000Z",
-          "createdBy": "owner"
+          "createdBy": "owner",
+          "updatedAt": "2026-01-01T09:03:00.000Z"
         }
       ]
     },
@@ -204,7 +208,8 @@
     "images": 0,
     "awaiting": 0,
     "createdAt": "2026-01-01T09:03:00.000Z",
-    "createdBy": "owner"
+    "createdBy": "owner",
+    "updatedAt": "2026-01-01T09:15:00.000Z"
   },
   {
     "id": "TLK-3",
@@ -230,7 +235,8 @@
     "images": 0,
     "awaiting": 0,
     "createdAt": "2026-01-01T09:05:00.000Z",
-    "createdBy": "a1"
+    "createdBy": "a1",
+    "updatedAt": "2026-01-01T09:05:00.000Z"
   }
 ]
 ```
@@ -263,7 +269,8 @@
     "images": 0,
     "awaiting": 0,
     "createdAt": "2026-01-01T09:05:00.000Z",
-    "createdBy": "a1"
+    "createdBy": "a1",
+    "updatedAt": "2026-01-01T09:05:00.000Z"
   }
 ]
 ```
@@ -314,6 +321,10 @@ None.
 None.
 
 ### Input requests
+
+None.
+
+### Ticket steps
 
 None.
 

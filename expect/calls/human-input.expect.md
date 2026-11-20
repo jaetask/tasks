@@ -43,7 +43,8 @@
   "images": 0,
   "awaiting": 2,
   "createdAt": "2026-01-01T09:05:00.000Z",
-  "createdBy": "owner"
+  "createdBy": "owner",
+  "updatedAt": "2026-01-01T09:08:00.000Z"
 }
 ```
 
@@ -248,6 +249,10 @@ None.
 | --- | --- | --- | --- | --- | --- |
 | q1 | TLK-1 | Coder | Should recordings be kept after they are sent? | awaiting |  |
 | q2 | TLK-1 | Coder | Which file format? | withdrawn |  |
+
+### Ticket steps
+
+None.
 
 ### Agent inboxes
 

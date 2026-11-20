@@ -20,6 +20,7 @@
 | open-agent-kit://contract/catalog | catalog Contract |
 | open-agent-kit://contract/tickets | tickets Contract |
 | open-agent-kit://contract/comments | comments Contract |
+| open-agent-kit://contract/steps | steps Contract |
 | open-agent-kit://contract/images | images Contract |
 | open-agent-kit://contract/inbox | inbox Contract |
 | open-agent-kit://contract/input | input Contract |
@@ -43,7 +44,7 @@
 | tickets__ticket-move |  | Move a ticket to any column of its board. |
 | tickets__ticket-review-request |  | Ask for review: move a ticket to the first waiting column. |
 | tickets__ticket-finish |  | Finish a ticket: move it to the first done column. |
-| tickets__ticket-assign |  | Assign a ticket to an actor, to hand it on, or to nobody with null. |
+| tickets__ticket-assign |  | Assign a ticket to an actor, to hand it on, or to nobody with null. A note says what the next actor needs to know; it is left as a comment on the ticket. |
 | tickets__ticket-edit |  | Change a ticket's title, its description, or both. |
 | tickets__ticket-backlog-send |  | Send a ticket to its project's backlog, off the board. |
 | tickets__ticket-board-send |  | Put a backlog ticket on the board, in the first to-do column. |
@@ -66,6 +67,14 @@
 | comments__comment-remove |  | Remove a comment. Its author or the owner can. Its replies stay. |
 | comments__reaction-add |  | React to a comment with an emoji. |
 | comments__reaction-remove |  | Take back your reaction to a comment. |
+| steps__ticket-step-list | yes | List a ticket's steps in order, each with whether it is done and its notes. |
+| steps__ticket-step-add |  | Add a step to the end of a ticket's checklist. |
+| steps__ticket-step-check |  | Tick a step as done. With a note, say what was checked or found, or link to a result. |
+| steps__ticket-step-uncheck |  | Untick a step that was done. |
+| steps__ticket-step-note |  | Leave a note on a step: what was checked or found, or a link to a result. |
+| steps__ticket-step-rename |  | Change a step's title. |
+| steps__ticket-step-move |  | Move a step to another place in its ticket's checklist. |
+| steps__ticket-step-remove |  | Remove a step and its notes from a ticket's checklist. |
 | images__image-list | yes | List a ticket's images. |
 | images__image-read | yes | Read one image, with its data as base64. |
 | images__image-add |  | Attach an image to a ticket, such as a screenshot of the result. |
@@ -141,6 +150,10 @@ None.
 None.
 
 ### Input requests
+
+None.
+
+### Ticket steps
 
 None.
 

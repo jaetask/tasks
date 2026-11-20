@@ -41,6 +41,9 @@ export type Ticket = {
   comments: number;
   images: number;
   awaiting: number;
+  createdAt: string;
+  createdBy: string;
+  updatedAt: string;
 };
 export type Board = { columns: (Column & { tickets: Ticket[] })[] };
 export type Overview = { kinds: { kind: Kind; tickets: Ticket[] }[] };
@@ -78,6 +81,13 @@ export type Conversation = {
   entries: ({ type: "comment"; comment: Comment } | { type: "change"; change: Line })[];
 };
 export type Image = { id: string; name: string; type: string };
+export type TicketStep = {
+  id: string;
+  ticket: string;
+  title: string;
+  done: boolean;
+  notes: { id: string; text: string; at: string; by: string; byName: string }[];
+};
 export type InputRequest = {
   id: string;
   ticket: string;

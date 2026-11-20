@@ -1,0 +1,141 @@
+{
+  "steps": [
+    {
+      "call": "catalog.actor-rename",
+      "input": {
+        "actor": "owner",
+        "name": "Sam"
+      }
+    },
+    {
+      "call": "catalog.actor-create",
+      "input": {
+        "name": "Coder"
+      }
+    },
+    {
+      "call": "catalog.project-create",
+      "input": {
+        "name": "Talk",
+        "prefix": "TLK"
+      }
+    },
+    {
+      "call": "tickets.ticket-create",
+      "input": {
+        "project": "TLK",
+        "title": "Voice notes on the phone"
+      }
+    },
+    {
+      "call": "steps.ticket-step-add",
+      "input": {
+        "ticket": "TLK-1",
+        "title": "Record from the lock screen"
+      }
+    },
+    {
+      "as": "a1",
+      "call": "steps.ticket-step-add",
+      "input": {
+        "ticket": "TLK-1",
+        "title": "Attach the note to a chat"
+      }
+    },
+    {
+      "as": "a1",
+      "call": "steps.ticket-step-add",
+      "input": {
+        "ticket": "TLK-1",
+        "title": "Test on a slow network"
+      }
+    },
+    {
+      "as": "a1",
+      "call": "steps.ticket-step-check",
+      "input": {
+        "step": "t1",
+        "note": "Recorded 30 seconds with the screen locked; the file plays back."
+      }
+    },
+    {
+      "as": "a1",
+      "call": "steps.ticket-step-check",
+      "input": {
+        "step": "t1"
+      }
+    },
+    {
+      "as": "a1",
+      "call": "steps.ticket-step-note",
+      "input": {
+        "step": "t2",
+        "text": "Blocked on the upload size limit."
+      }
+    },
+    {
+      "call": "steps.ticket-step-rename",
+      "input": {
+        "step": "t3",
+        "title": "Test on a slow connection"
+      }
+    },
+    {
+      "call": "steps.ticket-step-move",
+      "input": {
+        "step": "t3",
+        "before": "t1"
+      }
+    },
+    {
+      "call": "steps.ticket-step-uncheck",
+      "input": {
+        "step": "t1"
+      }
+    },
+    {
+      "call": "steps.ticket-step-remove",
+      "input": {
+        "step": "t2"
+      }
+    },
+    {
+      "call": "history.change-undo",
+      "input": {
+        "change": "h11"
+      }
+    },
+    {
+      "call": "steps.ticket-step-check",
+      "input": {
+        "step": "t9"
+      }
+    },
+    {
+      "call": "steps.ticket-step-add",
+      "input": {
+        "ticket": "TLK-9",
+        "title": "Nowhere"
+      }
+    },
+    {
+      "call": "tickets.ticket-archive",
+      "input": {
+        "ticket": "TLK-1"
+      }
+    },
+    {
+      "call": "steps.ticket-step-add",
+      "input": {
+        "ticket": "TLK-1",
+        "title": "Too late"
+      }
+    },
+    {
+      "call": "steps.ticket-step-list",
+      "input": {
+        "ticket": "TLK-1"
+      }
+    }
+  ]
+}

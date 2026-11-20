@@ -61,7 +61,8 @@
           "images": 0,
           "awaiting": 0,
           "createdAt": "2026-01-01T09:14:00.000Z",
-          "createdBy": "owner"
+          "createdBy": "owner",
+          "updatedAt": "2026-01-01T09:15:00.000Z"
         }
       ]
     },
@@ -140,6 +141,10 @@ None.
 None.
 
 ### Input requests
+
+None.
+
+### Ticket steps
 
 None.
 

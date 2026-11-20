@@ -191,6 +191,10 @@ None.
 
 None.
 
+### Ticket steps
+
+None.
+
 ### Agent inboxes
 
 | id | for | from | kind | ticket | about | text | state |

@@ -263,6 +263,10 @@ None.
 | --- | --- | --- | --- | --- | --- |
 | q1 | TLK-1 | Coder | Keep recordings after sending? | resolved | For 30 days. |
 
+### Ticket steps
+
+None.
+
 ### Agent inboxes
 
 | id | for | from | kind | ticket | about | text | state |

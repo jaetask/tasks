@@ -51,7 +51,8 @@
           "images": 0,
           "awaiting": 0,
           "createdAt": "2026-01-01T09:05:00.000Z",
-          "createdBy": "owner"
+          "createdBy": "owner",
+          "updatedAt": "2026-01-01T09:05:00.000Z"
         }
       ]
     },
@@ -82,7 +83,8 @@
           "images": 0,
           "awaiting": 0,
           "createdAt": "2026-01-01T09:06:00.000Z",
-          "createdBy": "owner"
+          "createdBy": "owner",
+          "updatedAt": "2026-01-01T09:09:00.000Z"
         }
       ]
     },
@@ -113,7 +115,8 @@
           "images": 0,
           "awaiting": 0,
           "createdAt": "2026-01-01T09:07:00.000Z",
-          "createdBy": "owner"
+          "createdBy": "owner",
+          "updatedAt": "2026-01-01T09:10:00.000Z"
         }
       ]
     },
@@ -157,7 +160,8 @@
           "images": 0,
           "awaiting": 0,
           "createdAt": "2026-01-01T09:05:00.000Z",
-          "createdBy": "owner"
+          "createdBy": "owner",
+          "updatedAt": "2026-01-01T09:05:00.000Z"
         }
       ]
     },
@@ -188,7 +192,8 @@
           "images": 0,
           "awaiting": 0,
           "createdAt": "2026-01-01T09:06:00.000Z",
-          "createdBy": "owner"
+          "createdBy": "owner",
+          "updatedAt": "2026-01-01T09:09:00.000Z"
         }
       ]
     },
@@ -240,7 +245,8 @@
           "images": 0,
           "awaiting": 0,
           "createdAt": "2026-01-01T09:06:00.000Z",
-          "createdBy": "owner"
+          "createdBy": "owner",
+          "updatedAt": "2026-01-01T09:09:00.000Z"
         }
       ]
     },
@@ -294,7 +300,8 @@
           "images": 0,
           "awaiting": 0,
           "createdAt": "2026-01-01T09:05:00.000Z",
-          "createdBy": "owner"
+          "createdBy": "owner",
+          "updatedAt": "2026-01-01T09:05:00.000Z"
         }
       ]
     },
@@ -364,7 +371,8 @@
           "images": 0,
           "awaiting": 0,
           "createdAt": "2026-01-01T09:06:00.000Z",
-          "createdBy": "owner"
+          "createdBy": "owner",
+          "updatedAt": "2026-01-01T09:09:00.000Z"
         }
       ]
     },
@@ -417,7 +425,8 @@
           "images": 0,
           "awaiting": 0,
           "createdAt": "2026-01-01T09:05:00.000Z",
-          "createdBy": "owner"
+          "createdBy": "owner",
+          "updatedAt": "2026-01-01T09:05:00.000Z"
         }
       ]
     },
@@ -448,7 +457,8 @@
           "images": 0,
           "awaiting": 0,
           "createdAt": "2026-01-01T09:06:00.000Z",
-          "createdBy": "owner"
+          "createdBy": "owner",
+          "updatedAt": "2026-01-01T09:09:00.000Z"
         }
       ]
     },
@@ -509,6 +519,10 @@ None.
 None.
 
 ### Input requests
+
+None.
+
+### Ticket steps
 
 None.
 
