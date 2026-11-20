@@ -537,7 +537,13 @@ export function TicketNew({ project }: { project: Project }) {
   const [busy, setBusy] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [feature, setFeature] = useState("");
+  const [feature, setFeature] = useState(query.get("feature") ?? "");
+  // A ticket started from a column of a board view begins where that column is.
+  const preset = {
+    ...(query.get("column") ? { column: query.get("column") } : {}),
+    ...(query.get("assignee") ? { assignee: query.get("assignee") } : {}),
+    ...(query.get("location") ? { location: query.get("location") } : {}),
+  };
   const [place, setPlace] = useState<"board" | "backlog">(toBacklog ? "backlog" : "board");
   return (
     <EditFrame
@@ -554,6 +560,7 @@ export function TicketNew({ project }: { project: Project }) {
           description,
           backlog: place === "backlog",
           ...(feature ? { feature } : {}),
+          ...(place === "board" ? preset : {}),
         });
         setBusy(false);
         if (made) go(back);
