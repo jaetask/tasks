@@ -39,6 +39,7 @@ import {
 } from "./api.js";
 import { useApp, useRead } from "./app.js";
 import { Nothing, Picker, projectEmoji } from "./local.js";
+import { PriorityIcon, StatusIcon } from "./pickers.js";
 import { TicketView } from "./ticket.js";
 
 const VIEWS = [
@@ -243,7 +244,7 @@ export const titleCase = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 const DRAG = "application/x-tasks-ticket";
 
-const KIND_DOT: Record<Kind, string> = {
+const _KIND_DOT: Record<Kind, string> = {
   todo: "bg-muted-foreground/50",
   doing: "bg-amber-500",
   waiting: "bg-violet-500",
@@ -266,12 +267,17 @@ export function TicketCard({ ticket, action }: { ticket: Ticket; action?: ReactN
     >
       <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
         <span>{`${ticket.id} · ${titleCase(ticket.type)}`}</span>
-        <span>
-          {ticket.blocked
-            ? "Blocked"
-            : ticket.priority !== "none"
-              ? titleCase(ticket.priority)
-              : ""}
+        <span className="flex items-center gap-1">
+          {ticket.blocked ? (
+            "Blocked"
+          ) : ticket.priority !== "none" ? (
+            <>
+              <PriorityIcon priority={ticket.priority} />
+              {titleCase(ticket.priority)}
+            </>
+          ) : (
+            ""
+          )}
         </span>
       </div>
       <Button
@@ -282,7 +288,7 @@ export function TicketCard({ ticket, action }: { ticket: Ticket; action?: ReactN
         {ticket.title}
       </Button>
       <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-        <span className={`inline-block size-2 rounded-full ${KIND_DOT[ticket.column.kind]}`} />
+        <StatusIcon kind={ticket.column.kind} backlog={ticket.backlog} />
         <span>{ticket.backlog ? "Backlog" : ticket.column.name}</span>
         {actor && (
           <>
@@ -311,12 +317,14 @@ export function TicketCard({ ticket, action }: { ticket: Ticket; action?: ReactN
 export function Lane({
   id,
   title,
+  icon,
   count,
   onDrop,
   children,
 }: {
   id: string;
   title: string;
+  icon?: ReactNode;
   count: number;
   onDrop?: (ticket: string) => void;
   children?: ReactNode;
@@ -343,7 +351,10 @@ export function Lane({
       className={`lane min-h-72 w-72 shrink-0 rounded-xl p-3 ${over ? "bg-muted" : "bg-muted/45"}`}
     >
       <div className="mb-3 flex items-center justify-between px-1">
-        <h2 className="text-sm font-medium">{title}</h2>
+        <h2 className="flex items-center gap-2 text-sm font-medium">
+          {icon}
+          {title}
+        </h2>
         <span className="text-xs text-muted-foreground">{count}</span>
       </div>
       <div className="grid gap-3">
@@ -392,6 +403,7 @@ export function TicketDialog() {
 type Group = {
   id: string;
   title: string;
+  kind?: Kind;
   tickets: Ticket[];
   drop: (ticket: string) => unknown;
 };
@@ -466,6 +478,7 @@ export function BoardPage({ project }: { project: Project }) {
       .map((c) => ({
         id: c.id,
         title: c.name,
+        kind: c.kind,
         tickets: by((t) => t.column.id, c.id),
         drop: (ticket) => act("tickets.ticket-move", { ticket, column: c.id }),
       }));
@@ -551,6 +564,7 @@ export function BoardPage({ project }: { project: Project }) {
               key={g.id}
               id={`column-${g.id}`}
               title={g.title}
+              {...(g.kind ? { icon: <StatusIcon kind={g.kind} /> } : {})}
               count={g.tickets.length}
               onDrop={(ticket) => void g.drop(ticket)}
             >

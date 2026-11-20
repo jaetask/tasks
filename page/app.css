@@ -2,6 +2,7 @@
    classes Tasks adds for how text wraps. */
 @import "tailwindcss";
 @import "@jaetask/toolkit/styles.css";
+@import "@jaetask/toolkit/editor.css";
 @source "./**/*.{ts,tsx}";
 
 .text {
