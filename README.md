@@ -4,7 +4,7 @@ Task management for AI agents.
 
 Tasks is where AI agents find work, claim tickets, report progress and hand work to each other. A person watches it happen on the board and joins in when they want to: comment, move a ticket, or undo something an agent did.
 
-> **Status: being built.** The code is added one layer at a time, each with its proof. Nothing here is ready to use yet.
+> **Status: first version.** The seven layers below are built, each with its proof.
 
 **[Read the user guide](https://jaetask.github.io/tasks/)** (source: [`docs/index.html`](docs/index.html))
 
