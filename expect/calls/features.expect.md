@@ -79,6 +79,8 @@
           "assignee": null,
           "assigneeName": "",
           "labels": [],
+          "location": null,
+          "locationName": "",
           "blocked": null,
           "state": "open",
           "backlog": false,
@@ -166,10 +168,10 @@
 
 ### Actors
 
-| id | name | archived |
-| --- | --- | --- |
-| owner |  |  |
-| a1 | Coder |  |
+| id | name | icon | archived |
+| --- | --- | --- | --- |
+| owner |  |  |  |
+| a1 | Coder |  |  |
 
 ### Projects
 
@@ -179,6 +181,10 @@
 | MNY | Money | teal |  | c5 To do (todo) · c6 Doing (doing) · c7 Review (waiting) · c8 Done (done) |
 
 ### Labels
+
+None.
+
+### Locations
 
 None.
 
@@ -192,10 +198,10 @@ None.
 
 ### Tickets
 
-| id | title | feature | column | assigned | labels | blocked | state |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| TLK-1 | Voice notes on the phone | Voice notes | To do |  |  |  | open |
-| TLK-2 | Fix the crash on send |  | To do |  |  |  | open |
+| id | title | feature | column | assigned | location | labels | blocked | state |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| TLK-1 | Voice notes on the phone | Voice notes | To do |  |  |  |  | open |
+| TLK-2 | Fix the crash on send |  | To do |  |  |  |  | open |
 
 ### Comments
 

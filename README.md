@@ -30,7 +30,7 @@ Tasks is an App on [open-agent-kit](https://github.com/jaetask/open-agent-kit): 
 One layer at a time. A layer is done when its proof is committed and green:
 
 1. Repository setup
-2. Catalog: the owner, actors, projects, columns and labels
+2. Catalog: the owner, actors, projects, columns, labels and locations
 3. Tickets
 4. Comments and images
 5. The App: SQLite, Connections and the MCP Contract

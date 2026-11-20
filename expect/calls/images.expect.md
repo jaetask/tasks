@@ -146,11 +146,11 @@
 
 ### Actors
 
-| id | name | archived |
-| --- | --- | --- |
-| owner | Sam |  |
-| a1 | Coder |  |
-| a2 | Reviewer |  |
+| id | name | icon | archived |
+| --- | --- | --- | --- |
+| owner | Sam |  |  |
+| a1 | Coder |  |  |
+| a2 | Reviewer |  |  |
 
 ### Projects
 
@@ -162,15 +162,19 @@
 
 None.
 
+### Locations
+
+None.
+
 ### Features
 
 None.
 
 ### Tickets
 
-| id | title | feature | column | assigned | labels | blocked | state |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| TLK-2 | Second |  | To do |  |  |  | open |
+| id | title | feature | column | assigned | location | labels | blocked | state |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| TLK-2 | Second |  | To do |  |  |  |  | open |
 
 ### Comments
 

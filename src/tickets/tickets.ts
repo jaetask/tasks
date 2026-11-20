@@ -34,6 +34,8 @@ export const Ticket = z.object({
   assignee: z.string().nullable().describe("The actor id it is assigned to, or null."),
   assigneeName: z.string(),
   labels: z.array(Label),
+  location: z.string().nullable().describe("The id of the location its work is done at, or null."),
+  locationName: z.string(),
   blocked: z.string().nullable().describe("Why it is blocked, or null when it is not."),
   state: State,
   backlog: z.boolean().describe("True while it waits in the backlog, off the board."),
@@ -110,6 +112,7 @@ export type Tickets = {
       labels: string[];
       assignee?: string | undefined;
       feature?: string | undefined;
+      location?: string | undefined;
       backlog?: boolean | undefined;
     },
   ): Ticket;
@@ -138,6 +141,8 @@ export type Tickets = {
   /** Moves an open ticket to the first column of a kind on its board. */
   moveToKind(id: string, kind: Kind): Ticket;
   assign(id: string, actor: string | null): Ticket;
+  /** Gives a ticket a location, or none with null. */
+  setLocation(id: string, location: string | null): Ticket;
   addLabel(id: string, label: string): Ticket;
   removeLabel(id: string, label: string): Ticket;
   block(id: string, note: string | null): Ticket;
@@ -163,6 +168,9 @@ export function migrateTickets(db: DatabaseSync): void {
   if (!columns.some((c) => c.name === "backlog")) {
     db.exec("ALTER TABLE tickets ADD COLUMN backlog INTEGER NOT NULL DEFAULT 0");
   }
+  if (!columns.some((c) => c.name === "location")) {
+    db.exec("ALTER TABLE tickets ADD COLUMN location TEXT REFERENCES locations (id)");
+  }
   db.exec(
     "CREATE TABLE IF NOT EXISTS ticket_labels (id TEXT PRIMARY KEY, ticket TEXT NOT NULL REFERENCES tickets (id), label TEXT NOT NULL REFERENCES labels (id))",
   );
@@ -177,6 +185,7 @@ type TicketRow = {
   column_id: string;
   feature: string | null;
   assignee: string | null;
+  location: string | null;
   blocked: string | null;
   state: State;
   backlog: number;
@@ -255,6 +264,8 @@ export function sqliteTickets(
       assignee: r.assignee,
       assigneeName: r.assignee ? catalog.actor(r.assignee).name : "",
       labels,
+      location: r.location,
+      locationName: r.location ? catalog.location(r.location).name : "",
       blocked: r.blocked,
       state: r.state,
       backlog: r.backlog === 1,
@@ -286,6 +297,10 @@ export function sqliteTickets(
   const get = (id: string) => toTicket(row(id));
   const activeActor = (id: string) => {
     if (catalog.actor(id).archived) throw new Refusal("archived-actor", `${id} is archived.`);
+  };
+  const activeLocation = (id: string) => {
+    const found = catalog.location(id);
+    if (found.archived) throw new Refusal("archived-location", `${found.name} is archived.`);
   };
   const columnOn = (project: string, column: string) => {
     const found = catalog.column(column);
@@ -378,6 +393,7 @@ export function sqliteTickets(
       if (!column) throw new Refusal("no-column", `The board of ${project.id} has no columns.`);
       if (ticket.assignee !== undefined) activeActor(ticket.assignee);
       if (ticket.feature !== undefined) featureOf(project.id, ticket.feature);
+      if (ticket.location !== undefined) activeLocation(ticket.location);
       const number = nextNumber(db, `ticket:${project.id}`);
       const id = `${project.id}-${number}`;
       rows.insert("tickets", {
@@ -389,6 +405,7 @@ export function sqliteTickets(
         column_id: column.id,
         feature: ticket.feature ?? null,
         assignee: ticket.assignee ?? null,
+        location: ticket.location ?? null,
         blocked: null,
         state: "open",
         backlog: ticket.backlog ? 1 : 0,
@@ -495,6 +512,12 @@ export function sqliteTickets(
       open(id);
       if (actor !== null) activeActor(actor);
       rows.update("tickets", id, { assignee: actor });
+      return get(id);
+    },
+    setLocation: (id, location) => {
+      open(id);
+      if (location !== null) activeLocation(location);
+      rows.update("tickets", id, { location });
       return get(id);
     },
     addLabel: (id, label) => {

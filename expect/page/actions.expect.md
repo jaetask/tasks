@@ -10,6 +10,7 @@
 | --- | --- |
 | catalog.actor-archive | write |
 | catalog.actor-create | write |
+| catalog.actor-icon-set | write |
 | catalog.actor-rename | write |
 | catalog.actor-restore | write |
 | catalog.catalog-read | read |
@@ -22,6 +23,10 @@
 | catalog.label-create | write |
 | catalog.label-remove | write |
 | catalog.label-rename | write |
+| catalog.location-archive | write |
+| catalog.location-create | write |
+| catalog.location-rename | write |
+| catalog.location-restore | write |
 | catalog.project-archive | write |
 | catalog.project-create | write |
 | catalog.project-edit | write |
@@ -79,6 +84,7 @@
 | tickets.ticket-find | read |
 | tickets.ticket-label-add | write |
 | tickets.ticket-label-remove | write |
+| tickets.ticket-location-set | write |
 | tickets.ticket-move | write |
 | tickets.ticket-read | read |
 | tickets.ticket-restore | write |

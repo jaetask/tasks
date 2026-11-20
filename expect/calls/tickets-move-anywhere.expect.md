@@ -55,6 +55,8 @@
           "assignee": null,
           "assigneeName": "",
           "labels": [],
+          "location": null,
+          "locationName": "",
           "blocked": null,
           "state": "open",
           "backlog": false,
@@ -79,6 +81,8 @@
           "assignee": null,
           "assigneeName": "",
           "labels": [],
+          "location": null,
+          "locationName": "",
           "blocked": null,
           "state": "open",
           "backlog": false,
@@ -136,6 +140,8 @@
           "assignee": null,
           "assigneeName": "",
           "labels": [],
+          "location": null,
+          "locationName": "",
           "blocked": null,
           "state": "open",
           "backlog": false,
@@ -167,6 +173,8 @@
           "assignee": null,
           "assigneeName": "",
           "labels": [],
+          "location": null,
+          "locationName": "",
           "blocked": null,
           "state": "open",
           "backlog": false,
@@ -195,10 +203,10 @@
 
 ### Actors
 
-| id | name | archived |
-| --- | --- | --- |
-| owner |  |  |
-| a1 | Coder |  |
+| id | name | icon | archived |
+| --- | --- | --- | --- |
+| owner |  |  |  |
+| a1 | Coder |  |  |
 
 ### Projects
 
@@ -211,16 +219,20 @@
 
 None.
 
+### Locations
+
+None.
+
 ### Features
 
 None.
 
 ### Tickets
 
-| id | title | feature | column | assigned | labels | blocked | state |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| TLK-1 | One |  | To do |  |  |  | open |
-| TLK-2 | Two |  | To do |  |  |  | open |
+| id | title | feature | column | assigned | location | labels | blocked | state |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| TLK-1 | One |  | To do |  |  |  |  | open |
+| TLK-2 | Two |  | To do |  |  |  |  | open |
 
 ### Comments
 

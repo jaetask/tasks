@@ -10,15 +10,16 @@
 
 | domain | version | card catalogue | about |
 | --- | --- | --- | --- |
-| catalog | 1.0.0 | 1 | The actors, the projects with their columns, and the labels. Only the owner changes them. |
+| catalog | 1.0.0 | 1 | The actors, the projects with their columns, the labels and the locations. Only the owner changes them. |
 
 ### Actions
 
 | action | effect | card | description |
 | --- | --- | --- | --- |
-| catalog.catalog-read | read |  | List the actors, the projects with their columns, and the labels. |
+| catalog.catalog-read | read |  | List the actors, the projects with their columns, the labels and the locations. |
 | catalog.actor-create | write | catalog-changed | Add an actor for an agent. A Connection acts as an actor. |
 | catalog.actor-rename | write | catalog-changed | Rename an actor. The owner's actor id is owner. |
+| catalog.actor-icon-set | write | catalog-changed | Set the icon shown beside an actor's name: an emoji, or empty for none. |
 | catalog.actor-archive | write | catalog-changed | Archive an actor. It can no longer act; what it did stays visible. |
 | catalog.actor-restore | write | catalog-changed | Restore an archived actor. |
 | catalog.project-create | write | catalog-changed | Create a project. Its board starts with the columns To do, Doing, Review and Done. |
@@ -35,12 +36,16 @@
 | catalog.label-rename | write | catalog-changed | Rename a label. |
 | catalog.label-colour-set | write | catalog-changed | Set a label's colour. |
 | catalog.label-remove | write | catalog-changed | Remove a label. Tickets no longer show it. |
+| catalog.location-create | write | catalog-changed | Add a location: a place where a ticket's work is done, such as a machine. |
+| catalog.location-rename | write | catalog-changed | Rename a location. |
+| catalog.location-archive | write | catalog-changed | Archive a location. No more tickets can be given it; tickets that have it keep showing it. |
+| catalog.location-restore | write | catalog-changed | Restore an archived location. |
 
 ### Cards
 
 | card | version | view | about |
 | --- | --- | --- | --- |
-| catalog-changed | 1 | change | What a Call changed in the actors, projects, columns or labels. |
+| catalog-changed | 1 | change | What a Call changed in the actors, projects, columns, labels or locations. |
 
 #### Card catalog-changed
 
@@ -54,11 +59,12 @@
 ### Agent context
 
 ```text
-catalog: The actors, the projects with their columns, and the labels. Only the owner changes them.
+catalog: The actors, the projects with their columns, the labels and the locations. Only the owner changes them.
 Tools:
-- catalog__catalog-read (reads): List the actors, the projects with their columns, and the labels.
+- catalog__catalog-read (reads): List the actors, the projects with their columns, the labels and the locations.
 - catalog__actor-create (changes): Add an actor for an agent. A Connection acts as an actor.
 - catalog__actor-rename (changes): Rename an actor. The owner's actor id is owner.
+- catalog__actor-icon-set (changes): Set the icon shown beside an actor's name: an emoji, or empty for none.
 - catalog__actor-archive (changes): Archive an actor. It can no longer act; what it did stays visible.
 - catalog__actor-restore (changes): Restore an archived actor.
 - catalog__project-create (changes): Create a project. Its board starts with the columns To do, Doing, Review and Done.
@@ -75,6 +81,10 @@ Tools:
 - catalog__label-rename (changes): Rename a label.
 - catalog__label-colour-set (changes): Set a label's colour.
 - catalog__label-remove (changes): Remove a label. Tickets no longer show it.
+- catalog__location-create (changes): Add a location: a place where a ticket's work is done, such as a machine.
+- catalog__location-rename (changes): Rename a location.
+- catalog__location-archive (changes): Archive a location. No more tickets can be given it; tickets that have it keep showing it.
+- catalog__location-restore (changes): Restore an archived location.
 A tool that changes something after the person says yes waits for them; tell them what you asked for.
 ```
 
@@ -101,6 +111,12 @@ A tool that changes something after the person says yes waits for them; tell the
       "type": "string",
       "minLength": 1,
       "maxLength": 60
+    },
+    "icon": {
+      "default": "",
+      "type": "string",
+      "maxLength": 16,
+      "description": "An emoji, or empty for none."
     }
   },
   "required": [
@@ -128,6 +144,29 @@ A tool that changes something after the person says yes waits for them; tell the
   "required": [
     "actor",
     "name"
+  ]
+}
+```
+
+#### catalog.actor-icon-set
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "actor": {
+      "type": "string"
+    },
+    "icon": {
+      "type": "string",
+      "maxLength": 16,
+      "description": "An emoji, or empty for none."
+    }
+  },
+  "required": [
+    "actor",
+    "icon"
   ]
 }
 ```
@@ -180,7 +219,7 @@ A tool that changes something after the person says yes waits for them; tell the
     },
     "prefix": {
       "type": "string",
-      "pattern": "^[A-Z]{2,6}$",
+      "pattern": "^[A-Z]{1,6}$",
       "description": "The project's id and the start of its ticket ids, like TLK."
     }
   },
@@ -208,7 +247,8 @@ A tool that changes something after the person says yes waits for them; tell the
     },
     "icon": {
       "type": "string",
-      "maxLength": 16
+      "maxLength": 16,
+      "description": "An emoji, or empty for none."
     },
     "colour": {
       "type": "string",
@@ -506,6 +546,82 @@ A tool that changes something after the person says yes waits for them; tell the
   },
   "required": [
     "label"
+  ]
+}
+```
+
+#### catalog.location-create
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 60
+    }
+  },
+  "required": [
+    "name"
+  ]
+}
+```
+
+#### catalog.location-rename
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "location": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 60
+    }
+  },
+  "required": [
+    "location",
+    "name"
+  ]
+}
+```
+
+#### catalog.location-archive
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "location": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "location"
+  ]
+}
+```
+
+#### catalog.location-restore
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "location": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "location"
   ]
 }
 ```

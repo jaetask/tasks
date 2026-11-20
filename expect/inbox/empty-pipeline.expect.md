@@ -101,10 +101,10 @@ r4 on n4: there are no steps: the item is received
 
 ### Tickets
 
-| id | title | feature | column | assigned | labels | blocked | state |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| TLK-1 | the board crashes when I drag a ticket to review |  | (backlog) |  |  |  | open |
-| TLK-2 | Need export to CSV for the Money app pls!! |  | To do |  |  |  | open |
+| id | title | feature | column | assigned | location | labels | blocked | state |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| TLK-1 | the board crashes when I drag a ticket to review |  | (backlog) |  |  |  |  | open |
+| TLK-2 | Need export to CSV for the Money app pls!! |  | To do |  |  |  |  | open |
 
 ### Changes
 

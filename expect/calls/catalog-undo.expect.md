@@ -66,9 +66,9 @@
 
 ### Actors
 
-| id | name | archived |
-| --- | --- | --- |
-| owner |  |  |
+| id | name | icon | archived |
+| --- | --- | --- | --- |
+| owner |  |  |  |
 
 ### Projects
 
@@ -81,6 +81,10 @@
 | id | name | colour |
 | --- | --- | --- |
 | l1 | bug | pink |
+
+### Locations
+
+None.
 
 ### Features
 

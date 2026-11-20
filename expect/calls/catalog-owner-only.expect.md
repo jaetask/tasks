@@ -17,14 +17,17 @@
     {
       "id": "owner",
       "name": "",
+      "icon": "",
       "archived": false
     },
     {
       "id": "a1",
       "name": "Coder",
+      "icon": "",
       "archived": false
     }
   ],
+  "locations": [],
   "projects": [],
   "labels": []
 }
@@ -54,16 +57,20 @@
 
 ### Actors
 
-| id | name | archived |
-| --- | --- | --- |
-| owner |  |  |
-| a1 | Coder |  |
+| id | name | icon | archived |
+| --- | --- | --- | --- |
+| owner |  |  |  |
+| a1 | Coder |  |  |
 
 ### Projects
 
 None.
 
 ### Labels
+
+None.
+
+### Locations
 
 None.
 

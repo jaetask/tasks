@@ -1,7 +1,6 @@
 // The screens that show things. Each is a page of panels from the toolkit;
 // anything that is edited opens its own edit page (see edits.tsx).
 import {
-  Avatar,
   Board,
   Button,
   Card,
@@ -36,8 +35,8 @@ import {
   type Ticket,
   when,
 } from "./api.js";
-import { actorName, narrowInput, useApp, useRead } from "./app.js";
-import { KindChip, LabelChip, Say, TicketRow } from "./local.js";
+import { actorLabel, narrowInput, useApp, useRead } from "./app.js";
+import { ActorAvatar, KindChip, LabelChip, Say, TicketRow } from "./local.js";
 
 export const projectTitle = (p: Project, screen: string) =>
   `${p.icon} ${p.name} · ${screen}`.trim();
@@ -64,7 +63,7 @@ function NarrowBar({ features }: { features?: Feature[] }) {
           .filter((a) => !a.archived)
           .map((a) => (
             <option key={a.id} value={a.id}>
-              {a.name}
+              {`${a.icon} ${a.name}`.trim()}
             </option>
           ))}
       </Select>
@@ -300,7 +299,7 @@ export function RequestCard({ request, link }: { request: InputRequest; link?: b
   return (
     <Card className="request">
       <div className="who">
-        <Avatar name={request.askedByName || "?"} />
+        <ActorAvatar id={request.askedBy} name={request.askedByName} />
         <b>{request.askedByName} asks</b>
         <span className="tk-muted">{when(request.at)}</span>
         {link && (
@@ -537,7 +536,7 @@ export function ChangesPage() {
               }
             >
               <span className={c.undoneBy ? "tk-muted" : ""}>
-                <b>{actorName(catalog, c.actor)}</b> {c.summary}
+                <b>{actorLabel(catalog, c.actor)}</b> {c.summary}
               </span>
               <span className="tk-muted">{when(c.at)}</span>
             </ListRow>
@@ -619,7 +618,10 @@ export function SettingsPage({ onSignOut }: { onSignOut: () => void }) {
   const { catalog } = useApp();
   const owner = catalog.actors.find((a) => a.id === OWNER);
   return (
-    <PageBody title="Settings" line="You, your agents' actors, your projects and your labels.">
+    <PageBody
+      title="Settings"
+      line="You, your agents' actors, your projects, your labels and your locations."
+    >
       <Panel
         id="you"
         title="You"
@@ -627,7 +629,7 @@ export function SettingsPage({ onSignOut }: { onSignOut: () => void }) {
         action={<EditLink to="/settings/owner" />}
       >
         <Card>
-          <b>{owner?.name}</b>
+          <b>{`${owner?.icon ?? ""} ${owner?.name ?? ""}`.trim()}</b>
         </Card>
       </Panel>
       <Panel
@@ -642,7 +644,7 @@ export function SettingsPage({ onSignOut }: { onSignOut: () => void }) {
               .filter((a) => a.id !== OWNER)
               .map((a) => (
                 <ListRow key={a.id} to={`/settings/actors/${a.id}`}>
-                  <b>{a.name}</b>
+                  <b>{`${a.icon} ${a.name}`.trim()}</b>
                   {a.archived && <span className="tk-muted">archived</span>}
                 </ListRow>
               ))}
@@ -686,6 +688,25 @@ export function SettingsPage({ onSignOut }: { onSignOut: () => void }) {
           </ListCard>
         ) : (
           <EmptyCard text="No labels yet. Add one, such as bug." />
+        )}
+      </Panel>
+      <Panel
+        id="locations"
+        title="Locations"
+        line="Where a ticket's work is done, such as a machine."
+        action={<PageLink to="/settings/locations/new">New location</PageLink>}
+      >
+        {catalog.locations.length > 0 ? (
+          <ListCard>
+            {catalog.locations.map((l) => (
+              <ListRow key={l.id} to={`/settings/locations/${l.id}`}>
+                <b>{l.name}</b>
+                {l.archived && <span className="tk-muted">archived</span>}
+              </ListRow>
+            ))}
+          </ListCard>
+        ) : (
+          <EmptyCard text="No locations yet. Add one for each place your agents work." />
         )}
       </Panel>
       <Panel id="session" title="This browser" line="Signing out ends this session only.">

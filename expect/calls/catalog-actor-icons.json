@@ -1,0 +1,63 @@
+{
+  "steps": [
+    {
+      "call": "catalog.actor-rename",
+      "input": {
+        "actor": "owner",
+        "name": "Sam"
+      }
+    },
+    {
+      "call": "catalog.actor-icon-set",
+      "input": {
+        "actor": "owner",
+        "icon": "\ud83e\uddd1"
+      }
+    },
+    {
+      "call": "catalog.actor-create",
+      "input": {
+        "name": "Coder",
+        "icon": "\ud83e\udd16"
+      }
+    },
+    {
+      "call": "catalog.actor-create",
+      "input": {
+        "name": "Reviewer"
+      }
+    },
+    {
+      "call": "catalog.actor-icon-set",
+      "input": {
+        "actor": "a2",
+        "icon": "\ud83d\udd0e"
+      }
+    },
+    {
+      "call": "catalog.actor-icon-set",
+      "input": {
+        "actor": "a1",
+        "icon": ""
+      }
+    },
+    {
+      "call": "catalog.actor-icon-set",
+      "input": {
+        "actor": "a9",
+        "icon": "\ud83d\ude42"
+      }
+    },
+    {
+      "as": "a2",
+      "call": "catalog.actor-icon-set",
+      "input": {
+        "actor": "a2",
+        "icon": "\ud83d\ude42"
+      }
+    },
+    {
+      "call": "catalog.catalog-read"
+    }
+  ]
+}

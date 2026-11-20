@@ -2,7 +2,6 @@
 // and its conversation, all from toolkit parts.
 import {
   ActivityRow,
-  Avatar,
   Button,
   Card,
   Chip,
@@ -30,8 +29,8 @@ import {
   type Ticket,
   when,
 } from "./api.js";
-import { useApp, useRead } from "./app.js";
-import { KindChip, LabelChip, Say } from "./local.js";
+import { actorLabel, useApp, useRead } from "./app.js";
+import { ActorAvatar, KindChip, LabelChip, Say } from "./local.js";
 import { RequestCard } from "./pages.js";
 
 const REACTIONS = ["👍", "👀", "✅"];
@@ -65,7 +64,7 @@ function CommentView({
   return (
     <CommentPart
       author={comment.author === OWNER ? comment.authorName : `${comment.authorName} (agent)`}
-      avatar={<Avatar name={comment.authorName || "?"} />}
+      avatar={<ActorAvatar id={comment.author} name={comment.authorName} />}
       time={`${when(comment.at)}${comment.editedAt ? " · edited" : ""}`}
       {...(comment.removed
         ? {}
@@ -134,7 +133,7 @@ function useThumbs(images: Image[] | undefined) {
 }
 
 export function TicketPage({ id }: { id: string }) {
-  const { act, go } = useApp();
+  const { catalog, act, go } = useApp();
   const ticket = useRead<Ticket>("tickets.ticket-read", { ticket: id });
   const conversation = useRead<Conversation>("comments.conversation-read", { ticket: id });
   const images = useRead<Image[]>("images.image-list", { ticket: id });
@@ -200,12 +199,16 @@ export function TicketPage({ id }: { id: string }) {
                 </>
               ),
             },
-            { label: "Assigned to", value: ticket.assigneeName || "Nobody" },
+            {
+              label: "Assigned to",
+              value: ticket.assignee ? actorLabel(catalog, ticket.assignee) : "Nobody",
+            },
             {
               label: "Blocked",
               value: ticket.blocked ? <Chip colour="amber">{ticket.blocked}</Chip> : "No",
             },
             { label: "Feature", value: ticket.featureName || "None" },
+            ...(ticket.location ? [{ label: "Location", value: ticket.locationName }] : []),
             ...(open ? [] : [{ label: "State", value: ticket.state }]),
           ]}
         />

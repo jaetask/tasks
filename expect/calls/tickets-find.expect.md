@@ -45,6 +45,8 @@
         "colour": "teal"
       }
     ],
+    "location": null,
+    "locationName": "",
     "blocked": null,
     "state": "open",
     "backlog": false,
@@ -80,6 +82,8 @@
         "colour": "pink"
       }
     ],
+    "location": null,
+    "locationName": "",
     "blocked": null,
     "state": "open",
     "backlog": false,
@@ -122,6 +126,8 @@
         "colour": "pink"
       }
     ],
+    "location": null,
+    "locationName": "",
     "blocked": null,
     "state": "open",
     "backlog": false,
@@ -164,6 +170,8 @@
         "colour": "pink"
       }
     ],
+    "location": null,
+    "locationName": "",
     "blocked": null,
     "state": "open",
     "backlog": false,
@@ -201,6 +209,8 @@
         "colour": "teal"
       }
     ],
+    "location": null,
+    "locationName": "",
     "blocked": null,
     "state": "open",
     "backlog": false,
@@ -232,6 +242,8 @@
     "assignee": "a2",
     "assigneeName": "Reviewer",
     "labels": [],
+    "location": null,
+    "locationName": "",
     "blocked": "needs a sample file",
     "state": "open",
     "backlog": false,
@@ -263,6 +275,8 @@
     "assignee": "a2",
     "assigneeName": "Reviewer",
     "labels": [],
+    "location": null,
+    "locationName": "",
     "blocked": "needs a sample file",
     "state": "open",
     "backlog": false,
@@ -300,6 +314,8 @@
         "colour": "teal"
       }
     ],
+    "location": null,
+    "locationName": "",
     "blocked": null,
     "state": "open",
     "backlog": false,
@@ -316,11 +332,11 @@
 
 ### Actors
 
-| id | name | archived |
-| --- | --- | --- |
-| owner | Sam |  |
-| a1 | Coder |  |
-| a2 | Reviewer |  |
+| id | name | icon | archived |
+| --- | --- | --- | --- |
+| owner | Sam |  |  |
+| a1 | Coder |  |  |
+| a2 | Reviewer |  |  |
 
 ### Projects
 
@@ -336,17 +352,21 @@
 | l1 | voice | teal |
 | l2 | bug | pink |
 
+### Locations
+
+None.
+
 ### Features
 
 None.
 
 ### Tickets
 
-| id | title | feature | column | assigned | labels | blocked | state |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| TLK-1 | Voice notes |  | To do |  | voice |  | open |
-| TLK-2 | Crash on send |  | Doing | Coder | voice, bug |  | open |
-| MNY-1 | Export to CSV |  | To do | Reviewer |  | needs a sample file | open |
+| id | title | feature | column | assigned | location | labels | blocked | state |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| TLK-1 | Voice notes |  | To do |  |  | voice |  | open |
+| TLK-2 | Crash on send |  | Doing | Coder |  | voice, bug |  | open |
+| MNY-1 | Export to CSV |  | To do | Reviewer |  |  | needs a sample file | open |
 
 ### Comments
 

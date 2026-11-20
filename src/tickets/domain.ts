@@ -151,6 +151,7 @@ const ticketCreate = write({
     labels: z.array(z.string()).max(20).default([]).describe("Label ids."),
     assignee: z.string().optional().describe("An actor id."),
     feature: z.string().optional().describe("The id of a feature of the project."),
+    location: z.string().optional().describe("The id of the location its work is done at."),
     backlog: z
       .boolean()
       .default(false)
@@ -242,6 +243,21 @@ const ticketAssign = write({
       summary: actor
         ? `assigned ${ticket} to ${assigned.assigneeName}`
         : `assigned ${ticket} to nobody`,
+    };
+  },
+});
+
+const ticketLocationSet = write({
+  name: "ticket-location-set",
+  description: "Set the location a ticket's work is done at, such as a machine, or none with null.",
+  input: z.object({ ticket: id, location: z.string().nullable() }),
+  run: ({ ticket, location }, { tickets }) => {
+    const changed = tickets.setLocation(ticket, location);
+    return {
+      ticket: changed,
+      summary: location
+        ? `set the location of ${ticket} to ${changed.locationName}`
+        : `removed the location of ${ticket}`,
     };
   },
 });
@@ -531,6 +547,7 @@ export const ticketsDomain = defineDomain<TicketsDeps>({
     ticketBacklogSend,
     ticketBoardSend,
     ticketFeatureSet,
+    ticketLocationSet,
     ticketLabelAdd,
     ticketLabelRemove,
     ticketBlock,

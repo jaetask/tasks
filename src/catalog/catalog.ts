@@ -1,5 +1,5 @@
-// The catalog repository: the actors, the projects with their columns, and
-// the labels. All of it is data the owner creates; only the owner actor
+// The catalog repository: the actors, the projects with their columns, the
+// labels and the locations. All of it is data the owner creates; only the owner actor
 // exists in a new install.
 import type { DatabaseSync } from "node:sqlite";
 import { z } from "zod";
@@ -19,7 +19,12 @@ export const COLOURS = ["blue", "teal", "green", "amber", "purple", "pink"] as c
 export const Colour = z.enum(COLOURS);
 export type Colour = z.infer<typeof Colour>;
 
-export const Actor = z.object({ id: z.string(), name: z.string(), archived: z.boolean() });
+export const Actor = z.object({
+  id: z.string(),
+  name: z.string(),
+  icon: z.string().describe("An emoji shown beside the actor's name. Empty for none."),
+  archived: z.boolean(),
+});
 export type Actor = z.infer<typeof Actor>;
 
 export const Column = z.object({ id: z.string(), name: z.string(), kind: Kind });
@@ -38,8 +43,12 @@ export type Project = z.infer<typeof Project>;
 export const Label = z.object({ id: z.string(), name: z.string(), colour: Colour });
 export type Label = z.infer<typeof Label>;
 
+export const Location = z.object({ id: z.string(), name: z.string(), archived: z.boolean() });
+export type Location = z.infer<typeof Location>;
+
 export const CatalogView = z.object({
   actors: z.array(Actor),
+  locations: z.array(Location),
   projects: z.array(Project),
   labels: z.array(Label),
 });
@@ -60,10 +69,12 @@ export type Catalog = {
   /** A column, with the project it belongs to. */
   column(id: string): Column & { project: string };
   label(id: string): Label;
+  location(id: string): Location;
   /** The first column of this kind on a project's board, or undefined. */
   firstColumn(project: string, kind: Kind): Column | undefined;
-  createActor(name: string): Actor;
+  createActor(name: string, icon: string): Actor;
   renameActor(id: string, name: string): Actor;
+  setActorIcon(id: string, icon: string): Actor;
   archiveActor(id: string, archived: boolean): Actor;
   createProject(name: string, prefix: string): Project;
   archiveProject(id: string, archived: boolean): Project;
@@ -91,11 +102,22 @@ export type Catalog = {
   renameLabel(id: string, name: string): Label;
   setLabelColour(id: string, colour: Colour): Label;
   removeLabel(id: string): Label;
+  createLocation(name: string): Location;
+  renameLocation(id: string, name: string): Location;
+  archiveLocation(id: string, archived: boolean): Location;
 };
 
 export function migrateCatalog(db: DatabaseSync): void {
   db.exec(
     "CREATE TABLE IF NOT EXISTS actors (id TEXT PRIMARY KEY, name TEXT NOT NULL, archived INTEGER NOT NULL DEFAULT 0)",
+  );
+  // Added after the first version: a database made before it gets the column here.
+  const actorColumns = db.prepare("PRAGMA table_info(actors)").all() as { name: string }[];
+  if (!actorColumns.some((c) => c.name === "icon")) {
+    db.exec("ALTER TABLE actors ADD COLUMN icon TEXT NOT NULL DEFAULT ''");
+  }
+  db.exec(
+    "CREATE TABLE IF NOT EXISTS locations (id TEXT PRIMARY KEY, name TEXT NOT NULL, archived INTEGER NOT NULL DEFAULT 0)",
   );
   db.exec(
     "CREATE TABLE IF NOT EXISTS projects (id TEXT PRIMARY KEY, name TEXT NOT NULL, position INTEGER NOT NULL, archived INTEGER NOT NULL DEFAULT 0)",
@@ -127,7 +149,8 @@ export function migrateCatalog(db: DatabaseSync): void {
   db.prepare("INSERT OR IGNORE INTO actors (id, name) VALUES (?, '')").run(OWNER);
 }
 
-type ActorRow = { id: string; name: string; archived: number };
+type ActorRow = { id: string; name: string; icon: string; archived: number };
+type LocationRow = { id: string; name: string; archived: number };
 type ProjectRow = {
   id: string;
   name: string;
@@ -152,7 +175,20 @@ export function sqliteCatalog(db: DatabaseSync, rows: Rows): Catalog {
   const labelRows = () =>
     db.prepare("SELECT * FROM labels WHERE removed = 0 ORDER BY rowid").all() as LabelRow[];
 
-  const toActor = (r: ActorRow): Actor => ({ id: r.id, name: r.name, archived: r.archived === 1 });
+  const locationRows = () =>
+    db.prepare("SELECT * FROM locations ORDER BY rowid").all() as LocationRow[];
+
+  const toActor = (r: ActorRow): Actor => ({
+    id: r.id,
+    name: r.name,
+    icon: r.icon,
+    archived: r.archived === 1,
+  });
+  const toLocation = (r: LocationRow): Location => ({
+    id: r.id,
+    name: r.name,
+    archived: r.archived === 1,
+  });
   const toColumn = (r: ColumnRow): Column => ({ id: r.id, name: r.name, kind: r.kind });
   const toProject = (r: ProjectRow): Project => ({
     id: r.id,
@@ -183,6 +219,17 @@ export function sqliteCatalog(db: DatabaseSync, rows: Rows): Catalog {
     const found = labelRows().find((l) => l.id === id);
     if (!found) throw new Refusal("unknown-label", `No label has id ${id}.`);
     return toLabel(found);
+  };
+
+  const location = (id: string) => {
+    const found = locationRows().find((l) => l.id === id);
+    if (!found) throw new Refusal("unknown-location", `No location has id ${id}.`);
+    return toLocation(found);
+  };
+  const freeLocationName = (name: string, except?: string) => {
+    if (locationRows().some((l) => l.id !== except && same(l.name, name))) {
+      throw new Refusal("name-taken", `A location is already named ${name}.`);
+    }
   };
 
   const freeActorName = (name: string, except?: string) => {
@@ -217,6 +264,7 @@ export function sqliteCatalog(db: DatabaseSync, rows: Rows): Catalog {
   return {
     read: () => ({
       actors: actorRows().map(toActor),
+      locations: locationRows().map(toLocation),
       projects: projectRows().map(toProject),
       labels: labelRows().map(toLabel),
     }),
@@ -227,18 +275,24 @@ export function sqliteCatalog(db: DatabaseSync, rows: Rows): Catalog {
       return { ...toColumn(row), project: row.project };
     },
     label,
+    location,
     firstColumn: (projectId, kind) => project(projectId).columns.find((c) => c.kind === kind),
 
-    createActor: (name) => {
+    createActor: (name, icon) => {
       freeActorName(name);
       const id = nextId(db, "a");
-      rows.insert("actors", { id, name, archived: 0 });
+      rows.insert("actors", { id, name, icon, archived: 0 });
       return actor(id);
     },
     renameActor: (id, name) => {
       actor(id);
       freeActorName(name, id);
       rows.update("actors", id, { name });
+      return actor(id);
+    },
+    setActorIcon: (id, icon) => {
+      actor(id);
+      rows.update("actors", id, { icon });
       return actor(id);
     },
     archiveActor: (id, archived) => {
@@ -361,6 +415,24 @@ export function sqliteCatalog(db: DatabaseSync, rows: Rows): Catalog {
       const found = label(id);
       rows.update("labels", id, { removed: 1 });
       return found;
+    },
+
+    createLocation: (name) => {
+      freeLocationName(name);
+      const id = nextId(db, "p");
+      rows.insert("locations", { id, name, archived: 0 });
+      return location(id);
+    },
+    renameLocation: (id, name) => {
+      location(id);
+      freeLocationName(name, id);
+      rows.update("locations", id, { name });
+      return location(id);
+    },
+    archiveLocation: (id, archived) => {
+      location(id);
+      rows.update("locations", id, { archived: archived ? 1 : 0 });
+      return location(id);
     },
   };
 }

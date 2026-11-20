@@ -28,14 +28,17 @@
     {
       "id": "owner",
       "name": "",
+      "icon": "",
       "archived": false
     },
     {
       "id": "a1",
       "name": "Coder",
+      "icon": "",
       "archived": false
     }
   ],
+  "locations": [],
   "projects": [
     {
       "id": "MNY",
@@ -132,10 +135,10 @@
 
 ### Actors
 
-| id | name | archived |
-| --- | --- | --- |
-| owner |  |  |
-| a1 | Coder |  |
+| id | name | icon | archived |
+| --- | --- | --- | --- |
+| owner |  |  |  |
+| a1 | Coder |  |  |
 
 ### Projects
 
@@ -146,6 +149,10 @@
 | NTS | Notes | teal |  | c9 To do (todo) · c10 Doing (doing) · c11 Review (waiting) · c12 Done (done) |
 
 ### Labels
+
+None.
+
+### Locations
 
 None.
 

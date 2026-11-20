@@ -32,6 +32,8 @@
     "assignee": null,
     "assigneeName": "",
     "labels": [],
+    "location": null,
+    "locationName": "",
     "blocked": null,
     "state": "open",
     "backlog": true,
@@ -56,6 +58,8 @@
     "assignee": null,
     "assigneeName": "",
     "labels": [],
+    "location": null,
+    "locationName": "",
     "blocked": null,
     "state": "open",
     "backlog": true,
@@ -87,6 +91,8 @@
     "assignee": null,
     "assigneeName": "",
     "labels": [],
+    "location": null,
+    "locationName": "",
     "blocked": null,
     "state": "open",
     "backlog": false,
@@ -128,6 +134,8 @@
           "assignee": null,
           "assigneeName": "",
           "labels": [],
+          "location": null,
+          "locationName": "",
           "blocked": null,
           "state": "open",
           "backlog": false,
@@ -187,6 +195,8 @@
     "assignee": null,
     "assigneeName": "",
     "labels": [],
+    "location": null,
+    "locationName": "",
     "blocked": null,
     "state": "open",
     "backlog": true,
@@ -211,6 +221,8 @@
     "assignee": null,
     "assigneeName": "",
     "labels": [],
+    "location": null,
+    "locationName": "",
     "blocked": null,
     "state": "open",
     "backlog": true,
@@ -242,6 +254,8 @@
     "assignee": null,
     "assigneeName": "",
     "labels": [],
+    "location": null,
+    "locationName": "",
     "blocked": null,
     "state": "open",
     "backlog": true,
@@ -260,10 +274,10 @@
 
 ### Actors
 
-| id | name | archived |
-| --- | --- | --- |
-| owner |  |  |
-| a1 | Coder |  |
+| id | name | icon | archived |
+| --- | --- | --- | --- |
+| owner |  |  |  |
+| a1 | Coder |  |  |
 
 ### Projects
 
@@ -275,17 +289,21 @@
 
 None.
 
+### Locations
+
+None.
+
 ### Features
 
 None.
 
 ### Tickets
 
-| id | title | feature | column | assigned | labels | blocked | state |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| TLK-1 | On the board |  | To do |  |  |  | open |
-| TLK-2 | Waiting one, clearer |  | Doing | Coder |  |  | open |
-| TLK-3 | Waiting two |  | (backlog) |  |  |  | open |
+| id | title | feature | column | assigned | location | labels | blocked | state |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| TLK-1 | On the board |  | To do |  |  |  |  | open |
+| TLK-2 | Waiting one, clearer |  | Doing | Coder |  |  |  | open |
+| TLK-3 | Waiting two |  | (backlog) |  |  |  |  | open |
 
 ### Comments
 

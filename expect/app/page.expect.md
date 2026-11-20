@@ -52,6 +52,8 @@
           "assignee": null,
           "assigneeName": "",
           "labels": [],
+          "location": null,
+          "locationName": "",
           "blocked": null,
           "state": "open",
           "backlog": false,
@@ -99,9 +101,9 @@ None.
 
 ### Actors
 
-| id | name | archived |
-| --- | --- | --- |
-| owner | Sam |  |
+| id | name | icon | archived |
+| --- | --- | --- | --- |
+| owner | Sam |  |  |
 
 ### Projects
 
@@ -113,15 +115,19 @@ None.
 
 None.
 
+### Locations
+
+None.
+
 ### Features
 
 None.
 
 ### Tickets
 
-| id | title | feature | column | assigned | labels | blocked | state |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| TLK-1 | Voice notes on the phone |  | To do |  |  |  | open |
+| id | title | feature | column | assigned | location | labels | blocked | state |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| TLK-1 | Voice notes on the phone |  | To do |  |  |  |  | open |
 
 ### Comments
 

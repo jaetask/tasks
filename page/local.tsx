@@ -4,6 +4,14 @@
 import { Avatar, Chip, Composer, ListRow } from "@jaetask/toolkit";
 import { type ReactNode, useState } from "react";
 import { type Colour, type Kind, KINDS, type Ticket } from "./api.js";
+import { actorIcon, useApp } from "./app.js";
+
+/** An actor's round picture: its icon, or the first letter of its name. */
+export function ActorAvatar({ id, name }: { id: string | null; name: string }) {
+  const { catalog } = useApp();
+  const emoji = actorIcon(catalog, id);
+  return <Avatar name={name || "?"} {...(emoji ? { emoji } : {})} />;
+}
 
 const KIND_COLOUR: Record<Kind, Colour | undefined> = {
   todo: undefined,
@@ -35,7 +43,12 @@ export function TicketRow({ ticket, aside }: { ticket: Ticket; aside?: ReactNode
       to={`/t/${ticket.id}`}
       dragId={ticket.id}
       blocked={ticket.blocked !== null}
-      aside={aside ?? (ticket.assignee ? <Avatar name={ticket.assigneeName || "?"} /> : undefined)}
+      aside={
+        aside ??
+        (ticket.assignee ? (
+          <ActorAvatar id={ticket.assignee} name={ticket.assigneeName} />
+        ) : undefined)
+      }
     >
       <b>{ticket.title}</b>
       {ticket.blocked && <span className="tk-muted">{`Blocked: ${ticket.blocked}`}</span>}

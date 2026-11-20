@@ -80,6 +80,8 @@
     "assignee": "a1",
     "assigneeName": "Coder",
     "labels": [],
+    "location": null,
+    "locationName": "",
     "blocked": null,
     "state": "archived",
     "backlog": false,
@@ -221,11 +223,11 @@ updated connection <Coding agent> (connections.connection-revoke, caller ui)
 
 ### Actors
 
-| id | name | archived |
-| --- | --- | --- |
-| owner | Sam |  |
-| a1 | Coder |  |
-| a2 | Watcher |  |
+| id | name | icon | archived |
+| --- | --- | --- | --- |
+| owner | Sam |  |  |
+| a1 | Coder |  |  |
+| a2 | Watcher |  |  |
 
 ### Projects
 
@@ -237,15 +239,19 @@ updated connection <Coding agent> (connections.connection-revoke, caller ui)
 
 None.
 
+### Locations
+
+None.
+
 ### Features
 
 None.
 
 ### Tickets
 
-| id | title | feature | column | assigned | labels | blocked | state |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| TLK-1 | Voice notes on the phone |  | Review | Coder |  |  | open |
+| id | title | feature | column | assigned | location | labels | blocked | state |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| TLK-1 | Voice notes on the phone |  | Review | Coder |  |  |  | open |
 
 ### Comments
 
