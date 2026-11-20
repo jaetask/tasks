@@ -21,6 +21,7 @@
 | open-agent-kit://contract/tickets | tickets Contract |
 | open-agent-kit://contract/comments | comments Contract |
 | open-agent-kit://contract/images | images Contract |
+| open-agent-kit://contract/inbox | inbox Contract |
 | open-agent-kit://contract/connections | connections Contract |
 | open-agent-kit://contract/history | history Contract |
 
@@ -75,6 +76,26 @@
 | images__image-read | yes | Read one image, with its data as base64. |
 | images__image-add |  | Attach an image to a ticket, such as a screenshot of the result. |
 | images__image-remove |  | Remove an image from a ticket. Whoever attached it or the owner can. |
+| inbox__inbox-read | yes | List inbox items, oldest first: all of them, or those in one state. |
+| inbox__item-read | yes | Read one inbox item, with the record of each run of the steps on it. |
+| inbox__item-capture |  | Put a new idea or request in the inbox. The owner's steps look at it before it lands there. |
+| inbox__item-tag |  | Add tags to an inbox item. |
+| inbox__item-untag |  | Remove tags from an inbox item. |
+| inbox__item-category-set |  | Sort an inbox item into a category, or out of its category with null. |
+| inbox__item-fields-set |  | Keep details pulled out of an inbox item, as named fields. |
+| inbox__item-fields-clear |  | Remove fields from an inbox item: the ones named, or all of them. |
+| inbox__item-edit |  | Change an inbox item's title, its text, or both, such as to tidy it. The item as captured is kept beside it. |
+| inbox__item-accept |  | Accept an inbox item: it is worth keeping, and stays in the inbox as accepted. |
+| inbox__item-reject |  | Reject an inbox item, such as spam, with the reason. |
+| inbox__item-dismiss |  | Dismiss an inbox item that needs nothing done, with the reason. |
+| inbox__item-promote |  | Turn an inbox item into a ticket in a project's first to-do column. |
+| inbox__item-link |  | Link an inbox item to a ticket that already covers it. |
+| inbox__item-run |  | Run the steps on an inbox item again, such as after changing the steps. |
+| inbox__pipeline-read | yes | List the inbox steps, in the order they run. |
+| inbox__step-add |  | Add a step that looks at each new inbox item. It may ask only for the Actions you give it. |
+| inbox__step-edit |  | Change an inbox step: its name, kind, actor, Actions, condition, settings, or whether it is on. |
+| inbox__step-move |  | Move an inbox step to another place in the order. |
+| inbox__step-remove |  | Remove an inbox step. |
 | connections__connection-list | yes | List the Connections: those waiting for approval, connected and revoked. |
 | connections__connection-approve |  | Approve a Connection that asked to connect: pick the actor it acts as, and whether it may change things or only read. |
 | connections__connection-revoke |  | Revoke a Connection, or turn down one that is waiting. It is cut off at once; what it did stays visible. |

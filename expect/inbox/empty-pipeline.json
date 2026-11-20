@@ -1,0 +1,41 @@
+{
+  "steps": [
+    { "call": "catalog.actor-rename", "input": { "actor": "owner", "name": "Sam" } },
+    { "call": "catalog.actor-create", "input": { "name": "Sorter" } },
+    { "call": "catalog.project-create", "input": { "name": "Talk", "prefix": "TLK" } },
+    { "call": "inbox.pipeline-read" },
+    {
+      "call": "inbox.item-capture",
+      "input": { "text": "Need export to CSV for the Money app pls!!", "source": "email" }
+    },
+    {
+      "call": "inbox.item-capture",
+      "input": { "text": "the board crashes when I drag a ticket to review" }
+    },
+    {
+      "call": "inbox.item-capture",
+      "input": { "text": "CHEAP WATCHES click here now", "source": "email" }
+    },
+    {
+      "as": "a1",
+      "call": "inbox.item-capture",
+      "input": {
+        "title": "Dark mode",
+        "text": "People keep asking for a dark theme.",
+        "source": "agent"
+      }
+    },
+    { "call": "inbox.item-tag", "input": { "item": "n1", "tags": ["request", "export"] } },
+    { "call": "inbox.item-accept", "input": { "item": "n1" } },
+    { "call": "inbox.item-promote", "input": { "item": "n2", "project": "TLK" } },
+    { "call": "inbox.item-reject", "input": { "item": "n3", "reason": "spam" } },
+    { "as": "a1", "call": "inbox.item-link", "input": { "item": "n4", "ticket": "TLK-1" } },
+    { "call": "inbox.item-tag", "input": { "item": "n3", "tags": ["late"] } },
+    { "call": "inbox.item-link", "input": { "item": "n1", "ticket": "TLK-9" } },
+    { "call": "inbox.item-promote", "input": { "item": "n1", "project": "NOPE" } },
+    { "call": "history.change-undo", "input": { "change": "h11" } },
+    { "call": "inbox.item-dismiss", "input": { "item": "n3", "reason": "nothing to do" } },
+    { "call": "inbox.item-read", "input": { "item": "n1" } },
+    { "call": "inbox.inbox-read", "input": { "state": "accepted" } }
+  ]
+}

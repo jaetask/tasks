@@ -1,6 +1,7 @@
 // Runs Tasks. Configuration is the environment:
 //   PORT (8081), HOST (127.0.0.1), DATA_DIR (data), KIT_SETUP_SECRET,
 //   KIT_CONNECT (other Apps' MCP endpoints, comma-separated).
+// The owner's script steps for the inbox are in DATA_DIR/steps.
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -15,6 +16,7 @@ const app = await createTasks({
   setupSecret: env.KIT_SETUP_SECRET,
   connect: (env.KIT_CONNECT ?? "").split(",").filter(Boolean),
   page: fileURLToPath(new URL("../public", import.meta.url)),
+  stepsDir: join(dataDir, "steps"),
 });
 
 const url = await app.listen(Number(env.PORT ?? 8081), env.HOST ?? "127.0.0.1");

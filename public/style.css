@@ -608,6 +608,42 @@ tr:last-child td {
   }
 }
 
+/* inbox */
+.items > li {
+  flex-direction: column;
+  align-items: stretch;
+  border-top: 1px solid var(--sunk);
+  padding-top: 10px;
+}
+.stack-small {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.stack-small input[type="text"] {
+  flex: none;
+  width: 100%;
+}
+.check {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  font-size: 0.86rem;
+}
+details summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+.runs ul {
+  margin: 4px 0;
+  padding-left: 20px;
+  font-size: 0.88rem;
+}
+ol.list {
+  list-style: decimal inside;
+}
+
 /* Last, so that it wins over the display of any class above. */
 [hidden] {
   display: none;

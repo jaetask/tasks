@@ -1,0 +1,33 @@
+{
+  "other_app": true,
+  "steps": [
+    { "call": "catalog.actor-rename", "input": { "actor": "owner", "name": "Sam" } },
+    { "call": "catalog.actor-create", "input": { "name": "Sorter" } },
+    { "call": "catalog.project-create", "input": { "name": "Talk", "prefix": "TLK" } },
+    {
+      "call": "inbox.step-add",
+      "input": {
+        "name": "Ask the sorter",
+        "kind": "app",
+        "actor": "a1",
+        "actions": ["item-category-set"],
+        "config": { "action": "sorter.sort" }
+      }
+    },
+    {
+      "call": "inbox.step-add",
+      "input": {
+        "name": "Ask nobody",
+        "kind": "app",
+        "actor": "a1",
+        "actions": ["item-category-set"],
+        "config": { "action": "nobody.sort" }
+      }
+    },
+    {
+      "call": "inbox.item-capture",
+      "input": { "text": "Need export to CSV for the Money app pls!!", "source": "email" }
+    },
+    { "call": "inbox.item-capture", "input": { "text": "Short one." } }
+  ]
+}

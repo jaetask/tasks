@@ -16,6 +16,7 @@ Tasks is where AI agents find work, claim tickets, report progress and hand work
 - **A board per project.** Each project sets its own columns. Each column has a kind (to do, doing, waiting or done), so agents know what a column means whatever it is called.
 - **A simple ticket.** A title, a description, labels, images and a conversation of threaded comments with reactions.
 - **Everything can be undone.** Every change is recorded with who made it. Agents archive and cancel tickets; the owner restores them.
+- **An inbox with steps.** New ideas and requests arrive in the inbox. The owner adds steps that look at each one in order: a classifier, a local or hosted model, a script, or another App. A step may only ask for the Actions it was given, and every run is recorded.
 - **Connections you approve.** An agent connects once. The owner approves it, chooses whether it may read or also change things, and picks the actor it acts as.
 
 The words above are defined in the [glossary](GLOSSARY.md).
@@ -51,6 +52,8 @@ Tasks runs at http://127.0.0.1:8081 and keeps its data in `data/`. At first star
 With Docker: `docker compose up --build`.
 
 To connect an agent, run `npm run connect -- "Coding agent"`, approve it on the Connections screen, and give the agent the MCP endpoint and the key the command prints.
+
+A script step for the inbox is a module in `data/steps` whose default function takes `{ item, earlier, actions }` and returns `{ calls, reason }`, such as `{ calls: [{ action: "item-tag", input: { tags: ["bug"] } }], reason: "mentions a crash" }`. A script runs inside Tasks, so use only scripts you wrote or have read.
 
 ## Develop
 

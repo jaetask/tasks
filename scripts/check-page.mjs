@@ -4,7 +4,7 @@
 // retakes the screenshots in docs/img. Needs Chromium once:
 //   npx playwright-core install chromium
 import { spawn } from "node:child_process";
-import { mkdtempSync, rmSync } from "node:fs";
+import { cpSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { chromium } from "playwright-core";
@@ -13,6 +13,8 @@ const PORT = process.env.CHECK_PORT ?? "18083";
 const SECRET = "check-page-secret";
 const base = `http://127.0.0.1:${PORT}`;
 const data = mkdtempSync(join(tmpdir(), "tasks-page-"));
+// The owner's script steps are in the data folder.
+cpSync("expect/inbox/steps", join(data, "steps"), { recursive: true });
 const server = spawn("node", ["--import", "tsx", "src/main.ts"], {
   env: { ...process.env, PORT, DATA_DIR: data, KIT_SETUP_SECRET: SECRET },
   stdio: "ignore",
@@ -225,7 +227,48 @@ try {
     await page.click("text=Done editing");
     await page.waitForSelector(".column-head");
   });
+  await step("inbox: capture an item; with no steps it lands as received", async () => {
+    await page.click('a[data-view="inbox"]');
+    await page.waitForSelector("text=No steps yet");
+    await page.fill(
+      '[aria-label="A new idea or request"]',
+      "Need export to CSV for the Money app pls!!",
+    );
+    await page.press('[aria-label="A new idea or request"]', "Enter");
+    await page.waitForSelector(".items li");
+  });
+  await step("inbox: add a spam check step; spam is rejected, with the run recorded", async () => {
+    await page.fill('[aria-label="Step name"]', "Spam check");
+    await page.fill('[aria-label^="File in the steps folder"]', "spam-check.mjs");
+    await page.check("label.check >> text=reject");
+    await page.click("text=Add step");
+    await page.waitForSelector("ol.list >> text=Spam check");
+    await page.fill('[aria-label="A new idea or request"]', "CHEAP WATCHES click here now");
+    await page.press('[aria-label="A new idea or request"]', "Enter");
+    await page.fill(
+      '[aria-label="A new idea or request"]',
+      "the board crashes when I drag a ticket",
+    );
+    await page.press('[aria-label="A new idea or request"]', "Enter");
+    await page.waitForSelector(".items >> text=bug");
+    if ((await count(".items > li")) !== 2) throw new Error("the spam is in the inbox");
+    await page.click(".items > li >> nth=1 >> text=What the steps did");
+    await page.waitForSelector(".runs >> text=not spam; a bug");
+    await shot("inbox");
+    await page.click("button >> text=rejected");
+    await page.waitForSelector("text=Reason: looks like spam");
+  });
+  await step("inbox: turn an item into a ticket", async () => {
+    await page.click("button >> text=received");
+    await page.waitForSelector(".items li");
+    await page.selectOption('[aria-label="Turn into a ticket"] >> nth=0', { label: "Talk" });
+    await until(() => document.querySelectorAll(".items > li").length === 1);
+    await page.click("button >> text=promoted");
+    await page.waitForSelector("text=Open TLK-4");
+  });
   await step("archive a ticket, then restore it from the Archive", async () => {
+    await page.click('a[data-view="board"]');
+    await page.waitForSelector(".column");
     await page.click("text=Show the recording length");
     await page.waitForSelector("#ticket[open]");
     await page.click("#tk-actions >> text=Archive");

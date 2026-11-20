@@ -1,0 +1,51 @@
+{
+  "steps": [
+    { "call": "catalog.actor-rename", "input": { "actor": "owner", "name": "Sam" } },
+    { "call": "catalog.actor-create", "input": { "name": "Sorter" } },
+    { "call": "catalog.project-create", "input": { "name": "Talk", "prefix": "TLK" } },
+    {
+      "call": "inbox.step-add",
+      "input": {
+        "name": "Spam check",
+        "kind": "script",
+        "actor": "a1",
+        "actions": ["item-reject", "item-tag"],
+        "config": { "file": "spam-check.mjs" }
+      }
+    },
+    {
+      "call": "inbox.step-add",
+      "input": {
+        "name": "Pull out details",
+        "kind": "script",
+        "actor": "a1",
+        "actions": ["item-untag", "item-edit", "item-fields-set"],
+        "config": { "file": "details.mjs" }
+      }
+    },
+    {
+      "call": "inbox.step-add",
+      "input": {
+        "name": "Sort it",
+        "kind": "script",
+        "actor": "a1",
+        "actions": ["item-category-set"],
+        "config": { "file": "sort.mjs" },
+        "condition": { "tag": "request" }
+      }
+    },
+    {
+      "call": "inbox.item-capture",
+      "input": { "text": "Need export to CSV for the Money app pls!!", "source": "email" }
+    },
+    {
+      "call": "inbox.item-capture",
+      "input": { "text": "the board crashes when I drag a ticket to review" }
+    },
+    {
+      "call": "inbox.item-capture",
+      "input": { "text": "CHEAP WATCHES click here now", "source": "email" }
+    },
+    { "call": "inbox.item-read", "input": { "item": "n1" } }
+  ]
+}

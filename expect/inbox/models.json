@@ -1,0 +1,76 @@
+{
+  "steps": [
+    { "call": "catalog.actor-rename", "input": { "actor": "owner", "name": "Sam" } },
+    { "call": "catalog.actor-create", "input": { "name": "Sorter" } },
+    { "call": "catalog.project-create", "input": { "name": "Talk", "prefix": "TLK" } },
+    {
+      "call": "inbox.step-add",
+      "input": {
+        "name": "Spam classifier",
+        "kind": "classifier",
+        "actor": "a1",
+        "actions": ["item-reject", "item-tag"],
+        "config": {
+          "url": "$MODEL",
+          "model": "tiny-classifier",
+          "labels": {
+            "spam": [{ "action": "item-reject", "input": { "reason": "classified as spam" } }],
+            "ok": [{ "action": "item-tag", "input": { "tags": ["checked"] } }]
+          }
+        }
+      }
+    },
+    {
+      "call": "inbox.step-add",
+      "input": {
+        "name": "Local sorter",
+        "kind": "local-model",
+        "actor": "a1",
+        "actions": ["item-tag", "item-category-set"],
+        "config": {
+          "url": "$MODEL",
+          "model": "local-llm",
+          "instructions": "Tag crash reports as bug."
+        }
+      }
+    },
+    {
+      "call": "inbox.step-add",
+      "input": {
+        "name": "Hosted sorter",
+        "kind": "hosted-model",
+        "actor": "a1",
+        "actions": ["item-tag"],
+        "config": { "url": "$MODEL", "model": "hosted-llm", "key_env": "EXPECT_MODEL_KEY" }
+      }
+    },
+    {
+      "call": "inbox.step-add",
+      "input": {
+        "name": "Hosted, no key",
+        "kind": "hosted-model",
+        "actor": "a1",
+        "actions": ["item-tag"],
+        "config": { "url": "$MODEL", "model": "hosted-llm", "key_env": "NOT_SET" }
+      }
+    },
+    {
+      "call": "inbox.step-add",
+      "input": {
+        "name": "No address",
+        "kind": "local-model",
+        "actor": "a1",
+        "actions": ["item-tag"],
+        "config": { "model": "local-llm" }
+      }
+    },
+    {
+      "call": "inbox.item-capture",
+      "input": { "text": "the board crashes when I drag a ticket to review" }
+    },
+    {
+      "call": "inbox.item-capture",
+      "input": { "text": "CHEAP WATCHES click here now", "source": "email" }
+    }
+  ]
+}

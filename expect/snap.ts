@@ -7,6 +7,7 @@ import { snap, table } from "@jaetask/snap";
 import { domains } from "../src/domains.js";
 import { runApp } from "./app.js";
 import { renderScript } from "./calls.js";
+import { runInbox } from "./inbox.js";
 import { renderContract } from "./render.js";
 
 const failed = await snap([
@@ -24,6 +25,11 @@ const failed = await snap([
     // Input: a Call script. Output: each step's Outcome, then the data.
     dir: "expect/calls",
     render: renderScript,
+  },
+  {
+    // The inbox and its steps: script, model, classifier and another App.
+    dir: "expect/inbox",
+    render: runInbox,
   },
   {
     // Input: { "script": path }. Output: every Action the page's script

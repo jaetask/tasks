@@ -11,6 +11,9 @@ import { connectionsDomain } from "./connections/domain.js";
 import { historyDomain } from "./history/domain.js";
 import { imagesDomain } from "./images/domain.js";
 import { migrateImages, sqliteImages } from "./images/images.js";
+import { inboxDomain } from "./inbox/domain.js";
+import { migrateInbox, sqliteInbox } from "./inbox/inbox.js";
+import { migrateRuns, sqliteRuns } from "./inbox/runs.js";
 import { migrateIds } from "./ids.js";
 import { migrateJournal, openJournal } from "./journal.js";
 import { ticketsDomain } from "./tickets/domain.js";
@@ -28,6 +31,8 @@ export function migrate(db: DatabaseSync): void {
   migrateTickets(db);
   migrateComments(db);
   migrateImages(db);
+  migrateInbox(db);
+  migrateRuns(db);
   migrated.add(db);
 }
 
@@ -70,6 +75,10 @@ export function domains(now: () => number = Date.now): Provided<DatabaseSync>[] 
     }),
     provide(commentsDomain, (db: DatabaseSync) => open(db, now)),
     provide(imagesDomain, (db: DatabaseSync) => open(db, now)),
+    provide(inboxDomain, (db: DatabaseSync) => {
+      const deps = open(db, now);
+      return { ...deps, inbox: sqliteInbox(db, deps.journal.rows), runs: sqliteRuns(db).of };
+    }),
     provide(connectionsDomain, (db: DatabaseSync) => ({
       ...open(db, now),
       connections: sqliteConnections(db, now),

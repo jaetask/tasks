@@ -1,0 +1,120 @@
+{
+  "steps": [
+    { "call": "catalog.actor-rename", "input": { "actor": "owner", "name": "Sam" } },
+    { "call": "catalog.actor-create", "input": { "name": "Sorter" } },
+    { "call": "catalog.project-create", "input": { "name": "Talk", "prefix": "TLK" } },
+    {
+      "call": "inbox.step-add",
+      "input": {
+        "name": "Greedy",
+        "kind": "script",
+        "actor": "a1",
+        "actions": ["item-tag"],
+        "config": { "file": "greedy.mjs" }
+      }
+    },
+    {
+      "call": "inbox.step-add",
+      "input": {
+        "name": "Broken",
+        "kind": "script",
+        "actor": "a1",
+        "actions": ["item-tag"],
+        "config": { "file": "broken.mjs" }
+      }
+    },
+    {
+      "call": "inbox.step-add",
+      "input": {
+        "name": "Outside",
+        "kind": "script",
+        "actor": "a1",
+        "actions": ["item-tag"],
+        "config": { "file": "../../calls.ts" }
+      }
+    },
+    {
+      "call": "inbox.step-add",
+      "input": {
+        "name": "Switched off",
+        "kind": "script",
+        "actor": "a1",
+        "actions": ["item-reject"],
+        "config": { "file": "spam-check.mjs" },
+        "on": false
+      }
+    },
+    {
+      "call": "inbox.step-add",
+      "input": {
+        "name": "Bugs to tickets",
+        "kind": "script",
+        "actor": "a1",
+        "actions": ["item-promote"],
+        "config": { "file": "promote-bugs.mjs" },
+        "condition": { "word": "crash" }
+      }
+    },
+    {
+      "call": "inbox.step-add",
+      "input": {
+        "name": "Never reached",
+        "kind": "script",
+        "actor": "a1",
+        "actions": ["item-tag"],
+        "config": { "file": "greedy.mjs" }
+      }
+    },
+    { "call": "inbox.item-capture", "input": { "text": "A calm first item." } },
+    {
+      "call": "inbox.item-capture",
+      "input": { "text": "the board crashes when I drag a ticket to review" }
+    },
+    {
+      "call": "inbox.step-add",
+      "input": {
+        "name": "As the owner",
+        "kind": "script",
+        "actor": "owner",
+        "actions": ["item-tag"],
+        "config": { "file": "sort.mjs" }
+      }
+    },
+    {
+      "call": "inbox.step-add",
+      "input": {
+        "name": "Board access",
+        "kind": "script",
+        "actor": "a1",
+        "actions": ["ticket-delete"],
+        "config": {}
+      }
+    },
+    {
+      "as": "a1",
+      "call": "inbox.step-add",
+      "input": {
+        "name": "Mine",
+        "kind": "script",
+        "actor": "a1",
+        "actions": ["item-tag"],
+        "config": { "file": "sort.mjs" }
+      }
+    },
+    { "as": "a1", "call": "inbox.step-remove", "input": { "step": "s1" } },
+    { "call": "inbox.step-remove", "input": { "step": "s2" } },
+    { "call": "inbox.step-remove", "input": { "step": "s3" } },
+    {
+      "call": "inbox.step-edit",
+      "input": {
+        "step": "s4",
+        "on": true,
+        "name": "Spam check",
+        "actions": ["item-reject", "item-tag"]
+      }
+    },
+    { "call": "inbox.step-move", "input": { "step": "s4", "before": "s1" } },
+    { "call": "inbox.item-run", "input": { "item": "n1" } },
+    { "call": "inbox.pipeline-read" }
+  ]
+}

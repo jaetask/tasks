@@ -101,6 +101,7 @@ export async function runApp(input: string): Promise<string> {
       file: join(dir, "app.db"),
       now: () => clock,
       setupSecret: "expect-setup-secret",
+      stepsDir: fileURLToPath(new URL("./inbox/steps", import.meta.url)),
       page: fileURLToPath(new URL("../public", import.meta.url)),
       log: () => {},
       sweepEvery: 0,

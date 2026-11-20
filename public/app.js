@@ -16,6 +16,8 @@ const state = {
   editingTicket: false,
   replyTo: null,
   archive: "all",
+  inbox: "received",
+  editingStep: null,
 };
 const imageData = new Map();
 
@@ -68,6 +70,8 @@ function lineForm(placeholder, label, onsubmit, value = "") {
       onsubmit: (e) => {
         e.preventDefault();
         const text = input.value.trim();
+        // Emptied at once, so the page knows the owner is done typing here.
+        input.value = "";
         if (text) onsubmit(text);
       },
     },
@@ -914,6 +918,416 @@ async function connectionsView() {
   ];
 }
 
+// ---- inbox ----
+
+const INTAKE = [
+  "item-tag",
+  "item-untag",
+  "item-category-set",
+  "item-fields-set",
+  "item-fields-clear",
+  "item-edit",
+  "item-accept",
+  "item-reject",
+  "item-dismiss",
+  "item-promote",
+  "item-link",
+];
+// What each kind of step needs, as [setting, what to type].
+const STEP_KINDS = {
+  script: [["file", "File in the steps folder, such as spam-check.mjs"]],
+  "local-model": [
+    ["url", "Address, such as http://127.0.0.1:11434/v1"],
+    ["model", "Model"],
+    ["instructions", "What it should do"],
+  ],
+  "hosted-model": [
+    ["url", "Address, such as https://api.example.com/v1"],
+    ["model", "Model"],
+    ["key_env", "Name of the environment variable with the key"],
+    ["instructions", "What it should do"],
+  ],
+  classifier: [
+    ["url", "Address of the model"],
+    ["model", "Model"],
+    ["key_env", "Name of the environment variable with the key, if it needs one"],
+    [
+      "labels",
+      'Labels as JSON, such as {"spam":[{"action":"item-reject","input":{"reason":"spam"}}]}',
+    ],
+  ],
+  app: [["action", "The other App's Action, such as sorter.sort"]],
+};
+const CONDITIONS = {
+  "": "every item",
+  tag: "items tagged",
+  category: "items in the category",
+  source: "items from",
+  word: "items with the word",
+};
+
+function itemView(item) {
+  const live = item.state === "received" || item.state === "accepted";
+  const projects = state.catalog.projects.filter((p) => !p.archived);
+  const why = (verb, action) =>
+    button(verb, () => {
+      const reason = window.prompt(`Why ${verb.toLowerCase()} it?`);
+      if (reason?.trim()) act(action, { item: item.id, reason: reason.trim() });
+    });
+  const runs = h("div", { class: "runs" });
+  const details = h(
+    "details",
+    {
+      ontoggle: async () => {
+        if (!details.open) return;
+        const found = await read("inbox.item-read", { item: item.id });
+        runs.replaceChildren(
+          ...(found?.runs ?? []).map((run) =>
+            h(
+              "div",
+              {},
+              h("p", { class: "caption", text: `${when(run.at)} · ${run.ended}` }),
+              h(
+                "ul",
+                {},
+                run.steps.map((s) =>
+                  h(
+                    "li",
+                    {},
+                    h("b", { text: s.name }),
+                    ` ${s.ran ? "" : "did not run. "}${s.reason}`,
+                    s.calls.length > 0 &&
+                      h(
+                        "ul",
+                        {},
+                        s.calls.map((c) =>
+                          h("li", {
+                            class: "mono",
+                            text: `${c.action} ${JSON.stringify(c.input)} → ${c.outcome}`,
+                          }),
+                        ),
+                      ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    },
+    h("summary", { text: "What the steps did" }),
+    runs,
+  );
+  return h(
+    "li",
+    { class: "item" },
+    h(
+      "div",
+      { class: "row wrap" },
+      h("b", { text: item.title }),
+      h("span", {
+        class: "mono caption",
+        text: `${item.id} · from ${item.source} · ${when(item.at)}`,
+      }),
+      item.tags.map((t) => h("span", { class: "label grey", text: t })),
+      item.category && h("span", { class: "label plum", text: item.category }),
+    ),
+    item.text !== item.title && h("p", { class: "description", text: item.text }),
+    (item.original.title !== item.title || item.original.text !== item.text) &&
+      h("p", { class: "caption", text: `As captured: ${item.original.text}` }),
+    Object.keys(item.fields).length > 0 &&
+      h("p", {
+        class: "caption mono",
+        text: Object.entries(item.fields)
+          .map(([k, v]) => `${k}: ${v}`)
+          .join(" · "),
+      }),
+    item.reason && h("p", { class: "caption", text: `Reason: ${item.reason}` }),
+    h(
+      "div",
+      { class: "row wrap" },
+      item.ticket && button(`Open ${item.ticket}`, () => openTicket(item.ticket), "small"),
+      live &&
+        item.state !== "accepted" &&
+        button("Accept", () => act("inbox.item-accept", { item: item.id }), "small"),
+      live &&
+        projects.length > 0 &&
+        select(
+          [["", "Turn into a ticket in…"], ...projects.map((p) => [p.id, p.name])],
+          "",
+          (project) => project && act("inbox.item-promote", { item: item.id, project }),
+          "Turn into a ticket",
+        ),
+      live && why("Reject", "inbox.item-reject"),
+      live && why("Dismiss", "inbox.item-dismiss"),
+      live &&
+        button("Run the steps again", () => act("inbox.item-run", { item: item.id }), "small"),
+    ),
+    details,
+  );
+}
+
+function stepForm(steps) {
+  const editing = steps.find((s) => s.id === state.editingStep);
+  const agents = state.catalog.actors.filter((a) => a.id !== OWNER && !a.archived);
+  const draft = editing
+    ? structuredClone(editing)
+    : {
+        name: "",
+        kind: "script",
+        actor: agents[0]?.id ?? "",
+        actions: ["item-tag"],
+        condition: null,
+        config: {},
+      };
+  const name = h("input", {
+    type: "text",
+    placeholder: "Step name, such as Spam check",
+    value: draft.name,
+    maxLength: 60,
+    required: true,
+    "aria-label": "Step name",
+  });
+  const settings = h("div", { class: "stack-small" });
+  const inputs = new Map();
+  const drawSettings = () => {
+    inputs.clear();
+    settings.replaceChildren(
+      ...STEP_KINDS[draft.kind].map(([key, hint]) => {
+        const current = draft.config[key];
+        const input = h("input", {
+          type: "text",
+          placeholder: hint,
+          "aria-label": hint,
+          value:
+            current === undefined
+              ? ""
+              : typeof current === "string"
+                ? current
+                : JSON.stringify(current),
+        });
+        inputs.set(key, input);
+        return input;
+      }),
+    );
+  };
+  drawSettings();
+  const [conditionKey, conditionValue] = Object.entries(draft.condition ?? {})[0] ?? ["", ""];
+  let on = conditionKey;
+  const value = h("input", {
+    type: "text",
+    placeholder: "such as request",
+    value: conditionValue,
+    "aria-label": "Condition value",
+    hidden: on === "",
+  });
+  const boxes = INTAKE.map((action) => {
+    const box = h("input", { type: "checkbox", checked: draft.actions.includes(action) });
+    return [action, box, h("label", { class: "check" }, box, action.replace("item-", ""))];
+  });
+  return h(
+    "form",
+    {
+      class: "stack-small",
+      onsubmit: async (e) => {
+        e.preventDefault();
+        const config = {};
+        for (const [key, input] of inputs) {
+          if (!input.value.trim()) continue;
+          try {
+            config[key] = key === "labels" ? JSON.parse(input.value) : input.value.trim();
+          } catch {
+            return showResult("The labels are not valid JSON.", true);
+          }
+        }
+        const step = {
+          name: name.value.trim(),
+          kind: draft.kind,
+          actor: draft.actor,
+          actions: boxes.filter(([, box]) => box.checked).map(([action]) => action),
+          condition: on && value.value.trim() ? { [on]: value.value.trim() } : null,
+          config,
+        };
+        const done = editing
+          ? await act("inbox.step-edit", { step: editing.id, ...step })
+          : await act("inbox.step-add", step);
+        if (done) {
+          state.editingStep = null;
+          refresh();
+        }
+      },
+    },
+    h("h3", { text: editing ? `Change ${editing.name}` : "Add a step" }),
+    agents.length === 0 &&
+      h("p", {
+        class: "caption",
+        text: "A step's changes show under an actor. Add one in Settings first.",
+      }),
+    h(
+      "div",
+      { class: "row wrap" },
+      name,
+      select(
+        Object.keys(STEP_KINDS).map((k) => [k, k.replace("-", " ")]),
+        draft.kind,
+        (k) => {
+          draft.kind = k;
+          drawSettings();
+        },
+        "Kind of step",
+      ),
+      select(
+        agents.map((a) => [a.id, `as ${a.name}`]),
+        draft.actor,
+        (a) => {
+          draft.actor = a;
+        },
+        "The actor it acts as",
+      ),
+    ),
+    settings,
+    h(
+      "div",
+      { class: "row wrap" },
+      h("span", { class: "caption", text: "It may:" }),
+      boxes.map(([, , label]) => label),
+    ),
+    h(
+      "div",
+      { class: "row wrap" },
+      h("span", { class: "caption", text: "It runs on" }),
+      select(
+        Object.entries(CONDITIONS),
+        on,
+        (k) => {
+          on = k;
+          value.hidden = k === "";
+        },
+        "Which items it runs on",
+      ),
+      value,
+    ),
+    h(
+      "div",
+      { class: "row" },
+      h("button", {
+        type: "submit",
+        class: "primary",
+        text: editing ? "Save step" : "Add step",
+        disabled: agents.length === 0,
+      }),
+      editing &&
+        button("Cancel", () => {
+          state.editingStep = null;
+          refresh();
+        }),
+    ),
+  );
+}
+
+async function inboxView() {
+  const [items, steps] = await Promise.all([
+    read("inbox.inbox-read", { state: state.inbox }),
+    read("inbox.pipeline-read"),
+  ]);
+  const tab = (value) =>
+    h("button", {
+      type: "button",
+      text: value,
+      "aria-pressed": String(state.inbox === value),
+      onclick: () => {
+        state.inbox = value;
+        refresh();
+      },
+    });
+  return [
+    h(
+      "div",
+      { class: "stack" },
+      h(
+        "section",
+        { class: "panel" },
+        h("h2", { text: "Inbox" }),
+        lineForm("A new idea or request", "Capture", (text) => act("inbox.item-capture", { text })),
+        h(
+          "div",
+          { class: "row wrap" },
+          ["received", "accepted", "promoted", "linked", "rejected", "dismissed"].map(tab),
+        ),
+        (items ?? []).length > 0
+          ? h("ul", { class: "list items" }, (items ?? []).map(itemView))
+          : h("p", { class: "muted", text: `Nothing is ${state.inbox}.` }),
+      ),
+      h(
+        "section",
+        { class: "panel" },
+        h("h2", { text: "Steps" }),
+        h("p", {
+          class: "muted",
+          text: "Steps look at each new item, one after another. Each one may only do what you allow, and every run is recorded on the item.",
+        }),
+        (steps ?? []).length > 0
+          ? h(
+              "ol",
+              { class: "list" },
+              (steps ?? []).map((s, i) =>
+                h(
+                  "li",
+                  {},
+                  h("b", { text: s.name }),
+                  h("span", {
+                    class: "caption",
+                    text: `${s.kind.replace("-", " ")} · as ${actorName(s.actor)} · may ${s.actions.map((a) => a.replace("item-", "")).join(", ")} · runs on ${
+                      s.condition
+                        ? Object.entries(s.condition)
+                            .map(([k, v]) => `${CONDITIONS[k]} ${v}`)
+                            .join(", ")
+                        : "every item"
+                    }`,
+                  }),
+                  h("button", {
+                    type: "button",
+                    class: "small",
+                    text: s.on ? "On" : "Off",
+                    "aria-pressed": String(s.on),
+                    title: "Switch this step on or off",
+                    onclick: () => act("inbox.step-edit", { step: s.id, on: !s.on }),
+                  }),
+                  h("button", {
+                    type: "button",
+                    class: "small",
+                    text: "↑",
+                    "aria-label": "Move step up",
+                    disabled: i === 0,
+                    onclick: () => act("inbox.step-move", { step: s.id, before: steps[i - 1].id }),
+                  }),
+                  h("button", {
+                    type: "button",
+                    class: "small",
+                    text: "↓",
+                    "aria-label": "Move step down",
+                    disabled: i === steps.length - 1,
+                    onclick: () => act("inbox.step-move", { step: s.id, before: steps[i + 2]?.id }),
+                  }),
+                  button(
+                    "Change",
+                    () => {
+                      state.editingStep = s.id;
+                      refresh();
+                    },
+                    "small",
+                  ),
+                  button("Remove", () => act("inbox.step-remove", { step: s.id }), "small danger"),
+                ),
+              ),
+            )
+          : h("p", { class: "muted", text: "No steps yet. New items go straight to your inbox." }),
+        stepForm(steps ?? []),
+      ),
+    ),
+  ];
+}
+
 // ---- settings ----
 
 function newProjectPanel(title) {
@@ -1066,6 +1480,7 @@ async function settingsView() {
 const VIEWS = {
   board: boardView,
   archive: archiveView,
+  inbox: inboxView,
   changes: changesView,
   connections: connectionsView,
   settings: settingsView,
