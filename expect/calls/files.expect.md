@@ -19,7 +19,7 @@
 []
 ```
 
-7. a1 calls files.file-add-path {"ticket":"TLK-1","path":"/etc/hosts"} → rejected: no-folder-allowed: The owner has not allowed any folder to attach files from.
+7. a1 calls files.file-add-path {"ticket":"TLK-1","path":"/no/such/folder/notes.log"} → rejected: no-file: There is no file at /no/such/folder/notes.log.
 8. owner calls files.file-add {"ticket":"TLK-1","name":"notes.log","type":"text/plain","upload":"00000000000000000000000000000000"} → rejected: no-file: There is no file there to attach.
 9. owner calls files.file-add {"ticket":"TLK-1","name":"notes.log","type":"text/plain","upload":"../app.db"} → rejected: invalid-input: upload: an upload is named by 32 hex characters
 10. owner calls files.file-add {"ticket":"TLK-9","name":"notes.log","type":"text/plain","upload":"00000000000000000000000000000000"} → rejected: unknown-ticket: No ticket has id TLK-9.

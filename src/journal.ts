@@ -65,7 +65,12 @@ export function migrateJournal(db: DatabaseSync): void {
     "CREATE TABLE IF NOT EXISTS changes (seq INTEGER PRIMARY KEY AUTOINCREMENT, at TEXT NOT NULL, actor TEXT NOT NULL, action TEXT NOT NULL, summary TEXT NOT NULL, ticket TEXT, touched TEXT NOT NULL, final INTEGER NOT NULL DEFAULT 0, undoes INTEGER, undone_by INTEGER)",
   );
   db.exec("CREATE INDEX IF NOT EXISTS changes_ticket ON changes (ticket)");
-  db.exec("CREATE INDEX IF NOT EXISTS changes_ticket ON changes (ticket)");
+  // A change made by bringing data in from another app is marked, so it does not count as the
+  // last time someone changed the ticket.
+  const columns = db.prepare("PRAGMA table_info(changes)").all() as { name: string }[];
+  if (!columns.some((c) => c.name === "imported")) {
+    db.exec("ALTER TABLE changes ADD COLUMN imported INTEGER NOT NULL DEFAULT 0");
+  }
 }
 
 type Stored = {

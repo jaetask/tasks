@@ -19,8 +19,6 @@ const app = await createTasks({
   page: fileURLToPath(new URL("../public", import.meta.url)),
   stepsDir: join(dataDir, "steps"),
   filesDir: join(dataDir, "files"),
-  // Folders an agent may attach files from by path, separated by commas. None unless set.
-  filesFrom: (env.FILES_FROM ?? "").split(",").filter(Boolean),
   // With LINK_TITLES=1 Tasks reads the title of the page each new link points to.
   ...(env.LINK_TITLES === "1" ? { readTitle } : {}),
 });

@@ -50,8 +50,8 @@ export function migrate(db: DatabaseSync): void {
   migrated.add(db);
 }
 
-/** Where files are kept, and where agents may attach them from. */
-export type FilesPlace = { dir: string; from: string[] };
+/** Where files are kept. */
+export type FilesPlace = { dir: string };
 
 /** Everything one Call needs, built on the store's connection. */
 function openWith(db: DatabaseSync, now: () => number, place: FilesPlace) {
@@ -101,7 +101,7 @@ function openWith(db: DatabaseSync, now: () => number, place: FilesPlace) {
 
 export function domains(
   now: () => number = Date.now,
-  place: FilesPlace = { dir: join(tmpdir(), "tasks-files"), from: [] },
+  place: FilesPlace = { dir: join(tmpdir(), "tasks-files") },
 ): Provided<DatabaseSync>[] {
   const open = (db: DatabaseSync, at: () => number) => openWith(db, at, place);
   return [
@@ -160,7 +160,6 @@ export function domains(
     provide(filesDomain, (db: DatabaseSync) => ({
       ...open(db, now),
       stagedDir: join(place.dir, "staged"),
-      filesFrom: place.from,
     })),
     provide(inboxDomain, (db: DatabaseSync) => {
       const deps = open(db, now);

@@ -30,8 +30,6 @@ export type TasksOptions = {
   stepsDir: string;
   /** The folder files attached to tickets are kept in. Beside the database if left out. */
   filesDir?: string;
-  /** Folders an agent may attach files from, by path. None if left out. */
-  filesFrom?: string[];
   /**
    * Reads the title of the page a new link points to. Without one, links keep their address as
    * their name and Tasks asks no other site anything.
@@ -62,7 +60,7 @@ export async function createTasks(options: TasksOptions): Promise<Tasks> {
     name: "tasks",
     version: VERSION,
     file: options.file,
-    domains: domains(now, { dir: filesDir, from: options.filesFrom ?? [] }),
+    domains: domains(now, { dir: filesDir }),
     owner: { id: OWNER },
     now,
     ...(options.setupSecret ? { setupSecret: options.setupSecret } : {}),

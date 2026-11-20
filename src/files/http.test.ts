@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtempSync, readdirSync, symlinkSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
@@ -7,14 +7,13 @@ import { createTasks } from "../app.js";
 
 const SECRET = "a-setup-secret-for-the-test";
 
-async function start(filesFrom: string[] = []) {
+async function start() {
   const filesDir = mkdtempSync(join(tmpdir(), "tasks-files-"));
   const app = await createTasks({
     file: ":memory:",
     setupSecret: SECRET,
     stepsDir: mkdtempSync(join(tmpdir(), "tasks-steps-")),
     filesDir,
-    filesFrom,
     log: () => {},
     sweepEvery: 0,
     syncEvery: 0,
@@ -142,39 +141,19 @@ test("a file over the limit for its type is refused and not kept", async () => {
   }
 });
 
-test("an agent attaches by path only from a folder the owner allows", async () => {
-  const allowed = mkdtempSync(join(tmpdir(), "tasks-allowed-"));
-  const other = mkdtempSync(join(tmpdir(), "tasks-other-"));
-  writeFileSync(join(allowed, "notes.log"), "line one\n");
-  writeFileSync(join(other, "secret.txt"), "not for tickets");
-  symlinkSync(join(other, "secret.txt"), join(allowed, "link.txt"));
-
-  const closed = await start();
-  try {
-    const refused = await closed.call("files.file-add-path", {
-      ticket: "TLK-1",
-      path: join(allowed, "notes.log"),
-    });
-    assert.equal(refused.reason?.code, "no-folder-allowed");
-  } finally {
-    await closed.app.close();
-  }
-
-  const { app, call } = await start([allowed]);
+test("an agent attaches a file by its path; the original stays where it was", async () => {
+  const folder = mkdtempSync(join(tmpdir(), "tasks-anywhere-"));
+  writeFileSync(join(folder, "notes.log"), "line one\n");
+  const { app, call } = await start();
   try {
     const added = await call("files.file-add-path", {
       ticket: "TLK-1",
-      path: join(allowed, "notes.log"),
+      path: join(folder, "notes.log"),
     });
     assert.equal(added.state, "succeeded");
     assert.equal((added.output as { type: string; size: number }).type, "text/plain");
-    for (const path of [
-      join(other, "secret.txt"),
-      join(allowed, "link.txt"),
-      join(allowed, "..", "tasks-other-missing"),
-      join(allowed, "missing.txt"),
-      allowed,
-    ]) {
+    assert.equal(readdirSync(folder).length, 1);
+    for (const path of [join(folder, "missing.txt"), folder]) {
       const outcome = await call("files.file-add-path", { ticket: "TLK-1", path });
       assert.notEqual(outcome.state, "succeeded", path);
     }
