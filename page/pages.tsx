@@ -36,10 +36,10 @@ import {
   when,
 } from "./api.js";
 import { actorLabel, narrowInput, useApp, useRead } from "./app.js";
-import { ActorAvatar, KindChip, LabelChip, Say, TicketRow } from "./local.js";
+import { ActorAvatar, KindChip, LabelChip, projectEmoji, Say, TicketRow } from "./local.js";
 
 export const projectTitle = (p: Project, screen: string) =>
-  `${p.icon} ${p.name} · ${screen}`.trim();
+  `${projectEmoji(p)} ${p.name} · ${screen}`.trim();
 
 /** A search box and the pickers that narrow a board, the Overview or a backlog. */
 function NarrowBar({ features }: { features?: Feature[] }) {
@@ -663,7 +663,7 @@ export function SettingsPage({ onSignOut }: { onSignOut: () => void }) {
           <ListCard>
             {catalog.projects.map((p) => (
               <ListRow key={p.id} to={`/p/${p.id}/edit`}>
-                <b>{`${p.icon} ${p.name}`.trim()}</b>
+                <b>{`${projectEmoji(p)} ${p.name}`.trim()}</b>
                 <span className="tk-muted">{`${p.id}${p.archived ? " · archived" : ""}`}</span>
               </ListRow>
             ))}

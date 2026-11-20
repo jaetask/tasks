@@ -19,6 +19,48 @@ export const COLOURS = ["blue", "teal", "green", "amber", "purple", "pink"] as c
 export const Colour = z.enum(COLOURS);
 export type Colour = z.infer<typeof Colour>;
 
+// The line icons a project can show, by name.
+export const PROJECT_ICONS = [
+  "folder",
+  "robot",
+  "code",
+  "checklist",
+  "layout",
+  "rocket",
+  "bolt",
+  "flame",
+  "star",
+  "heart",
+  "bulb",
+  "target",
+  "flag",
+  "chart",
+  "wallet",
+  "dollar",
+  "person",
+  "table",
+  "brand-x",
+  "globe",
+  "cloud",
+  "database",
+  "terminal",
+  "tool",
+  "bug",
+  "palette",
+  "book",
+  "coffee",
+] as const;
+
+/** A project's colour: one of the six named colours, or any colour as six-digit hex. */
+export const ProjectColour = z
+  .string()
+  .refine(
+    (v) => (COLOURS as readonly string[]).includes(v) || /^#[0-9a-fA-F]{6}$/.test(v),
+    `a colour is one of ${COLOURS.join(", ")}, or six-digit hex such as #48b685`,
+  )
+  .transform((v) => v.toLowerCase());
+export type ProjectColour = z.infer<typeof ProjectColour>;
+
 export const Actor = z.object({
   id: z.string(),
   name: z.string(),
@@ -33,8 +75,12 @@ export type Column = z.infer<typeof Column>;
 export const Project = z.object({
   id: z.string(),
   name: z.string(),
-  icon: z.string().describe("An emoji shown beside the project's name. Empty for none."),
-  colour: Colour,
+  icon: z
+    .string()
+    .describe(
+      "The icon shown beside the project's name: an icon name such as globe, or an emoji. Empty for none.",
+    ),
+  colour: z.string().describe("One of the six named colours, or six-digit hex such as #48b685."),
   archived: z.boolean(),
   columns: z.array(Column),
 });
@@ -80,7 +126,11 @@ export type Catalog = {
   archiveProject(id: string, archived: boolean): Project;
   editProject(
     id: string,
-    patch: { name?: string | undefined; icon?: string | undefined; colour?: Colour | undefined },
+    patch: {
+      name?: string | undefined;
+      icon?: string | undefined;
+      colour?: ProjectColour | undefined;
+    },
   ): Project;
   /** Moves a project to sit before `before` in the list, or to the end. */
   moveProject(id: string, before?: string): Project[];
@@ -155,7 +205,7 @@ type ProjectRow = {
   id: string;
   name: string;
   icon: string;
-  colour: Colour;
+  colour: ProjectColour;
   position: number;
   archived: number;
 };

@@ -23,7 +23,7 @@
 | catalog.actor-archive | write | catalog-changed | Archive an actor. It can no longer act; what it did stays visible. |
 | catalog.actor-restore | write | catalog-changed | Restore an archived actor. |
 | catalog.project-create | write | catalog-changed | Create a project. Its board starts with the columns To do, Doing, Review and Done. |
-| catalog.project-edit | write | catalog-changed | Change a project's name, its icon (an emoji, or empty for none) or its colour. Its prefix and ticket ids stay the same. |
+| catalog.project-edit | write | catalog-changed | Change a project's name, its icon or its colour. Its prefix and ticket ids stay the same. |
 | catalog.project-move | write | catalog-changed | Move a project to another place in the list of projects. |
 | catalog.project-archive | write | catalog-changed | Archive a project. Its tickets are kept and it can be restored. |
 | catalog.project-restore | write | catalog-changed | Restore an archived project. |
@@ -68,7 +68,7 @@ Tools:
 - catalog__actor-archive (changes): Archive an actor. It can no longer act; what it did stays visible.
 - catalog__actor-restore (changes): Restore an archived actor.
 - catalog__project-create (changes): Create a project. Its board starts with the columns To do, Doing, Review and Done.
-- catalog__project-edit (changes): Change a project's name, its icon (an emoji, or empty for none) or its colour. Its prefix and ticket ids stay the same.
+- catalog__project-edit (changes): Change a project's name, its icon or its colour. Its prefix and ticket ids stay the same.
 - catalog__project-move (changes): Move a project to another place in the list of projects.
 - catalog__project-archive (changes): Archive a project. Its tickets are kept and it can be restored.
 - catalog__project-restore (changes): Restore an archived project.
@@ -248,18 +248,10 @@ A tool that changes something after the person says yes waits for them; tell the
     "icon": {
       "type": "string",
       "maxLength": 16,
-      "description": "An emoji, or empty for none."
+      "description": "An icon name (folder, robot, code, checklist, layout, rocket, bolt, flame, star, heart, bulb, target, flag, chart, wallet, dollar, person, table, brand-x, globe, cloud, database, terminal, tool, bug, palette, book, coffee), an emoji, or empty for none."
     },
     "colour": {
-      "type": "string",
-      "enum": [
-        "blue",
-        "teal",
-        "green",
-        "amber",
-        "purple",
-        "pink"
-      ]
+      "type": "string"
     }
   },
   "required": [

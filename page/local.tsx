@@ -3,8 +3,25 @@
 // own text.
 import { Avatar, Chip, Composer, ListRow } from "@jaetask/toolkit";
 import { type ReactNode, useState } from "react";
-import { type Colour, type Kind, KINDS, type Ticket } from "./api.js";
+import { COLOURS, type Colour, type Kind, KINDS, type Project, type Ticket } from "./api.js";
 import { actorIcon, useApp } from "./app.js";
+
+/** A project's emoji, or "" when its icon is an icon name or it has none. */
+export const projectEmoji = (project: Project) =>
+  /^[a-z-]*$/.test(project.icon) ? "" : project.icon;
+
+/** A project's round picture: its emoji or first letter, on its colour when that is a named one. */
+export function ProjectAvatar({ project }: { project: Project }) {
+  const named = (COLOURS as readonly string[]).includes(project.colour);
+  const emoji = projectEmoji(project);
+  return (
+    <Avatar
+      name={project.name}
+      {...(named ? { colour: project.colour as Colour } : {})}
+      {...(emoji ? { emoji } : {})}
+    />
+  );
+}
 
 /** An actor's round picture: its icon, or the first letter of its name. */
 export function ActorAvatar({ id, name }: { id: string | null; name: string }) {

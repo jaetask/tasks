@@ -20,7 +20,11 @@
 10. owner calls catalog.project-edit {"project":"TLK","icon":""} → succeeded; updated project TLK
 11. owner calls history.change-undo {"change":"h9"} → succeeded; updated change h9
 12. a1 calls catalog.project-move {"project":"TLK"} → rejected: not-allowed: a1 may not run catalog.project-move
-13. owner calls catalog.catalog-read → succeeded:
+13. owner calls catalog.project-edit {"project":"MNY","icon":"dollar","colour":"#48B685"} → succeeded; updated project MNY
+14. owner calls catalog.project-edit {"project":"NTS","icon":"notebook"} → rejected: invalid-input: icon: an icon is one of: folder, robot, code, checklist, layout, rocket, bolt, flame, star, heart, bulb, target, flag, chart, wallet, dollar, person, table, brand-x, globe, cloud, database, terminal, tool, bug, palette, book, coffee
+15. owner calls catalog.project-edit {"project":"NTS","colour":"#48b"} → rejected: invalid-input: colour: a colour is one of blue, teal, green, amber, purple, pink, or six-digit hex such as #48b685
+16. owner calls catalog.project-edit {"project":"NTS","colour":"lime"} → rejected: invalid-input: colour: a colour is one of blue, teal, green, amber, purple, pink, or six-digit hex such as #48b685
+17. owner calls catalog.catalog-read → succeeded:
 
 ```json
 {
@@ -43,8 +47,8 @@
     {
       "id": "MNY",
       "name": "Money",
-      "icon": "",
-      "colour": "teal",
+      "icon": "dollar",
+      "colour": "#48b685",
       "archived": false,
       "columns": [
         {
@@ -144,7 +148,7 @@
 
 | id | name | icon | archived | columns |
 | --- | --- | --- | --- | --- |
-| MNY | Money | teal |  | c5 To do (todo) · c6 Doing (doing) · c7 Review (waiting) · c8 Done (done) |
+| MNY | Money | dollar #48b685 |  | c5 To do (todo) · c6 Doing (doing) · c7 Review (waiting) · c8 Done (done) |
 | TLK | Talk | 💬 teal |  | c1 To do (todo) · c2 Doing (doing) · c3 Review (waiting) · c4 Done (done) |
 | NTS | Notes | teal |  | c9 To do (todo) · c10 Doing (doing) · c11 Review (waiting) · c12 Done (done) |
 
@@ -194,3 +198,4 @@ None.
 | h8 | 09:08 | owner | catalog.project-move | moved project Money in the list |  |  |
 | h9 | 09:10 | owner | catalog.project-edit | changed how project Talk looks |  | h10 |
 | h10 | 09:11 | owner | history.change-undo | undid: changed how project Talk looks |  |  |
+| h11 | 09:13 | owner | catalog.project-edit | changed how project Money looks |  |  |

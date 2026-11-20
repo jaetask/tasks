@@ -1,17 +1,117 @@
 {
   "steps": [
-    { "call": "catalog.actor-create", "input": { "name": "Coder" } },
-    { "call": "catalog.project-create", "input": { "name": "Talk", "prefix": "TLK" } },
-    { "call": "catalog.project-create", "input": { "name": "Money", "prefix": "MNY" } },
-    { "call": "catalog.project-create", "input": { "name": "Notes", "prefix": "NTS" } },
-    { "call": "catalog.project-edit", "input": { "project": "TLK", "icon": "💬" } },
-    { "call": "catalog.project-move", "input": { "project": "NTS", "before": "TLK" } },
-    { "call": "catalog.project-move", "input": { "project": "NTS" } },
-    { "call": "catalog.project-move", "input": { "project": "MNY", "before": "TLK" } },
-    { "call": "catalog.project-move", "input": { "project": "MNY", "before": "NOPE" } },
-    { "call": "catalog.project-edit", "input": { "project": "TLK", "icon": "" } },
-    { "call": "history.change-undo", "input": { "change": "h9" } },
-    { "as": "a1", "call": "catalog.project-move", "input": { "project": "TLK" } },
-    { "call": "catalog.catalog-read" }
+    {
+      "call": "catalog.actor-create",
+      "input": {
+        "name": "Coder"
+      }
+    },
+    {
+      "call": "catalog.project-create",
+      "input": {
+        "name": "Talk",
+        "prefix": "TLK"
+      }
+    },
+    {
+      "call": "catalog.project-create",
+      "input": {
+        "name": "Money",
+        "prefix": "MNY"
+      }
+    },
+    {
+      "call": "catalog.project-create",
+      "input": {
+        "name": "Notes",
+        "prefix": "NTS"
+      }
+    },
+    {
+      "call": "catalog.project-edit",
+      "input": {
+        "project": "TLK",
+        "icon": "\ud83d\udcac"
+      }
+    },
+    {
+      "call": "catalog.project-move",
+      "input": {
+        "project": "NTS",
+        "before": "TLK"
+      }
+    },
+    {
+      "call": "catalog.project-move",
+      "input": {
+        "project": "NTS"
+      }
+    },
+    {
+      "call": "catalog.project-move",
+      "input": {
+        "project": "MNY",
+        "before": "TLK"
+      }
+    },
+    {
+      "call": "catalog.project-move",
+      "input": {
+        "project": "MNY",
+        "before": "NOPE"
+      }
+    },
+    {
+      "call": "catalog.project-edit",
+      "input": {
+        "project": "TLK",
+        "icon": ""
+      }
+    },
+    {
+      "call": "history.change-undo",
+      "input": {
+        "change": "h9"
+      }
+    },
+    {
+      "as": "a1",
+      "call": "catalog.project-move",
+      "input": {
+        "project": "TLK"
+      }
+    },
+    {
+      "call": "catalog.project-edit",
+      "input": {
+        "project": "MNY",
+        "icon": "dollar",
+        "colour": "#48B685"
+      }
+    },
+    {
+      "call": "catalog.project-edit",
+      "input": {
+        "project": "NTS",
+        "icon": "notebook"
+      }
+    },
+    {
+      "call": "catalog.project-edit",
+      "input": {
+        "project": "NTS",
+        "colour": "#48b"
+      }
+    },
+    {
+      "call": "catalog.project-edit",
+      "input": {
+        "project": "NTS",
+        "colour": "lime"
+      }
+    },
+    {
+      "call": "catalog.catalog-read"
+    }
   ]
 }

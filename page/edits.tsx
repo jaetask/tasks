@@ -187,7 +187,7 @@ export function ProjectEdit({ project }: { project: Project | null }) {
   const [name, setName] = useState(project?.name ?? "");
   const [prefix, setPrefix] = useState("");
   const [icon, setIcon] = useState(project?.icon ?? "");
-  const [colour, setColour] = useState<Colour>(project?.colour ?? "teal");
+  const [colour, setColour] = useState<string>(project?.colour ?? "teal");
   const order = catalog.projects.map((p) => p.id);
   const at = project ? order.indexOf(project.id) : -1;
   return (

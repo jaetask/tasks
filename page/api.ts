@@ -10,7 +10,8 @@ export type Project = {
   id: string;
   name: string;
   icon: string;
-  colour: Colour;
+  /** One of the six named colours, or six-digit hex. */
+  colour: string;
   archived: boolean;
   columns: Column[];
 };
