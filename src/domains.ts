@@ -14,6 +14,8 @@ import { migrateImages, sqliteImages } from "./images/images.js";
 import { inboxDomain } from "./inbox/domain.js";
 import { migrateInbox, sqliteInbox } from "./inbox/inbox.js";
 import { migrateRuns, sqliteRuns } from "./inbox/runs.js";
+import { inputDomain } from "./input/domain.js";
+import { migrateInput, sqliteInputs } from "./input/input.js";
 import { migrateIds } from "./ids.js";
 import { migrateJournal, openJournal } from "./journal.js";
 import { ticketsDomain } from "./tickets/domain.js";
@@ -31,6 +33,7 @@ export function migrate(db: DatabaseSync): void {
   migrateTickets(db);
   migrateComments(db);
   migrateImages(db);
+  migrateInput(db);
   migrateInbox(db);
   migrateRuns(db);
   migrated.add(db);
@@ -52,11 +55,13 @@ function open(db: DatabaseSync, now: () => number) {
   const nameOf = (id: string) => catalog.read().actors.find((a) => a.id === id)?.name || id;
   const comments = sqliteComments(db, journal.rows, nameOf);
   const images = sqliteImages(db, journal.rows);
+  const inputs = sqliteInputs(db, journal.rows, nameOf);
   const tickets = sqliteTickets(db, journal.rows, catalog, (ticket) => ({
     comments: comments.count(ticket),
     images: images.list(ticket).length,
+    awaiting: inputs.awaiting(ticket),
   }));
-  return { ...base, catalog, tickets, comments, images, nameOf, now };
+  return { ...base, catalog, tickets, comments, images, inputs, nameOf, now };
 }
 
 export function domains(now: () => number = Date.now): Provided<DatabaseSync>[] {
@@ -69,6 +74,7 @@ export function domains(now: () => number = Date.now): Provided<DatabaseSync>[] 
       const deps = open(db, now);
       const purge = (ticket: string) => {
         deps.comments.purge(ticket);
+        deps.inputs.purge(ticket);
         deps.images.purge(ticket);
       };
       return { ...deps, purge };
@@ -79,6 +85,7 @@ export function domains(now: () => number = Date.now): Provided<DatabaseSync>[] 
       const deps = open(db, now);
       return { ...deps, inbox: sqliteInbox(db, deps.journal.rows), runs: sqliteRuns(db).of };
     }),
+    provide(inputDomain, (db: DatabaseSync) => ({ ...open(db, now), answered: () => {} })),
     provide(connectionsDomain, (db: DatabaseSync) => ({
       ...open(db, now),
       connections: sqliteConnections(db, now),

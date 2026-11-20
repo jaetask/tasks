@@ -39,6 +39,7 @@ export const Ticket = z.object({
   backlog: z.boolean().describe("True while it waits in the backlog, off the board."),
   comments: z.number().describe("How many comments it has."),
   images: z.number().describe("How many images it has."),
+  awaiting: z.number().describe("How many questions on it await the owner's answer."),
   createdAt: z.string(),
   createdBy: z.string(),
 });
@@ -183,8 +184,8 @@ type TicketRow = {
   created_by: string;
 };
 
-/** How many comments and images a ticket has. Other Domains keep them. */
-export type Counts = (ticket: string) => { comments: number; images: number };
+/** How many comments, images and open questions a ticket has. Other Domains keep them. */
+export type Counts = (ticket: string) => { comments: number; images: number; awaiting: number };
 
 export function sqliteTickets(
   db: DatabaseSync,

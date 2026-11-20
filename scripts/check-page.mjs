@@ -237,6 +237,30 @@ try {
     await page.click(".card >> text=Voice notes on the phone");
     await page.waitForSelector("#ticket[open] h2");
   });
+  await step(
+    "human input: an agent asks on a ticket; the owner answers from the list",
+    async () => {
+      await page.click("#tk-close");
+      await agent("input__input-request", {
+        ticket: "TLK-1",
+        question: "Should recordings be kept after they are sent?",
+        context: "Keeping them uses about 1 MB a minute.",
+      });
+      await page.waitForSelector(".side .count >> text=1");
+      await page.waitForSelector(".card >> text=❓ 1");
+      await page.click('a[href="#/input"]');
+      await page.waitForSelector("text=Coder asks");
+      await shot("human-input");
+      await page.fill('[aria-label="Your answer"]', "Keep them for 30 days.");
+      await page.press('[aria-label="Your answer"]', "Enter");
+      await page.waitForSelector("text=No agent is waiting for you");
+      await page.click("button >> text=Resolved");
+      await page.waitForSelector("text=You answered: Keep them for 30 days.");
+      await page.click('.side-row a[href="#/board/TLK"]');
+      await page.click(".card >> text=Voice notes on the phone");
+      await page.waitForSelector("#ticket[open] h2");
+    },
+  );
   await step("backlog: a new ticket waits there, then goes to the board", async () => {
     await page.click("#tk-close");
     await page.click('.side-sub a[href="#/backlog/TLK"]');

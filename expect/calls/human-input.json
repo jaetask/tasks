@@ -1,0 +1,57 @@
+{
+  "steps": [
+    { "call": "catalog.actor-rename", "input": { "actor": "owner", "name": "Sam" } },
+    { "call": "catalog.actor-create", "input": { "name": "Coder" } },
+    { "call": "catalog.actor-create", "input": { "name": "Reviewer" } },
+    { "call": "catalog.project-create", "input": { "name": "Talk", "prefix": "TLK" } },
+    {
+      "call": "tickets.ticket-create",
+      "input": { "project": "TLK", "title": "Voice notes on the phone" }
+    },
+    { "as": "a1", "call": "tickets.ticket-claim", "input": { "ticket": "TLK-1" } },
+    {
+      "as": "a1",
+      "call": "input.input-request",
+      "input": {
+        "ticket": "TLK-1",
+        "question": "Should recordings be kept after they are sent?",
+        "context": "Keeping them uses about 1 MB a minute."
+      }
+    },
+    {
+      "as": "a1",
+      "call": "input.input-request",
+      "input": { "ticket": "TLK-1", "question": "Which file format?" }
+    },
+    { "as": "a1", "call": "tickets.ticket-read", "input": { "ticket": "TLK-1" } },
+    { "as": "a1", "call": "input.input-list", "input": { "state": "awaiting" } },
+    {
+      "as": "a1",
+      "call": "input.input-resolve",
+      "input": { "request": "q1", "answer": "I say yes." }
+    },
+    { "as": "a2", "call": "input.input-withdraw", "input": { "request": "q2" } },
+    { "as": "a1", "call": "input.input-withdraw", "input": { "request": "q2" } },
+    {
+      "call": "input.input-resolve",
+      "input": { "request": "q1", "answer": "Keep them for 30 days." }
+    },
+    { "call": "input.input-resolve", "input": { "request": "q1", "answer": "Changed my mind." } },
+    { "call": "input.input-resolve", "input": { "request": "q2", "answer": "Too late." } },
+    { "as": "a1", "call": "input.input-read", "input": { "request": "q1" } },
+    { "as": "a1", "call": "input.input-list", "input": { "project": "TLK", "state": "awaiting" } },
+    {
+      "as": "a1",
+      "call": "input.input-request",
+      "input": { "ticket": "TLK-9", "question": "Anyone?" }
+    },
+    { "as": "a1", "call": "tickets.ticket-archive", "input": { "ticket": "TLK-1" } },
+    {
+      "as": "a1",
+      "call": "input.input-request",
+      "input": { "ticket": "TLK-1", "question": "Still there?" }
+    },
+    { "call": "comments.conversation-read", "input": { "ticket": "TLK-1" } },
+    { "call": "history.change-undo", "input": { "change": "h10" } }
+  ]
+}

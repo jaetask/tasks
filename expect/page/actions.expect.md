@@ -54,6 +54,8 @@
 | inbox.step-edit | write |
 | inbox.step-move | write |
 | inbox.step-remove | write |
+| input.input-list | read |
+| input.input-resolve | write |
 | tickets.backlog-read | read |
 | tickets.board-read | read |
 | tickets.feature-archive | write |

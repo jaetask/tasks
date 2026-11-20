@@ -50,6 +50,7 @@
     "backlog": false,
     "comments": 0,
     "images": 0,
+    "awaiting": 0,
     "createdAt": "2026-01-01T09:08:00.000Z",
     "createdBy": "owner"
   },
@@ -84,6 +85,7 @@
     "backlog": false,
     "comments": 0,
     "images": 0,
+    "awaiting": 0,
     "createdAt": "2026-01-01T09:09:00.000Z",
     "createdBy": "owner"
   }
@@ -125,6 +127,7 @@
     "backlog": false,
     "comments": 0,
     "images": 0,
+    "awaiting": 0,
     "createdAt": "2026-01-01T09:09:00.000Z",
     "createdBy": "owner"
   }
@@ -166,6 +169,7 @@
     "backlog": false,
     "comments": 0,
     "images": 0,
+    "awaiting": 0,
     "createdAt": "2026-01-01T09:09:00.000Z",
     "createdBy": "owner"
   }
@@ -202,6 +206,7 @@
     "backlog": false,
     "comments": 0,
     "images": 0,
+    "awaiting": 0,
     "createdAt": "2026-01-01T09:08:00.000Z",
     "createdBy": "owner"
   }
@@ -232,6 +237,7 @@
     "backlog": false,
     "comments": 0,
     "images": 0,
+    "awaiting": 0,
     "createdAt": "2026-01-01T09:10:00.000Z",
     "createdBy": "owner"
   }
@@ -262,6 +268,7 @@
     "backlog": false,
     "comments": 0,
     "images": 0,
+    "awaiting": 0,
     "createdAt": "2026-01-01T09:10:00.000Z",
     "createdBy": "owner"
   }
@@ -298,6 +305,7 @@
     "backlog": false,
     "comments": 0,
     "images": 0,
+    "awaiting": 0,
     "createdAt": "2026-01-01T09:08:00.000Z",
     "createdBy": "owner"
   }
@@ -345,6 +353,10 @@ None.
 None.
 
 ### Images
+
+None.
+
+### Input requests
 
 None.
 

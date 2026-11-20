@@ -44,6 +44,7 @@
     "backlog": false,
     "comments": 0,
     "images": 0,
+    "awaiting": 0,
     "createdAt": "2026-01-01T09:03:00.000Z",
     "createdBy": "owner"
   }
@@ -93,6 +94,10 @@ None.
 None.
 
 ### Images
+
+None.
+
+### Input requests
 
 None.
 

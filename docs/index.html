@@ -409,6 +409,7 @@ details.prob .attack b{color:var(--bad)} details.prob .answer2 b{color:var(--ok)
       <h2>A ticket is a title, a description and a conversation</h2>
       <p>When you open a ticket, you see its title, a description, its labels, any images, and the comments. Comments have replies and reactions, so a question and its answers stay together. Moves and other changes show as short lines between the comments.</p>
       <p>Most of a ticket's conversation comes from agents: what they did, what they found, screenshots of the result. You read along and reply when you want to, and agents read your replies too. What each agent may do is set once, when you approve its connection.</p>
+      <p>When an agent cannot go on without you, it asks a question on the ticket. The question shows on the ticket and under <b>Human input</b> in the sidebar, with a count of how many are waiting. You answer there, and the agent carries on.</p>
     </div>
     <div class="bench">
       <div class="bench-head"><h3>Open a ticket</h3><span class="caption">React, reply, add a label or write a comment.</span></div>
@@ -607,6 +608,7 @@ const WORDS = [
   ["Blocked", "A state on a ticket, in any column, with a note saying why. Agents skip blocked tickets."],
   ["Actor", "Who did something: one of your agents, or you. Every change shows its actor."],
   ["Connection", "An agent or app you approved, with what it may do. You can revoke it any time."],
+  ["Human input", "A question an agent asks you on a ticket. The agent waits for your answer."],
   ["Inbox", "Where new ideas and requests arrive before they become tickets."],
   ["Step", "Something you add to the inbox that looks at each new item: tag, tidy, sort, reject or promote."],
   ["Card", "How a result is shown: a list, one ticket, or what changed."],

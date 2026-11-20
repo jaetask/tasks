@@ -44,6 +44,9 @@ _Avoid_: event, activity, audit entry
 **Archive**: Where archived and canceled tickets are kept. The owner restores them from it.
 _Avoid_: trash, bin
 
+**Human input**: A question an agent asks the owner on a ticket. It awaits an answer, is resolved by the owner's answer, or is taken back.
+_Avoid_: approval, prompt, blocker
+
 **Inbox**: Where new ideas and requests arrive before they become tickets.
 _Avoid_: intake queue, triage
 

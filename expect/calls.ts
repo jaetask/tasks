@@ -9,6 +9,7 @@ import { sqliteCatalog } from "../src/catalog/catalog.js";
 import { domains } from "../src/domains.js";
 import { sqliteComments } from "../src/comments/comments.js";
 import { sqliteImages } from "../src/images/images.js";
+import { sqliteInputs } from "../src/input/input.js";
 import { openJournal } from "../src/journal.js";
 import { sqliteTickets } from "../src/tickets/tickets.js";
 
@@ -43,7 +44,11 @@ export function renderData(db: DatabaseSync): string[] {
   const journal = openJournal(db, () => START);
   const repository = sqliteCatalog(db, journal.rows);
   const catalog = repository.read();
-  const tickets = sqliteTickets(db, journal.rows, repository, () => ({ comments: 0, images: 0 }));
+  const tickets = sqliteTickets(db, journal.rows, repository, () => ({
+    comments: 0,
+    images: 0,
+    awaiting: 0,
+  }));
   const all = (["open", "archived", "canceled"] as const).flatMap((state) =>
     tickets.find({ state }),
   );
@@ -54,6 +59,7 @@ export function renderData(db: DatabaseSync): string[] {
       .thread(t.id)
       .flatMap((c) => [c, ...c.replies]),
   );
+  const requests = sqliteInputs(db, journal.rows, nameOf).list();
   const images = all.flatMap((t) => sqliteImages(db, journal.rows).list(t.id));
   return [
     "### Actors",
@@ -130,6 +136,13 @@ export function renderData(db: DatabaseSync): string[] {
       ? table(
           ["id", "ticket", "name", "type", "bytes", "by"],
           images.map((i) => [i.id, i.ticket, i.name, i.type, i.size, i.by]),
+        )
+      : "None.",
+    "### Input requests",
+    requests.length
+      ? table(
+          ["id", "ticket", "asked by", "question", "state", "answer"],
+          requests.map((q) => [q.id, q.ticket, q.askedByName, q.question, q.state, q.answer ?? ""]),
         )
       : "None.",
     "### Changes",

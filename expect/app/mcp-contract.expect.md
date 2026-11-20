@@ -22,6 +22,7 @@
 | open-agent-kit://contract/comments | comments Contract |
 | open-agent-kit://contract/images | images Contract |
 | open-agent-kit://contract/inbox | inbox Contract |
+| open-agent-kit://contract/input | input Contract |
 | open-agent-kit://contract/connections | connections Contract |
 | open-agent-kit://contract/history | history Contract |
 
@@ -107,6 +108,11 @@
 | inbox__step-edit |  | Change an inbox step: its name, kind, actor, Actions, condition, settings, or whether it is on. |
 | inbox__step-move |  | Move an inbox step to another place in the order. |
 | inbox__step-remove |  | Remove an inbox step. |
+| input__input-list | yes | List the questions asked of the owner, oldest first: all of them, or by state, project or ticket. |
+| input__input-read | yes | Read one input request, to see whether the owner has answered it. |
+| input__input-request |  | Ask the owner a question on a ticket when you cannot go on without a person's answer. Then wait: read the request again later, or look in your agent inbox. |
+| input__input-resolve |  | Answer an input request. Only the owner can. |
+| input__input-withdraw |  | Take back an input request that no longer needs an answer. Whoever asked or the owner can. |
 | connections__connection-list | yes | List the Connections: those waiting for approval, connected and revoked. |
 | connections__connection-approve |  | Approve a Connection that asked to connect: pick the actor it acts as, and whether it may change things or only read. |
 | connections__connection-revoke |  | Revoke a Connection, or turn down one that is waiting. It is cut off at once; what it did stays visible. |
@@ -153,6 +159,10 @@ None.
 None.
 
 ### Images
+
+None.
+
+### Input requests
 
 None.
 

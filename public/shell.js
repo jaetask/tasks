@@ -9,7 +9,10 @@ const PROJECT_SCREENS = [
   ["board", "Board"],
   ["features", "Features"],
 ];
-const TOP = [["overview", "Overview"]];
+const TOP = [
+  ["overview", "Overview"],
+  ["input", "Human input"],
+];
 const BOTTOM = [
   ["archive", "Archive"],
   ["connections", "Connections"],

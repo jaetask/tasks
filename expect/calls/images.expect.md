@@ -182,6 +182,10 @@ None.
 | --- | --- | --- | --- | --- | --- |
 | i3 | TLK-2 | kept.png | image/png | 70 | a2 |
 
+### Input requests
+
+None.
+
 ### Changes
 
 | id | at | actor | action | summary | ticket | undone by |

@@ -683,6 +683,15 @@ tr:last-child td {
   }
 }
 
+/* a question from an agent */
+.request {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-left: 3px solid var(--plum);
+  padding-left: 12px;
+}
+
 /* inbox */
 .items > li {
   flex-direction: column;

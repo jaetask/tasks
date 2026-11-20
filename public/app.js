@@ -23,6 +23,8 @@ const state = {
   replyTo: null,
   archive: "all",
   inbox: "received",
+  input: "awaiting",
+  inputProject: "",
   openRuns: new Set(),
   editingStep: null,
 };
@@ -123,6 +125,8 @@ function ticketCard(ticket) {
       ticket.featureName && h("span", { text: ticket.featureName }),
       ticket.comments > 0 && h("span", { text: `💬 ${ticket.comments}` }),
       ticket.images > 0 && h("span", { text: `🖼 ${ticket.images}` }),
+      ticket.awaiting > 0 &&
+        h("span", { title: "Questions waiting for you", text: `❓ ${ticket.awaiting}` }),
       ticket.assignee && avatar(ticket.assignee, ticket.assigneeName),
     ),
   );
@@ -377,6 +381,104 @@ async function boardView() {
   ];
 }
 
+// ---- human input ----
+
+// One question an agent asked, with the form to answer it while it waits.
+function requestView(request) {
+  return h(
+    "div",
+    { class: "request" },
+    h(
+      "div",
+      { class: "comment-head" },
+      avatar(request.askedBy, request.askedByName),
+      h("b", { text: `${request.askedByName} asks` }),
+      h("span", { class: "caption", text: when(request.at) }),
+    ),
+    h("p", { class: "description", text: request.question }),
+    request.context && h("p", { class: "caption", text: request.context }),
+    request.state === "awaiting"
+      ? lineForm("Your answer", "Answer", (answer) =>
+          act("input.input-resolve", { request: request.id, answer }),
+        )
+      : h("p", {
+          class: "caption",
+          text: request.answer ? `You answered: ${request.answer}` : "Taken back.",
+        }),
+  );
+}
+
+async function inputView() {
+  const projects = state.catalog.projects.filter((p) => !p.archived);
+  const requests =
+    (await read("input.input-list", {
+      state: state.input,
+      ...(state.inputProject ? { project: state.inputProject } : {}),
+    })) ?? [];
+  const tab = (value, text) =>
+    h("button", {
+      type: "button",
+      text,
+      "aria-pressed": String(state.input === value),
+      onclick: () => {
+        state.input = value;
+        refresh();
+      },
+    });
+  return [
+    h(
+      "div",
+      { class: "stack" },
+      h(
+        "section",
+        { class: "panel" },
+        h(
+          "div",
+          { class: "row spread wrap" },
+          h("h2", { text: "Human input" }),
+          h(
+            "div",
+            { class: "row" },
+            tab("awaiting", "Awaiting input"),
+            tab("resolved", "Resolved"),
+            select(
+              [["", "Every project"], ...projects.map((p) => [p.id, p.name])],
+              state.inputProject,
+              (project) => {
+                state.inputProject = project;
+                refresh();
+              },
+              "Project",
+            ),
+          ),
+        ),
+        h("p", {
+          class: "muted",
+          text: "Questions your agents asked you on a ticket. An agent waits for your answer before it goes on.",
+        }),
+        requests.length > 0
+          ? h(
+              "ul",
+              { class: "list items" },
+              requests.map((r) =>
+                h(
+                  "li",
+                  {},
+                  button(`Open ${r.ticket}`, () => openTicket(r.ticket), "small"),
+                  requestView(r),
+                ),
+              ),
+            )
+          : h("p", {
+              class: "muted",
+              text:
+                state.input === "awaiting" ? "No agent is waiting for you." : "Nothing here yet.",
+            }),
+      ),
+    ),
+  ];
+}
+
 // ---- backlog ----
 
 async function backlogView() {
@@ -614,10 +716,11 @@ function addImage(ticket) {
 
 async function renderTicket() {
   const id = state.ticket;
-  const [ticket, conversation, images] = await Promise.all([
+  const [ticket, conversation, images, requests] = await Promise.all([
     read("tickets.ticket-read", { ticket: id }),
     read("comments.conversation-read", { ticket: id }),
     read("images.image-list", { ticket: id }),
+    read("input.input-list", { ticket: id, state: "awaiting" }),
   ]);
   if (!ticket || !conversation || !images || state.ticket !== id) {
     if (!ticket) closeTicket();
@@ -693,6 +796,7 @@ async function renderTicket() {
         class: `description${ticket.description ? "" : " muted"}`,
         text: ticket.description || "No description.",
       }),
+      (requests ?? []).map(requestView),
     );
   }
 
@@ -1681,6 +1785,7 @@ async function settingsView() {
 
 const VIEWS = {
   overview: overviewView,
+  input: inputView,
   board: boardView,
   backlog: backlogView,
   features: featuresView,
@@ -1745,7 +1850,10 @@ async function refresh({ gentle = false } = {}) {
     projects: active,
     view: state.view,
     project: PROJECT_VIEWS.includes(state.view) ? state.project : null,
-    counts: { connections: connections.filter((c) => c.state === "pairing").length },
+    counts: {
+      connections: connections.filter((c) => c.state === "pairing").length,
+      input: ((await read("input.input-list", { state: "awaiting" })) ?? []).length,
+    },
     moveProject: (id, before) => act("catalog.project-move", { project: id, before }),
   });
   if (mine !== drawing) return;

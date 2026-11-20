@@ -85,6 +85,7 @@
     "backlog": false,
     "comments": 1,
     "images": 0,
+    "awaiting": 0,
     "createdAt": "2026-01-01T09:08:00.000Z",
     "createdBy": "owner"
   }
@@ -253,6 +254,10 @@ None.
 | m1 | TLK-1 |  | Coder | Recording works in the app. |  |
 
 ### Images
+
+None.
+
+### Input requests
 
 None.
 
