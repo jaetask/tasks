@@ -48,25 +48,24 @@ import {
   type Image,
   type InputRequest,
   type Kind,
-  OWNER,
-  PRIORITIES,
   type Ticket,
   type TicketStep,
-  TYPES,
   when,
 } from "./api.js";
 import { useApp, useRead } from "./app.js";
 import { Editor } from "./editor.js";
 import { DeleteForGood, Face, Nothing } from "./local.js";
 import { RequestCard } from "./pages.js";
+import { LabelDot, PRIORITY_NAME, PriorityIcon, RailRow, StatusIcon } from "./pickers.js";
 import {
-  LabelDot,
-  PRIORITY_NAME,
-  PriorityIcon,
-  PropertyPicker,
-  RailRow,
-  StatusIcon,
-} from "./pickers.js";
+  ActorPicker,
+  FeaturePicker,
+  LabelsPicker,
+  LocationPicker,
+  PriorityPicker,
+  StatusPicker,
+  TypePicker,
+} from "./properties.js";
 
 /** The images of a ticket with their data, read one by one as they are needed. */
 function useThumbs(images: Image[] | undefined) {
@@ -284,7 +283,7 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
   const conversation = useRead<Conversation>("comments.conversation-read", { ticket: id });
   const images = useRead<Image[]>("images.image-list", { ticket: id });
   const requests = useRead<InputRequest[]>("input.input-list", { ticket: id, state: "awaiting" });
-  const features = useRead<Feature[]>(ticket ? "tickets.feature-find" : null, {
+  const _features = useRead<Feature[]>(ticket ? "tickets.feature-find" : null, {
     project: ticket?.project,
   });
   const thumbs = useThumbs(images);
@@ -513,45 +512,15 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
           </DropdownMenu>
         </div>
         <h3 className="m-0 px-2 text-xs font-medium text-muted-foreground">Properties</h3>
-        <PropertyPicker
-          label="Status"
-          placeholder="Change status..."
-          hint="S"
-          disabled={!open}
-          chosen={ticket.backlog ? [] : [ticket.column.id]}
-          choices={(project?.columns ?? []).map((c) => ({
-            id: c.id,
-            name: c.name,
-            icon: <StatusIcon kind={c.kind} />,
-          }))}
-          onPick={(column) =>
-            void (async () => {
-              // A backlog ticket goes on the board first, then to the column picked.
-              if (ticket.backlog) await act("tickets.ticket-board-send", { ticket: id });
-              await act("tickets.ticket-move", { ticket: id, column });
-            })()
-          }
-        >
+        <StatusPicker ticket={ticket}>
           <RailRow
             data-property="status"
             icon={<StatusIcon kind={ticket.column.kind} backlog={ticket.backlog} />}
           >
             {open ? (ticket.backlog ? "Backlog" : ticket.column.name) : titleCase(ticket.state)}
           </RailRow>
-        </PropertyPicker>
-        <PropertyPicker
-          label="Priority"
-          placeholder="Set priority to..."
-          hint="P"
-          disabled={!open}
-          chosen={[ticket.priority]}
-          choices={PRIORITIES.map((p) => ({
-            id: p,
-            name: PRIORITY_NAME[p],
-            icon: <PriorityIcon priority={p} />,
-          }))}
-          onPick={(priority) => void act("tickets.ticket-priority-set", { ticket: id, priority })}
-        >
+        </StatusPicker>
+        <PriorityPicker ticket={ticket}>
           <RailRow
             data-property="priority"
             muted={ticket.priority === "none"}
@@ -559,35 +528,9 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
           >
             {ticket.priority === "none" ? "Set priority" : PRIORITY_NAME[ticket.priority]}
           </RailRow>
-        </PropertyPicker>
+        </PriorityPicker>
         <div className="group/row flex min-w-0 items-center">
-          <PropertyPicker
-            label="Actor"
-            placeholder="Assign to..."
-            hint="A"
-            disabled={!open}
-            chosen={[ticket.assignee ?? ""]}
-            choices={[
-              { id: "", name: "No actor", icon: <IconUserOff size={16} aria-hidden /> },
-              ...catalog.actors
-                .filter((a) => !a.archived || a.id === ticket.assignee)
-                .map((a) => ({
-                  id: a.id,
-                  name: a.name,
-                  icon: <Face name={a.name} emoji={a.icon} />,
-                  ...(a.id === OWNER ? {} : { group: "Agents" }),
-                })),
-            ]}
-            onPick={(picked) => {
-              const note = handoff.trim();
-              setHandoff("");
-              void act("tickets.ticket-assign", {
-                ticket: id,
-                actor: picked || null,
-                ...(note && picked ? { note } : {}),
-              });
-            }}
-          >
+          <ActorPicker ticket={ticket} note={handoff} onAssigned={() => setHandoff("")}>
             <RailRow
               data-property="actor"
               muted={!actor}
@@ -601,7 +544,7 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
             >
               {actor ? actor.name : "No actor"}
             </RailRow>
-          </PropertyPicker>
+          </ActorPicker>
           {actor && (
             <GoTo
               label="Go to actor"
@@ -622,21 +565,7 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
           />
         )}
         {(catalog.locations.length > 0 || ticket.location) && (
-          <PropertyPicker
-            label="Location"
-            placeholder="Set location to..."
-            disabled={!open}
-            chosen={[ticket.location ?? ""]}
-            choices={[
-              { id: "", name: "No location" },
-              ...catalog.locations
-                .filter((l) => !l.archived || l.id === ticket.location)
-                .map((l) => ({ id: l.id, name: l.name })),
-            ]}
-            onPick={(location) =>
-              void act("tickets.ticket-location-set", { ticket: id, location: location || null })
-            }
-          >
+          <LocationPicker ticket={ticket}>
             <RailRow
               data-property="location"
               muted={!ticket.location}
@@ -644,22 +573,10 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
             >
               {ticket.locationName || "No location"}
             </RailRow>
-          </PropertyPicker>
+          </LocationPicker>
         )}
         <div className="group/row flex min-w-0 items-center">
-          <PropertyPicker
-            label="Feature"
-            placeholder="Set feature to..."
-            disabled={!open}
-            chosen={[ticket.feature ?? ""]}
-            choices={[
-              { id: "", name: "No feature" },
-              ...(features ?? []).map((f) => ({ id: f.id, name: f.name })),
-            ]}
-            onPick={(feature) =>
-              void act("tickets.ticket-feature-set", { ticket: id, feature: feature || null })
-            }
-          >
+          <FeaturePicker ticket={ticket}>
             <RailRow
               data-property="feature"
               muted={!ticket.feature}
@@ -667,7 +584,7 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
             >
               {ticket.featureName || "No feature"}
             </RailRow>
-          </PropertyPicker>
+          </FeaturePicker>
           {ticket.feature && (
             <GoTo
               label="Go to feature"
@@ -677,21 +594,14 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
             />
           )}
         </div>
-        <PropertyPicker
-          label="Type"
-          placeholder="Set type to..."
-          disabled={!open}
-          chosen={[ticket.type]}
-          choices={TYPES.map((t) => ({ id: t, name: titleCase(t) }))}
-          onPick={(type) => void act("tickets.ticket-type-set", { ticket: id, type })}
-        >
+        <TypePicker ticket={ticket}>
           <RailRow
             data-property="type"
             icon={<IconTag size={16} aria-hidden className="text-muted-foreground" />}
           >
             {titleCase(ticket.type)}
           </RailRow>
-        </PropertyPicker>
+        </TypePicker>
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -719,32 +629,7 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
         </form>
         <div className="mt-3 flex items-center justify-between px-2">
           <h3 className="m-0 text-xs font-medium text-muted-foreground">Labels</h3>
-          <PropertyPicker
-            label="Labels"
-            placeholder="Change or add labels..."
-            hint="L"
-            many
-            disabled={!open}
-            chosen={ticket.labels.map((l) => l.id)}
-            choices={catalog.labels.map((l) => ({
-              id: l.id,
-              name: l.name,
-              icon: <LabelDot colour={l.colour} />,
-            }))}
-            onPick={(label) =>
-              void act(
-                ticket.labels.some((l) => l.id === label)
-                  ? "tickets.ticket-label-remove"
-                  : "tickets.ticket-label-add",
-                { ticket: id, label },
-              )
-            }
-            onCreate={(name) =>
-              void act<{ id: string }>("catalog.label-create", { name, colour: "blue" }).then(
-                (made) => made && act("tickets.ticket-label-add", { ticket: id, label: made.id }),
-              )
-            }
-          >
+          <LabelsPicker ticket={ticket}>
             <Button
               variant="ghost"
               aria-label="Change or add labels"
@@ -752,7 +637,7 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
             >
               <IconPlus size={14} aria-hidden />
             </Button>
-          </PropertyPicker>
+          </LabelsPicker>
         </div>
         {ticket.labels.length > 0 && (
           <div className="flex flex-wrap gap-1.5 px-2">

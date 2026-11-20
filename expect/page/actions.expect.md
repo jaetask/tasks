@@ -27,6 +27,7 @@
 | catalog.location-rename | write |
 | catalog.location-restore | write |
 | catalog.project-archive | write |
+| catalog.project-card-set | write |
 | catalog.project-create | write |
 | catalog.project-edit | write |
 | catalog.project-move | write |

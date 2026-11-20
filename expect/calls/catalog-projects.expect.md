@@ -24,7 +24,12 @@
 14. owner calls catalog.project-edit {"project":"NTS","icon":"notebook"} → rejected: invalid-input: icon: an icon is one of: folder, robot, code, checklist, layout, rocket, bolt, flame, star, heart, bulb, target, flag, chart, wallet, dollar, person, table, brand-x, globe, cloud, database, terminal, tool, bug, palette, book, coffee
 15. owner calls catalog.project-edit {"project":"NTS","colour":"#48b"} → rejected: invalid-input: colour: a colour is one of blue, teal, green, amber, purple, pink, or six-digit hex such as #48b685
 16. owner calls catalog.project-edit {"project":"NTS","colour":"lime"} → rejected: invalid-input: colour: a colour is one of blue, teal, green, amber, purple, pink, or six-digit hex such as #48b685
-17. owner calls catalog.catalog-read → succeeded:
+17. owner calls catalog.project-card-set {"project":"TLK","show":["id","labels","links"]} → succeeded; updated project TLK
+18. owner calls catalog.project-card-set {"project":"TLK","show":["colour"]} → rejected: invalid-input: show.0: Invalid option: expected one of "id"|"type"|"priority"|"status"|"actor"|"feature"|"location"|"labels"|"links"|"reactions"|"time-in-status"|"created"|"updated"
+19. a1 calls catalog.project-card-set {"project":"TLK","show":[]} → rejected: not-allowed: a1 may not run catalog.project-card-set
+20. owner calls catalog.project-card-set {"project":"MNY","show":[]} → succeeded; updated project MNY
+21. owner calls catalog.project-card-set {"project":"NTS","show":null} → succeeded
+22. owner calls catalog.catalog-read → succeeded:
 
 ```json
 {
@@ -71,7 +76,8 @@
           "name": "Done",
           "kind": "done"
         }
-      ]
+      ],
+      "card": []
     },
     {
       "id": "TLK",
@@ -100,6 +106,11 @@
           "name": "Done",
           "kind": "done"
         }
+      ],
+      "card": [
+        "id",
+        "labels",
+        "links"
       ]
     },
     {
@@ -129,6 +140,15 @@
           "name": "Done",
           "kind": "done"
         }
+      ],
+      "card": [
+        "id",
+        "type",
+        "priority",
+        "status",
+        "actor",
+        "feature",
+        "updated"
       ]
     }
   ],
@@ -203,3 +223,5 @@ None.
 | h9 | 09:10 | owner | catalog.project-edit | changed how project Talk looks |  | h10 |
 | h10 | 09:11 | owner | history.change-undo | undid: changed how project Talk looks |  |  |
 | h11 | 09:13 | owner | catalog.project-edit | changed how project Money looks |  |  |
+| h12 | 09:17 | owner | catalog.project-card-set | chose what cards show on the board of Talk |  |  |
+| h13 | 09:20 | owner | catalog.project-card-set | chose what cards show on the board of Money |  |  |

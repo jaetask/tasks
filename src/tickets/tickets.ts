@@ -62,6 +62,7 @@ export const Ticket = z.object({
   createdAt: z.string(),
   createdBy: z.string(),
   updatedAt: z.string().describe("When it last changed."),
+  columnSince: z.string().describe("When it entered the column it is in."),
 });
 export type Ticket = z.infer<typeof Ticket>;
 
@@ -332,6 +333,15 @@ export function sqliteTickets(
       createdAt: r.created_at,
       createdBy: r.created_by,
       // The record of changes says when a ticket last changed.
+      // The last time a Call moved it, or when it was made.
+      columnSince:
+        (
+          db
+            .prepare(
+              "SELECT max(at) AS at FROM changes WHERE ticket = ? AND action IN ('tickets.ticket-move', 'tickets.ticket-claim', 'tickets.ticket-review-request', 'tickets.ticket-finish', 'tickets.ticket-board-send', 'tickets.ticket-backlog-send')",
+            )
+            .get(r.id) as { at: string | null }
+        ).at ?? r.created_at,
       updatedAt:
         (
           db.prepare("SELECT max(at) AS at FROM changes WHERE ticket = ?").get(r.id) as {

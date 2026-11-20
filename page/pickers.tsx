@@ -94,6 +94,7 @@ export function PropertyPicker({
   many,
   onCreate,
   disabled,
+  armed = true,
   children,
 }: {
   label: string;
@@ -106,12 +107,14 @@ export function PropertyPicker({
   /** Makes a new choice from the words typed, when none matches. */
   onCreate?: (name: string) => void;
   disabled?: boolean;
+  /** False while the key in `hint` should not open it. True if left out. */
+  armed?: boolean | undefined;
   children: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   useEffect(() => {
-    if (!hint || disabled) return;
+    if (!hint || disabled || !armed) return;
     const on = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey || e.altKey || typing(e.target)) return;
       if (e.key.toLowerCase() !== hint.toLowerCase()) return;
@@ -120,7 +123,7 @@ export function PropertyPicker({
     };
     window.addEventListener("keydown", on);
     return () => window.removeEventListener("keydown", on);
-  }, [hint, disabled]);
+  }, [hint, disabled, armed]);
   const pick = (id: string) => {
     onPick(id);
     if (!many) setOpen(false);

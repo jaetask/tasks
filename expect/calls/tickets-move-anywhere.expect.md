@@ -69,7 +69,8 @@
           "awaiting": 0,
           "createdAt": "2026-01-01T09:04:00.000Z",
           "createdBy": "owner",
-          "updatedAt": "2026-01-01T09:09:00.000Z"
+          "updatedAt": "2026-01-01T09:09:00.000Z",
+          "columnSince": "2026-01-01T09:09:00.000Z"
         },
         {
           "id": "TLK-2",
@@ -100,7 +101,8 @@
           "awaiting": 0,
           "createdAt": "2026-01-01T09:05:00.000Z",
           "createdBy": "owner",
-          "updatedAt": "2026-01-01T09:05:00.000Z"
+          "updatedAt": "2026-01-01T09:05:00.000Z",
+          "columnSince": "2026-01-01T09:05:00.000Z"
         }
       ]
     },
@@ -164,7 +166,8 @@
           "awaiting": 0,
           "createdAt": "2026-01-01T09:04:00.000Z",
           "createdBy": "owner",
-          "updatedAt": "2026-01-01T09:09:00.000Z"
+          "updatedAt": "2026-01-01T09:09:00.000Z",
+          "columnSince": "2026-01-01T09:09:00.000Z"
         }
       ]
     },
@@ -202,7 +205,8 @@
           "awaiting": 0,
           "createdAt": "2026-01-01T09:05:00.000Z",
           "createdBy": "owner",
-          "updatedAt": "2026-01-01T09:05:00.000Z"
+          "updatedAt": "2026-01-01T09:05:00.000Z",
+          "columnSince": "2026-01-01T09:05:00.000Z"
         }
       ]
     },

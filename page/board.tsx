@@ -12,6 +12,7 @@ import {
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@jaetask/toolkit/ui/dialog";
 import { Input } from "@jaetask/toolkit/ui/input";
 import { Label } from "@jaetask/toolkit/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@jaetask/toolkit/ui/popover";
 import { ToggleGroup, ToggleGroupItem } from "@jaetask/toolkit/ui/toggle-group";
 import {
   Tooltip,
@@ -20,11 +21,15 @@ import {
   TooltipTrigger,
 } from "@jaetask/toolkit/ui/tooltip";
 import {
+  IconAdjustmentsHorizontal,
   IconChevronDown,
   IconCircleCheck,
+  IconLink,
   IconMapPin,
   IconPlus,
   IconStack2,
+  IconStopwatch,
+  IconUserOff,
   IconUsers,
 } from "@tabler/icons-react";
 import { type DragEvent, type ReactNode, useEffect, useState } from "react";
@@ -40,7 +45,16 @@ import {
 } from "./api.js";
 import { useApp, useRead } from "./app.js";
 import { Nothing, Picker, projectEmoji } from "./local.js";
-import { PriorityIcon, StatusIcon } from "./pickers.js";
+import { LabelDot, PriorityIcon, StatusIcon } from "./pickers.js";
+import {
+  ActorPicker,
+  FeaturePicker,
+  LabelsPicker,
+  LocationPicker,
+  PriorityPicker,
+  StatusPicker,
+  TypePicker,
+} from "./properties.js";
 import { TicketView } from "./ticket.js";
 
 const VIEWS = [
@@ -251,66 +265,248 @@ const _KIND_DOT: Record<Kind, string> = {
   waiting: "bg-violet-500",
   done: "bg-emerald-500",
 };
-/** A ticket as a card on a board. Pressing its title opens it; it can be dragged to a lane. */
-export function TicketCard({ ticket, action }: { ticket: Ticket; action?: ReactNode }) {
+/** A compact time since: 5m, 3h, 16d. */
+const since = (at: string) => {
+  const minutes = Math.max(0, Math.round((Date.now() - Date.parse(at)) / 60_000));
+  if (minutes < 60) return `${minutes}m`;
+  if (minutes < 60 * 24) return `${Math.round(minutes / 60)}h`;
+  return `${Math.round(minutes / (60 * 24))}d`;
+};
+/** A short date: Nov 20, with the year only when it is not this year. */
+const shortDate = (at: string) => {
+  const date = new Date(at);
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    ...(date.getFullYear() === new Date().getFullYear() ? {} : { year: "numeric" }),
+  });
+};
+const SERVICES: Record<string, string> = {
+  "youtube.com": "YouTube",
+  "youtu.be": "YouTube",
+  "github.com": "GitHub",
+  "figma.com": "Figma",
+  "linear.app": "Linear",
+  "notion.so": "Notion",
+};
+/** The name a link's site goes by: a known service, or its domain. */
+const service = (url: string) => {
+  try {
+    const host = new URL(url).hostname.replace(/^www\./, "");
+    return SERVICES[host] ?? host;
+  } catch {
+    return url;
+  }
+};
+
+const PILL =
+  "inline-flex h-6 items-center gap-1.5 rounded-full border bg-transparent px-2 text-xs font-normal";
+
+/** A chip on a card that opens a picker or a link: it keeps its click and its drag to itself. */
+function Chip({ className, ...rest }: React.ComponentProps<typeof Button>) {
+  return (
+    <Button
+      variant="ghost"
+      data-chip
+      draggable={false}
+      className={`h-auto p-0 text-xs font-normal hover:bg-transparent ${className ?? ""}`}
+      {...rest}
+    />
+  );
+}
+
+/**
+ * A ticket as a card on a board. Anywhere on it opens the ticket, except a property, which opens
+ * that property's picker. It can be dragged to a lane. `show` says which properties it carries.
+ */
+export function TicketCard({
+  ticket,
+  action,
+  show,
+}: {
+  ticket: Ticket;
+  action?: ReactNode;
+  /** The properties to show. The ticket's project decides if left out. */
+  show?: readonly string[];
+}) {
   const { catalog, go, path } = useApp();
+  const [hovered, setHovered] = useState(false);
   const project = catalog.projects.find((p) => p.id === ticket.project);
   const actor = catalog.actors.find((a) => a.id === ticket.assignee);
+  const shown = new Set(show ?? project?.card ?? []);
+  const has = (property: string) => shown.has(property);
   const open = () => go(`${path}?ticket=${ticket.id}`);
+  const avatar = actor && (
+    <span
+      aria-hidden
+      className="inline-flex size-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold"
+    >
+      {actor.icon || actor.name.slice(0, 1)}
+    </span>
+  );
+  const status = <StatusIcon kind={ticket.column.kind} backlog={ticket.backlog} />;
+  // Status and actor share a line when both are shown; alone, each takes less room.
+  const together = has("status") && has("actor");
+  const top = has("id") || has("type") || has("priority") || (has("actor") && !together);
+  const byService = new Map<string, string[]>();
+  for (const l of ticket.links) {
+    byService.set(service(l.url), [...(byService.get(service(l.url)) ?? []), l.url]);
+  }
+  const pills =
+    (has("location") && ticket.locationName) ||
+    (has("labels") && ticket.labels.length > 0) ||
+    (has("links") && ticket.links.length > 0) ||
+    (has("reactions") && ticket.reactions.length > 0) ||
+    has("time-in-status");
+  const bare = shown.size === 0;
   return (
     // The whole card opens the ticket; it can be dragged, and on the backlog it holds a button of its own.
     <article
       draggable
       aria-label={`${ticket.id} ${ticket.title}`}
       data-blocked={ticket.blocked !== null}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       onDragStart={(e) => {
         e.dataTransfer.setData(DRAG, ticket.id);
         e.dataTransfer.effectAllowed = "move";
       }}
-      onClick={open}
+      onClick={(e) => {
+        // A click in a picker, which is drawn outside the card, or on a chip is not for the card.
+        const target = e.target as HTMLElement;
+        if (!e.currentTarget.contains(target) || target.closest("[data-chip]")) return;
+        open();
+      }}
       onKeyDown={(e) => {
         if (e.key === "Enter" && e.target === e.currentTarget) open();
       }}
-      className="ticket cursor-pointer rounded-xl border bg-card p-4 shadow-sm transition-shadow hover:shadow-md focus-visible:outline-2 focus-visible:outline-ring"
+      className={`ticket grid cursor-pointer gap-3 rounded-xl border bg-card shadow-sm transition-shadow hover:shadow-md focus-visible:outline-2 focus-visible:outline-ring ${bare ? "px-3 py-2" : "p-4"}`}
     >
-      <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
-        <span>{`${ticket.id} · ${titleCase(ticket.type)}`}</span>
-        <span className="flex items-center gap-1">
-          {ticket.blocked ? (
-            "Blocked"
-          ) : ticket.priority !== "none" ? (
-            <>
-              <PriorityIcon priority={ticket.priority} />
-              {titleCase(ticket.priority)}
-            </>
-          ) : (
-            ""
-          )}
-        </span>
-      </div>
-      <div className="font-medium">{ticket.title}</div>
-      <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-        <StatusIcon kind={ticket.column.kind} backlog={ticket.backlog} />
-        <span>{ticket.backlog ? "Backlog" : ticket.column.name}</span>
-        {actor && (
-          <>
-            <span
-              aria-hidden
-              className="inline-flex size-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold"
-            >
-              {actor.icon || actor.name.slice(0, 1)}
-            </span>
-            <span>{actor.name}</span>
-          </>
+      {top && (
+        <div className="-mb-1 flex items-center justify-between gap-2 text-xs text-muted-foreground">
+          <span className="flex items-center gap-1">
+            {has("id") && <span>{ticket.id}</span>}
+            {has("id") && has("type") && <span>·</span>}
+            {has("type") && (
+              <TypePicker ticket={ticket}>
+                <Chip className="text-muted-foreground">{titleCase(ticket.type)}</Chip>
+              </TypePicker>
+            )}
+          </span>
+          <span className="flex items-center gap-2">
+            {ticket.blocked && <span>Blocked</span>}
+            {has("priority") && (
+              <PriorityPicker ticket={ticket} armed={hovered}>
+                <Chip className="gap-1 text-muted-foreground" aria-label="Priority">
+                  <PriorityIcon priority={ticket.priority} />
+                  {ticket.priority !== "none" && titleCase(ticket.priority)}
+                </Chip>
+              </PriorityPicker>
+            )}
+            {has("actor") && !together && (
+              <ActorPicker ticket={ticket} armed={hovered}>
+                <Chip aria-label="Actor">
+                  {avatar ?? (
+                    <IconUserOff size={16} aria-hidden className="text-muted-foreground" />
+                  )}
+                </Chip>
+              </ActorPicker>
+            )}
+          </span>
+        </div>
+      )}
+      <div className="flex items-start gap-2 font-medium">
+        {has("status") && !together && (
+          <StatusPicker ticket={ticket} armed={hovered}>
+            <Chip className="mt-0.5" aria-label="Status">
+              {status}
+            </Chip>
+          </StatusPicker>
         )}
+        <span className={bare ? "truncate" : ""}>{ticket.title}</span>
       </div>
-      <div className="mt-3 text-xs text-muted-foreground">
-        {[project?.name ?? ticket.project, ticket.featureName].filter(Boolean).join(" / ")}
-      </div>
-      <div className="mt-3 flex items-center justify-between gap-2 text-xs text-muted-foreground">
-        <span>{`Updated ${new Date(ticket.updatedAt).toLocaleDateString("en-GB")}`}</span>
-        {action}
-      </div>
+      {together && (
+        <div className="flex flex-wrap items-center gap-2 text-xs">
+          <StatusPicker ticket={ticket} armed={hovered}>
+            <Chip className="gap-2" aria-label="Status">
+              {status}
+              {ticket.backlog ? "Backlog" : ticket.column.name}
+            </Chip>
+          </StatusPicker>
+          <ActorPicker ticket={ticket} armed={hovered}>
+            <Chip className="gap-2" aria-label="Actor">
+              {avatar}
+              {actor ? actor.name : <span className="text-muted-foreground">No actor</span>}
+            </Chip>
+          </ActorPicker>
+        </div>
+      )}
+      {has("feature") && (
+        <FeaturePicker ticket={ticket}>
+          <Chip className="justify-start whitespace-normal text-left text-muted-foreground">
+            {[project?.name ?? ticket.project, ticket.featureName].filter(Boolean).join(" / ")}
+          </Chip>
+        </FeaturePicker>
+      )}
+      {pills && (
+        <div className="flex flex-wrap items-center gap-1.5">
+          {has("location") && ticket.locationName && (
+            <LocationPicker ticket={ticket}>
+              <Chip className={PILL}>
+                <IconMapPin size={12} aria-hidden />
+                {ticket.locationName}
+              </Chip>
+            </LocationPicker>
+          )}
+          {has("labels") &&
+            ticket.labels.map((l) => (
+              <LabelsPicker key={l.id} ticket={ticket} armed={hovered}>
+                <Chip className={PILL}>
+                  <LabelDot colour={l.colour} />
+                  {l.name}
+                </Chip>
+              </LabelsPicker>
+            ))}
+          {has("links") &&
+            [...byService].map(([name, urls]) => (
+              <Chip key={name} asChild className={PILL}>
+                <a href={urls[0]} target="_blank" rel="noopener noreferrer">
+                  <IconLink size={12} aria-hidden />
+                  {urls.length > 1 ? `${name} ${urls.length}` : name}
+                </a>
+              </Chip>
+            ))}
+          {has("time-in-status") && (
+            <span className={PILL} title={new Date(ticket.columnSince).toLocaleString()}>
+              <IconStopwatch size={12} aria-hidden />
+              {since(ticket.columnSince)}
+            </span>
+          )}
+          {has("reactions") &&
+            ticket.reactions.map((r) => (
+              <span key={r.emoji} className="text-xs text-muted-foreground">
+                {`${r.emoji} ${r.actors.length}`}
+              </span>
+            ))}
+        </div>
+      )}
+      {(has("created") || has("updated") || action) && (
+        <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+          <span className="grid gap-1">
+            {has("created") && (
+              <span title={new Date(ticket.createdAt).toLocaleString()}>
+                {`Created ${shortDate(ticket.createdAt)}`}
+              </span>
+            )}
+            {has("updated") && (
+              <span title={new Date(ticket.updatedAt).toLocaleString()}>
+                {`Updated ${shortDate(ticket.updatedAt)}`}
+              </span>
+            )}
+          </span>
+          {action}
+        </div>
+      )}
     </article>
   );
 }
@@ -416,6 +612,71 @@ export function TicketDialog() {
         <TicketView key={id} id={id} onGone={() => go(path)} />
       </DialogContent>
     </Dialog>
+  );
+}
+
+const CARD_PROPERTIES: [string, string][] = [
+  ["id", "ID"],
+  ["type", "Type"],
+  ["priority", "Priority"],
+  ["status", "Status"],
+  ["actor", "Actor"],
+  ["feature", "Feature"],
+  ["location", "Location"],
+  ["labels", "Labels"],
+  ["links", "Links"],
+  ["reactions", "Reactions"],
+  ["time-in-status", "Time in status"],
+  ["created", "Created"],
+  ["updated", "Updated"],
+];
+
+/** The Display button: which properties a card shows on this project's board and backlog. */
+function Display({ project }: { project: Project }) {
+  const { act } = useApp();
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant="outline" size="sm">
+          <IconAdjustmentsHorizontal size={16} aria-hidden />
+          Display
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="grid w-80 gap-3">
+        <p className="m-0 text-xs font-medium text-muted-foreground">Display properties</p>
+        <ToggleGroup
+          type="multiple"
+          aria-label="Display properties"
+          className="flex-wrap justify-start gap-1.5"
+          value={project.card}
+          onValueChange={(show) =>
+            void act("catalog.project-card-set", { project: project.id, show })
+          }
+        >
+          {CARD_PROPERTIES.map(([id, name]) => (
+            <ToggleGroupItem
+              key={id}
+              value={id}
+              className="h-7 rounded-full border px-3 text-xs font-normal text-muted-foreground data-[state=on]:border-transparent data-[state=on]:bg-muted data-[state=on]:text-foreground"
+            >
+              {name}
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
+        <div className="flex justify-end">
+          <Button
+            variant="link"
+            size="sm"
+            className="h-auto p-0"
+            onClick={() =>
+              void act("catalog.project-card-set", { project: project.id, show: null })
+            }
+          >
+            Reset
+          </Button>
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }
 
@@ -552,6 +813,7 @@ export function BoardPage({ project }: { project: Project }) {
               ))}
             </ToggleGroup>
           </TooltipProvider>
+          <Display project={project} />
           <EditLink to={`/p/${project.id}/columns`} label="Edit columns" />
           <PrimaryLink to={`/p/${project.id}/new`}>New ticket</PrimaryLink>
         </div>
@@ -621,7 +883,12 @@ export function BacklogPage({ project }: { project: Project }) {
       wide
       title={title(project, "Backlog")}
       line="Tickets wait here until you put them on the board. Agents looking for work do not see them."
-      action={<PrimaryLink to={`/p/${project.id}/new?backlog=1`}>New ticket</PrimaryLink>}
+      action={
+        <div className="flex flex-wrap items-center gap-2">
+          <Display project={project} />
+          <PrimaryLink to={`/p/${project.id}/new?backlog=1`}>New ticket</PrimaryLink>
+        </div>
+      }
     >
       <FilterBar filters={filters} set={set} features={features} />
       {tickets.length > 0 ? (
