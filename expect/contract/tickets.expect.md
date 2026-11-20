@@ -917,6 +917,11 @@ A tool that changes something after the person says yes waits for them; tell the
       "type": "string",
       "maxLength": 2000,
       "pattern": "^https?:\\/\\/\\S+$"
+    },
+    "title": {
+      "description": "What to call the link. Left out, the page's own title is used when it has one.",
+      "type": "string",
+      "maxLength": 200
     }
   },
   "required": [

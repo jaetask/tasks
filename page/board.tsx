@@ -31,7 +31,6 @@ import {
   IconChevronDown,
   IconCircleCheck,
   IconDots,
-  IconLink,
   IconMapPin,
   IconPlus,
   IconStack2,
@@ -51,6 +50,7 @@ import {
   TYPES,
 } from "./api.js";
 import { useApp, useRead } from "./app.js";
+import { ServiceIcon, service } from "./links.js";
 import { Nothing, Picker, projectEmoji, projectLook } from "./local.js";
 import { LabelDot, PriorityIcon, StatusIcon } from "./pickers.js";
 import {
@@ -330,24 +330,6 @@ const shortDate = (at: string) => {
     ...(date.getFullYear() === new Date().getFullYear() ? {} : { year: "numeric" }),
   });
 };
-const SERVICES: Record<string, string> = {
-  "youtube.com": "YouTube",
-  "youtu.be": "YouTube",
-  "github.com": "GitHub",
-  "figma.com": "Figma",
-  "linear.app": "Linear",
-  "notion.so": "Notion",
-};
-/** The name a link's site goes by: a known service, or its domain. */
-const service = (url: string) => {
-  try {
-    const host = new URL(url).hostname.replace(/^www\./, "");
-    return SERVICES[host] ?? host;
-  } catch {
-    return url;
-  }
-};
-
 const PILL =
   "inline-flex h-6 items-center gap-1.5 rounded-full border bg-transparent px-2 text-xs font-normal";
 
@@ -534,7 +516,7 @@ export function TicketCard({
               [...byService].map(([name, urls]) => (
                 <Chip key={name} asChild className={PILL}>
                   <a href={urls[0]} target="_blank" rel="noopener noreferrer">
-                    <IconLink size={12} aria-hidden />
+                    <ServiceIcon url={urls[0] ?? ""} size={12} />
                     {urls.length > 1 ? `${name} ${urls.length}` : name}
                   </a>
                 </Chip>

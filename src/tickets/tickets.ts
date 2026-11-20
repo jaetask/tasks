@@ -209,7 +209,7 @@ export type Tickets = {
   /** Adds an actor's reaction to a ticket. The same emoji again changes nothing. */
   react(id: string, actor: string, emoji: string): Ticket;
   unreact(id: string, actor: string, emoji: string): Ticket;
-  addLink(id: string, url: string): Ticket;
+  addLink(id: string, url: string, title?: string): Ticket;
   removeLink(id: string, link: string): Ticket;
   /** Sets the title and description shown for a link. */
   describeLink(link: string, title: string, description: string): Ticket;
@@ -450,12 +450,12 @@ export function sqliteTickets(
     if (!rows.get("ticket_labels", id)) rows.insert("ticket_labels", { id, ticket, label });
   };
 
-  const link = (ticket: string, url: string) => {
+  const link = (ticket: string, url: string, title = "") => {
     const has = db
       .prepare("SELECT id FROM ticket_links WHERE ticket = ? AND url = ?")
       .get(ticket, url);
     if (has) throw new Refusal("link-there", `${ticket} already has this link.`);
-    rows.insert("ticket_links", { id: nextId(db, "u"), ticket, url, title: "", description: "" });
+    rows.insert("ticket_links", { id: nextId(db, "u"), ticket, url, title, description: "" });
   };
 
   const narrowed = (all: TicketRow[], narrow: Narrow = {}) => {
@@ -706,9 +706,9 @@ export function sqliteTickets(
       rows.remove("ticket_reactions", `${id}:${actor}:${emoji}`);
       return get(id);
     },
-    addLink: (id, url) => {
+    addLink: (id, url, title) => {
       open(id);
-      link(id, url);
+      link(id, url, title);
       return get(id);
     },
     removeLink: (id, linkId) => {

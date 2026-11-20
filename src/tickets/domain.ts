@@ -365,10 +365,19 @@ const ticketReactionRemove = write({
 const ticketLinkAdd = write({
   name: "ticket-link-add",
   description: "Add a link to a ticket: a web address that belongs to it, such as a pull request.",
-  input: z.object({ ticket: id, url }),
-  run: ({ ticket, url }, { tickets }) => ({
-    ticket: tickets.addLink(ticket, url),
-    summary: `added a link to ${ticket}: ${url}`,
+  input: z.object({
+    ticket: id,
+    url,
+    title: z
+      .string()
+      .trim()
+      .max(200)
+      .optional()
+      .describe("What to call the link. Left out, the page's own title is used when it has one."),
+  }),
+  run: ({ ticket, url, title }, { tickets }) => ({
+    ticket: tickets.addLink(ticket, url, title),
+    summary: `added a link to ${ticket}: ${title ? `${title} (${url})` : url}`,
   }),
 });
 
