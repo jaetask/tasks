@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import type { Ticket } from "./api.js";
 import { useApp } from "./app.js";
 import { ActorAvatar, NoActor, TICKET_DRAG } from "./local.js";
-import { LabelDot, PriorityIcon, StatusIcon } from "./pickers.js";
+import { LabelDot, labelNames, PriorityIcon, StatusIcon } from "./pickers.js";
 import { TicketMenu } from "./ticket-menu.js";
 
 export function TicketLine({
@@ -59,7 +59,7 @@ export function TicketLine({
           {ticket.labels.length > 0 && (
             <span
               className="hidden shrink-0 items-center gap-1 md:flex"
-              title={ticket.labels.map((l) => l.name).join(", ")}
+              title={labelNames(ticket.labels)}
             >
               {ticket.labels.slice(0, 4).map((l) => (
                 <LabelDot key={l.id} colour={l.colour} />

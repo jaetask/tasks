@@ -14,7 +14,7 @@ import { type Feature, OWNER, PRIORITIES, type Ticket, TYPES } from "./api.js";
 import { useApp, useRead } from "./app.js";
 import { Editor } from "./editor.js";
 import { Face, NoActor, projectLook } from "./local.js";
-import { LabelDot, PRIORITY_NAME, PriorityIcon, StatusIcon } from "./pickers.js";
+import { LabelName, labelChoice, PRIORITY_NAME, PriorityIcon, StatusIcon } from "./pickers.js";
 
 const BACKLOG = "backlog";
 const titleCase = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
@@ -79,6 +79,7 @@ function NewTicket({ onClose }: { onClose: () => void }) {
   const [feature, setFeature] = useState(query.get("feature") ?? "");
   const [due, setDue] = useState<string | null>(null);
   const location = query.get("location");
+  const picked = catalog.labels.filter((label) => labels.includes(label.id));
   if (!chosen) return null;
   const columns = chosen.columns;
   const at =
@@ -228,20 +229,18 @@ function NewTicket({ onClose }: { onClose: () => void }) {
             placeholder="Add labels..."
             many
             chosen={labels}
-            choices={catalog.labels.map((l) => ({
-              id: l.id,
-              name: l.name,
-              icon: <LabelDot colour={l.colour} />,
-            }))}
+            choices={catalog.labels.map(labelChoice)}
             onPick={(id) =>
               setLabels(labels.includes(id) ? labels.filter((l) => l !== id) : [...labels, id])
             }
           >
             <Chip label="Labels">
-              <IconTag size={14} aria-hidden className="text-muted-foreground" />
-              {labels.length === 0
+              {picked.length === 0 && (
+                <IconTag size={14} aria-hidden className="text-muted-foreground" />
+              )}
+              {picked.length === 0
                 ? "Labels"
-                : labels.map((id) => catalog.labels.find((l) => l.id === id)?.name).join(", ")}
+                : picked.map((label) => <LabelName key={label.id} label={label} />)}
             </Chip>
           </PropertyPicker>
           {features.length > 0 && (

@@ -54,4 +54,23 @@ export function LabelDot({ colour }: { colour: Colour }) {
   );
 }
 
+type Named = { id: string; name: string; colour: Colour };
+
+export function LabelName({ label }: { label: Named }) {
+  return (
+    <span className="inline-flex min-w-0 items-center gap-1.5">
+      <LabelDot colour={label.colour} />
+      <span className="truncate">{label.name}</span>
+    </span>
+  );
+}
+
+export const labelChoice = (label: Named) => ({
+  id: label.id,
+  name: label.name,
+  icon: <LabelDot colour={label.colour} />,
+});
+
+export const labelNames = (all: Named[]) => all.map((label) => label.name).join(", ");
+
 export { type PickerChoice as Choice, PropertyPicker, RailRow } from "@jaetask/toolkit/suite";

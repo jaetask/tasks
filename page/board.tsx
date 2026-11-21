@@ -49,7 +49,7 @@ import { useApp, useRead } from "./app.js";
 import { ServiceIcon, service } from "@jaetask/toolkit/suite";
 import { ActorAvatar, Picker, projectLook, NoActor, Tick, TICKET_DRAG } from "./local.js";
 export { Tick };
-import { LabelDot, PRIORITY_NAME, PriorityIcon, StatusIcon } from "./pickers.js";
+import { LabelDot, labelChoice, PRIORITY_NAME, PriorityIcon, StatusIcon } from "./pickers.js";
 import { TicketLine } from "./ticket-line.js";
 import {
   ActorPicker,
@@ -217,7 +217,7 @@ export function FilterBar({
     {
       id: "label",
       label: "Label",
-      options: catalog.labels.map((l) => ({ id: l.id, name: l.name })),
+      options: catalog.labels.map(labelChoice),
     },
     { id: "type", label: "Type", options: TYPES.map((t) => ({ id: t, name: titleCase(t) })) },
     {
