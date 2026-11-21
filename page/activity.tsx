@@ -40,6 +40,7 @@ import { type ReactNode, useCallback, useState } from "react";
 import { type Comment, type Conversation, OWNER, type Reply, type Ticket, when } from "./api.js";
 import { useApp } from "./app.js";
 import { Editor } from "./editor.js";
+import { ActorAvatar } from "./local.js";
 
 /** How long ago, in the shortest form: now, 5m ago, 3h ago, 18d ago. */
 export function ago(at: string): string {
@@ -51,18 +52,7 @@ export function ago(at: string): string {
 }
 
 function Who({ id, name }: { id: string; name: string }) {
-  const { catalog } = useApp();
-  const actor = catalog.actors.find((a) => a.id === id);
-  const icon = actor?.icon;
-  const shown = name || actor?.name || "";
-  return (
-    <span
-      aria-hidden
-      className="inline-flex size-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold"
-    >
-      {icon || shown.slice(0, 1) || "?"}
-    </span>
-  );
+  return <ActorAvatar id={id} name={name} />;
 }
 
 /** A paperclip that picks image files and attaches them to the ticket. */

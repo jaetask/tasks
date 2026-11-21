@@ -105,13 +105,17 @@ try {
   await step("name the owner; the shell opens on the Overview", async () => {
     await page.fill('[aria-label="Your name"]', "Sam");
     await button("Start").click();
-    await see("Create your first project");
+    await see("Create a project");
   });
-  await step("create a project on its own edit page", async () => {
-    await link("Create a project").click();
+  await step("create the first project in a dialog", async () => {
+    await button("Create a project").click();
     await see("New project");
-    await page.fill("#name", "Talk");
-    await page.fill("#prefix", "tlk");
+    await page.fill("#project-name", "Talk");
+    // The prefix is suggested from the name, and can be typed over.
+    if ((await page.inputValue("#project-prefix")) !== "TALK") {
+      throw new Error("no prefix was suggested from the name");
+    }
+    await page.fill("#project-prefix", "tlk");
     await button("Choose project icon and colour").click();
     await button("globe icon").click();
     await button("Green icon colour").click();
@@ -121,12 +125,11 @@ try {
     await page.waitForSelector(".lane");
   });
   await step("several projects can be open in the sidebar at once", async () => {
-    await open("/settings/projects/new");
-    await page.fill("#name", "Money");
-    await page.fill("#prefix", "mny");
+    await open("/settings/projects");
+    await button("New project").click();
+    await page.fill("#project-name", "Money");
+    await page.fill("#project-prefix", "mny");
     await button("Create project").click();
-    await see("Each has its own board");
-    await open("/p/MNY/board");
     await page.waitForSelector(".lane");
     await open("/p/TLK/board");
     await page.waitForSelector(".lane");
@@ -139,10 +142,21 @@ try {
     await page.getByRole("link", { name: "Money", exact: true }).click();
     await until(() => document.querySelectorAll('.tk-side a[href$="/intake"]').length === 2);
     await until(() => window.location.hash.startsWith("#/p/MNY/board"));
-    await open("/p/MNY/edit");
-    await button("Archive").click();
-    await see("Each has its own board");
   });
+  await step(
+    "settings has its own sidebar; a project is archived from its row's menu",
+    async () => {
+      await page.getByRole("link", { name: "Settings", exact: true }).click();
+      await link("Back to Tasks").waitFor();
+      await link("Projects").click();
+      await button("Project Money").click();
+      await page.getByRole("menuitem", { name: "Archive", exact: true }).click();
+      await until(() => !document.querySelector(".tk-list")?.textContent.includes("Money"));
+      await page.getByRole("checkbox", { name: "Show archived" }).click();
+      await page.locator(".tk-list").getByText("Archived").waitFor();
+      await link("Back to Tasks").click();
+    },
+  );
   await step("the sidebar opens the project's board with its four columns", async () => {
     await page.getByRole("link", { name: /Talk/ }).first().click();
     await page
@@ -162,29 +176,61 @@ try {
       .first()
       .waitFor();
   });
-  await step("settings: add an actor and two labels, each on an edit page", async () => {
-    await open("/settings");
-    await link("Add actor").click();
-    await page.fill("#name", "Coder");
-    await page.fill("#icon", "🤖");
+  await step("settings: add an actor, labels and a location, each in a dialog", async () => {
+    await open("/settings/actors");
+    await button("New actor").click();
+    await page.fill("#actor-name", "Coder");
+    await button("Choose project icon and colour").click();
+    await button("robot icon").click();
+    await page.keyboard.press("Escape");
     await button("Add actor").click();
-    await see("One for each of your agents");
-    await page.locator("#actors").getByText("Coder").waitFor();
-    await link("New label").click();
-    await page.fill("#name", "voice");
+    await page.locator(".tk-list").getByText("Coder").waitFor();
+    // Its mark is its icon, and opens the icon and colour picker.
+    await page.locator('.tk-list [aria-label="Icon and colour of Coder"] svg').waitFor();
+    await open("/settings/labels");
+    await button("New label").click();
+    await page.fill("#label-name", "voices");
     await button("Add label").click();
-    await page.locator("#labels").getByText("voice").waitFor();
-    await link("New label").click();
-    await page.fill("#name", "bug");
+    await page.locator(".tk-list").getByText("voices").waitFor();
+    await button("New label").click();
+    await page.fill("#label-name", "bug");
     // A label's colour is chosen from swatches, never by name.
     await button("green label colour").click();
     await button("Add label").click();
-    await page.locator("#labels").getByText("bug").waitFor();
-    await link("New location").click();
-    await page.fill("#name", "Studio");
+    await page.locator(".tk-list").getByText("bug").waitFor();
+    await open("/settings/locations");
+    await button("New location").click();
+    await page.fill("#location-name", "Studio");
     await button("Add location").click();
-    await page.locator("#locations").getByText("Studio").waitFor();
+    await page.locator(".tk-list").getByText("Studio").waitFor();
   });
+  await step(
+    "settings: a name is changed where it is shown; a label is removed from its menu",
+    async () => {
+      await open("/settings/labels");
+      await page.locator(".tk-list").getByRole("button", { name: "voices", exact: true }).click();
+      await page.fill('[aria-label="Rename voices"]', "voice");
+      await page.keyboard.press("Enter");
+      await page.locator(".tk-list").getByRole("button", { name: "voice", exact: true }).waitFor();
+      // Escape leaves a name as it was.
+      await page.locator(".tk-list").getByRole("button", { name: "voice", exact: true }).click();
+      await page.fill('[aria-label="Rename voice"]', "something else");
+      await page.keyboard.press("Escape");
+      await page.locator(".tk-list").getByRole("button", { name: "voice", exact: true }).waitFor();
+      await button("New label").click();
+      await page.fill("#label-name", "spare");
+      await button("Add label").click();
+      await button("Label spare").click();
+      await page.getByRole("menuitem", { name: "Remove", exact: true }).click();
+      await until(() => !document.querySelector(".tk-list")?.textContent.includes("spare"));
+      // Rename from the menu opens the same box.
+      await button("Label bug").click();
+      await page.getByRole("menuitem", { name: "Rename", exact: true }).click();
+      await page.locator('[aria-label="Rename bug"]').waitFor();
+      await page.keyboard.press("Escape");
+      await open("/settings/actors");
+    },
+  );
   await shot("settings");
   await step("add two tickets, each on the new ticket page", async () => {
     for (const [i, title] of ["Voice notes on the phone", "Fix the crash on send"].entries()) {
@@ -704,7 +750,7 @@ try {
       .getByRole("link", { name: /Intake/ })
       .first()
       .click();
-    await see("No steps yet");
+    await see("No steps look at new items");
     await page.fill(
       '[aria-label="A new idea or request"]',
       "Need export to CSV for the Money app pls!!",
@@ -712,13 +758,16 @@ try {
     await page.press('[aria-label="A new idea or request"]', "Enter");
     await page.waitForSelector(".item");
   });
-  await step("intake: add a spam check step on its edit page; spam is rejected", async () => {
-    await link("Add a step").click();
-    await page.fill("#name", "Spam check");
+  await step("intake: add a spam check step in Settings; spam is rejected", async () => {
+    await link("Intake steps").click();
+    await button("New step").click();
+    await page.fill("#step-name", "Spam check");
     await page.fill("#setting-file", "spam-check.mjs");
-    await page.getByRole("button", { name: "reject", exact: true }).click();
+    await page.getByRole("button", { name: "Reject it", exact: true }).click();
     await button("Add step").click();
-    await see("1. Spam check");
+    await page.locator(".tk-list").getByText("Spam check").waitFor();
+    await open("/p/TLK/intake");
+    await see("1 step looks at each new item");
     await page.fill('[aria-label="A new idea or request"]', "CHEAP WATCHES click here now");
     await page.press('[aria-label="A new idea or request"]', "Enter");
     await page.fill(
@@ -769,6 +818,23 @@ try {
       () => true,
     );
     if (!cut) throw new Error("the agent can still call");
+  });
+  await step("a project's prefix is changed in Settings; its tickets follow", async () => {
+    await open("/settings/projects");
+    await button("Prefix TLK. Change it").click();
+    await page.fill("#prefix", "talk");
+    await button("Change prefix").click();
+    await button("Prefix TALK. Change it").waitFor();
+    await open("/t/TALK-1");
+    await see("Voice notes on the phone");
+    // The id a ticket had before still opens it.
+    await open("/t/TLK-2");
+    await see("TALK-2");
+    await open("/settings/projects");
+    await button("Prefix TALK. Change it").click();
+    await page.fill("#prefix", "tlk");
+    await button("Change prefix").click();
+    await button("Prefix TLK. Change it").waitFor();
   });
   await step("at phone width the page does not scroll sideways", async () => {
     await page.setViewportSize({ width: 390, height: 800 });

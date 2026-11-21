@@ -27,6 +27,7 @@ import { migrateReplies, sqliteReplies } from "./replies/replies.js";
 import { stepsDomain } from "./steps/domain.js";
 import { migrateSteps, sqliteSteps } from "./steps/steps.js";
 import { ticketsDomain } from "./tickets/domain.js";
+import { reprefix } from "./tickets/rekey.js";
 import { migrateTickets, sqliteTickets } from "./tickets/tickets.js";
 
 const migrated = new WeakSet<DatabaseSync>();
@@ -107,7 +108,69 @@ export function domains(
   return [
     provide(catalogDomain, (db: DatabaseSync) => {
       const deps = open(db, now);
-      return { ...deps, vacate: (from, to) => deps.tickets.vacate(from, to.id) };
+      const n = (sql: string, id: string) => (db.prepare(sql).get(id) as { n: number }).n;
+      const some = (count: number, one: string, many: string) =>
+        count === 0 ? null : `${count} ${count === 1 ? one : many}`;
+      return {
+        ...deps,
+        vacate: (from, to) => deps.tickets.vacate(from, to.id),
+        reprefix: (from, to) => reprefix(db, from, to),
+        used: (what, id) => {
+          if (what === "location") {
+            return some(
+              n("SELECT count(*) AS n FROM tickets WHERE location = ?", id),
+              "ticket has it",
+              "tickets have it",
+            );
+          }
+          if (what === "project") {
+            return (
+              some(
+                n("SELECT count(*) AS n FROM tickets WHERE project = ?", id),
+                "ticket is in it",
+                "tickets are in it",
+              ) ??
+              some(
+                n("SELECT count(*) AS n FROM features WHERE project = ?", id),
+                "feature is in it",
+                "features are in it",
+              ) ??
+              some(
+                n("SELECT count(*) AS n FROM inbox_items WHERE project = ?", id),
+                "inbox item was sent to it",
+                "inbox items were sent to it",
+              )
+            );
+          }
+          return (
+            some(
+              n("SELECT count(*) AS n FROM tickets WHERE assignee = ?1 OR created_by = ?1", id),
+              "ticket is or was its",
+              "tickets are or were its",
+            ) ??
+            some(
+              n("SELECT count(*) AS n FROM changes WHERE actor = ?", id),
+              "change was made as it",
+              "changes were made as it",
+            ) ??
+            some(
+              n("SELECT count(*) AS n FROM inbox_steps WHERE actor = ?", id),
+              "intake step acts as it",
+              "intake steps act as it",
+            ) ??
+            (n("SELECT count(*) AS n FROM sqlite_master WHERE name = ?", "kit_connections") === 0
+              ? null
+              : some(
+                  n(
+                    "SELECT count(*) AS n FROM kit_connections WHERE json_extract(record, '$.principal.id') = ? AND json_extract(record, '$.state') != 'revoked'",
+                    id,
+                  ),
+                  "Connection acts as it",
+                  "Connections act as it",
+                ))
+          );
+        },
+      };
     }),
     provide(ticketsDomain, (db: DatabaseSync) => {
       const deps = open(db, now);

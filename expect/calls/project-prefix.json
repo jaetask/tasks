@@ -1,0 +1,176 @@
+{
+  "steps": [
+    {
+      "call": "catalog.actor-create",
+      "input": {
+        "name": "Coder"
+      }
+    },
+    {
+      "call": "catalog.project-create",
+      "input": {
+        "name": "Talk",
+        "prefix": "TLK"
+      }
+    },
+    {
+      "call": "catalog.project-create",
+      "input": {
+        "name": "Money",
+        "prefix": "MNY"
+      }
+    },
+    {
+      "call": "catalog.label-create",
+      "input": {
+        "name": "bug",
+        "colour": "pink"
+      }
+    },
+    {
+      "call": "tickets.feature-create",
+      "input": {
+        "project": "TLK",
+        "name": "Voice"
+      }
+    },
+    {
+      "call": "tickets.ticket-create",
+      "input": {
+        "project": "TLK",
+        "title": "Record a note",
+        "labels": ["l1"],
+        "feature": "f1",
+        "assignee": "a1"
+      }
+    },
+    {
+      "call": "tickets.ticket-create",
+      "input": {
+        "project": "TLK",
+        "title": "Play a note"
+      }
+    },
+    {
+      "as": "a1",
+      "call": "comments.comment-add",
+      "input": {
+        "ticket": "TLK-1",
+        "text": "Started on it."
+      }
+    },
+    {
+      "call": "steps.ticket-step-add",
+      "input": {
+        "ticket": "TLK-1",
+        "title": "Try it on the phone"
+      }
+    },
+    {
+      "call": "tickets.ticket-link-add",
+      "input": {
+        "ticket": "TLK-2",
+        "url": "https://example.com/pr/2"
+      }
+    },
+    {
+      "call": "catalog.project-prefix-set",
+      "input": {
+        "project": "TLK",
+        "prefix": "MNY"
+      }
+    },
+    {
+      "call": "catalog.project-prefix-set",
+      "input": {
+        "project": "TLK",
+        "prefix": "TLK"
+      }
+    },
+    {
+      "call": "catalog.project-prefix-set",
+      "input": {
+        "project": "TLK",
+        "prefix": "talk"
+      }
+    },
+    {
+      "as": "a1",
+      "call": "catalog.project-prefix-set",
+      "input": {
+        "project": "TLK",
+        "prefix": "TALK"
+      }
+    },
+    {
+      "call": "catalog.project-prefix-set",
+      "input": {
+        "project": "TLK",
+        "prefix": "TALK"
+      }
+    },
+    {
+      "call": "tickets.ticket-read",
+      "input": {
+        "ticket": "TALK-1"
+      }
+    },
+    {
+      "call": "tickets.ticket-read",
+      "input": {
+        "ticket": "TLK-2"
+      }
+    },
+    {
+      "call": "comments.conversation-read",
+      "input": {
+        "ticket": "TALK-1"
+      }
+    },
+    {
+      "call": "steps.ticket-step-list",
+      "input": {
+        "ticket": "TALK-1"
+      }
+    },
+    {
+      "call": "tickets.ticket-create",
+      "input": {
+        "project": "TALK",
+        "title": "Share a note"
+      }
+    },
+    {
+      "as": "a1",
+      "call": "tickets.ticket-move",
+      "input": {
+        "ticket": "TALK-1",
+        "column": "c2"
+      }
+    },
+    {
+      "call": "history.change-undo",
+      "input": {
+        "change": "h6"
+      }
+    },
+    {
+      "call": "history.change-undo",
+      "input": {
+        "change": "h12"
+      }
+    },
+    {
+      "call": "tickets.board-read",
+      "input": {
+        "project": "TLK"
+      }
+    },
+    {
+      "call": "history.change-list",
+      "input": {
+        "limit": 3
+      }
+    }
+  ]
+}

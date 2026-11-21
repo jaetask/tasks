@@ -65,7 +65,12 @@ export function renderData(db: DatabaseSync): string[] {
     "### Actors",
     table(
       ["id", "name", "icon", "archived"],
-      catalog.actors.map((a) => [a.id, a.name, a.icon, a.archived ? "yes" : ""]),
+      catalog.actors.map((a) => [
+        a.id,
+        a.name,
+        `${a.icon} ${a.colour}`.trim(),
+        a.archived ? "yes" : "",
+      ]),
     ),
     "### Projects",
     catalog.projects.length

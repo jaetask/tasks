@@ -40,12 +40,14 @@
       "id": "owner",
       "name": "",
       "icon": "",
+      "colour": "",
       "archived": false
     },
     {
       "id": "a1",
       "name": "Coder",
       "icon": "",
+      "colour": "",
       "archived": false
     }
   ],

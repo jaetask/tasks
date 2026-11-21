@@ -3,6 +3,7 @@
 import { defineCard, defineDomain } from "@jaetask/open-agent-kit";
 import { z } from "zod";
 import { type Base, readAction, writeAction } from "../actions.js";
+import { Refusal } from "../refusal.js";
 import {
   Actor,
   CardProperty,
@@ -24,10 +25,13 @@ export type CatalogDeps = Base & {
   catalog: Catalog;
   /** Moves every ticket in a column to another column of the same board. */
   vacate(from: string, to: Column): void;
+  /** Why an actor, a location or a project cannot be deleted: what was done with it. Null if nothing. */
+  used(what: "actor" | "location" | "project", id: string): string | null;
+  /** Gives a project another prefix: its id, and the start of every one of its ticket ids. */
+  reprefix(from: string, to: string): void;
 };
 
 const name = z.string().trim().min(1).max(60);
-const icon = z.string().trim().max(16).describe("An emoji, or empty for none.");
 // A word in small letters must be one of the icon names; anything else is an emoji.
 const projectIcon = z
   .string()
@@ -38,6 +42,12 @@ const projectIcon = z
     `an icon is one of: ${PROJECT_ICONS.join(", ")}`,
   )
   .describe(`An icon name (${PROJECT_ICONS.join(", ")}), an emoji, or empty for none.`);
+const icon = projectIcon;
+const iconColour = z
+  .string()
+  .regex(/^(#[0-9a-fA-F]{6})?$/, "a colour is six-digit hex such as #48b685, or empty")
+  .transform((v) => v.toLowerCase())
+  .describe("The colour of the icon, as six-digit hex. Empty for the usual one.");
 const prefix = z
   .string()
   .regex(/^[A-Z]{1,6}$/, "a prefix is 1 to 6 capital letters, like TLK")
@@ -65,10 +75,10 @@ export const catalogRead = readAction({
 const actorCreate = write({
   name: "actor-create",
   description: "Add an actor for an agent. A Connection acts as an actor.",
-  input: z.object({ name, icon: icon.default("") }),
+  input: z.object({ name, icon: icon.default(""), colour: iconColour.default("") }),
   output: Actor,
-  run: ({ name, icon }, { catalog, log }) => {
-    const actor = catalog.createActor(name, icon);
+  run: ({ name, icon, colour }, { catalog, log }) => {
+    const actor = catalog.createActor(name, icon, colour);
     log(`added actor ${name}`, { kind: "created", subject: "actor", id: actor.id });
     return actor;
   },
@@ -93,11 +103,12 @@ const actorRename = write({
 
 const actorIconSet = write({
   name: "actor-icon-set",
-  description: "Set the icon shown beside an actor's name: an emoji, or empty for none.",
-  input: z.object({ actor: z.string(), icon }),
+  description:
+    "Set an actor's mark: an icon name or an emoji, or empty for none, and the colour of the icon.",
+  input: z.object({ actor: z.string(), icon, colour: iconColour.optional() }),
   output: Actor,
-  run: ({ actor: id, icon }, { catalog, log }) => {
-    const actor = catalog.setActorIcon(id, icon);
+  run: ({ actor: id, icon, colour }, { catalog, log }) => {
+    const actor = catalog.setActorIcon(id, icon, colour);
     log(
       icon
         ? `set the icon of actor ${actor.name} to ${icon}`
@@ -132,6 +143,33 @@ const actorRestore = write({
   },
 });
 
+const gone = (
+  what: "actor" | "location" | "project",
+  id: string,
+  name: string,
+  used: CatalogDeps["used"],
+) => {
+  const why = used(what, id);
+  if (why) {
+    throw new Refusal("in-use", `${name} cannot be deleted: ${why}. Archive it instead.`);
+  }
+};
+
+const actorDelete = write({
+  name: "actor-delete",
+  description:
+    "Delete an actor that was never used: no ticket, no change and no Connection is its. Any other actor can only be archived.",
+  input: z.object({ actor: z.string() }),
+  output: Actor,
+  run: ({ actor: id }, { catalog, log, used }) => {
+    if (id === OWNER) throw new Refusal("owner", "The owner cannot be deleted.");
+    gone("actor", id, catalog.actor(id).name, used);
+    const actor = catalog.deleteActor(id);
+    log(`deleted actor ${actor.name}`, { kind: "deleted", subject: "actor", id });
+    return actor;
+  },
+});
+
 const projectCreate = write({
   name: "project-create",
   description: "Create a project. Its board starts with the columns To do, Doing, Review and Done.",
@@ -147,7 +185,7 @@ const projectCreate = write({
 const projectEdit = write({
   name: "project-edit",
   description:
-    "Change a project's name, its icon or its colour. Its prefix and ticket ids stay the same.",
+    "Change a project's name, its icon or its colour. Its prefix is changed with project-prefix-set.",
   input: z.object({
     project: z.string(),
     name: name.optional(),
@@ -246,6 +284,45 @@ const projectRestore = write({
     const project = catalog.archiveProject(id, false);
     log(`restored project ${project.name}`, { kind: "updated", subject: "project", id });
     return project;
+  },
+});
+
+const projectDelete = write({
+  name: "project-delete",
+  description:
+    "Delete a project that holds nothing: no ticket, feature or inbox item. Any other project can only be archived.",
+  input: z.object({ project: z.string() }),
+  output: Project,
+  run: ({ project: id }, { catalog, log, used }) => {
+    gone("project", id, catalog.project(id).name, used);
+    const project = catalog.deleteProject(id);
+    log(`deleted project ${project.name}`, { kind: "deleted", subject: "project", id });
+    return project;
+  },
+});
+
+const projectPrefixSet = write({
+  name: "project-prefix-set",
+  description:
+    "Give a project another prefix. The prefix is the project's id and starts every one of its ticket ids, so each ticket gets a new id with the same number: TLK-12 becomes TALK-12. A ticket's earlier id still opens it. It cannot be undone, and changes made to the project before it can no longer be undone.",
+  input: z.object({ project: z.string(), prefix }),
+  output: Project,
+  run: ({ project: id, prefix }, { catalog, journal, principal, change, reprefix }) => {
+    const before = catalog.project(id);
+    if (prefix === id)
+      throw new Refusal("no-change", `${before.name} already has the prefix ${id}.`);
+    if (catalog.read().projects.some((p) => p.id === prefix)) {
+      throw new Refusal("prefix-taken", `A project already has the prefix ${prefix}.`);
+    }
+    reprefix(id, prefix);
+    journal.record({
+      actor: principal.id,
+      action: "catalog.project-prefix-set",
+      summary: `changed the prefix of ${before.name} from ${id} to ${prefix}`,
+      final: true,
+    });
+    change({ kind: "updated", subject: "project", id: prefix });
+    return catalog.project(prefix);
   },
 });
 
@@ -422,6 +499,19 @@ const locationArchive = write({
   },
 });
 
+const locationDelete = write({
+  name: "location-delete",
+  description: "Delete a location no ticket has. Any other location can only be archived.",
+  input: z.object({ location: z.string() }),
+  output: Location,
+  run: ({ location: id }, { catalog, log, used }) => {
+    gone("location", id, catalog.location(id).name, used);
+    const location = catalog.deleteLocation(id);
+    log(`deleted location ${location.name}`, { kind: "deleted", subject: "location", id });
+    return location;
+  },
+});
+
 const locationRestore = write({
   name: "location-restore",
   description: "Restore an archived location.",
@@ -446,6 +536,7 @@ export const catalogDomain = defineDomain<CatalogDeps>({
     actorIconSet,
     actorArchive,
     actorRestore,
+    actorDelete,
     projectCreate,
     projectEdit,
     projectCardSet,
@@ -453,6 +544,8 @@ export const catalogDomain = defineDomain<CatalogDeps>({
     projectMove,
     projectArchive,
     projectRestore,
+    projectDelete,
+    projectPrefixSet,
     columnAdd,
     columnRename,
     columnKindSet,
@@ -466,6 +559,7 @@ export const catalogDomain = defineDomain<CatalogDeps>({
     locationRename,
     locationArchive,
     locationRestore,
+    locationDelete,
   ],
   cards: [catalogChanged],
   authorise: (principal, action) => action.effect === "read" || principal.id === OWNER,

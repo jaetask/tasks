@@ -7,6 +7,7 @@ import { type Catalog, Column, KINDS, Kind, Label } from "../catalog/catalog.js"
 import { nextId, nextNumber } from "../ids.js";
 import type { Rows } from "../journal.js";
 import { Refusal } from "../refusal.js";
+import { aliasOf, migrateAliases, rekey } from "./rekey.js";
 
 export const TYPES = ["task", "bug", "improvement", "specification"] as const;
 export const Type = z.enum(TYPES).describe("What kind of work it is.");
@@ -36,6 +37,8 @@ export const Feature = z.object({
   favourite: z.boolean(),
   archived: z.boolean(),
   tickets: z.number().describe("How many open tickets belong to it."),
+  left: z.number().describe("How many of its open tickets are not in a done column."),
+  done: z.number().describe("How many of its tickets are in a done column or archived."),
 });
 export type Feature = z.infer<typeof Feature>;
 
@@ -151,6 +154,20 @@ export const Find = z.object({
 });
 export type Find = z.infer<typeof Find>;
 
+export const Usage = z.object({
+  labels: z.record(z.string(), z.number()).describe("For each label id, the tickets that have it."),
+  projects: z
+    .record(z.string(), z.number())
+    .describe("For each project id, its open tickets that are not in a done column."),
+  actors: z
+    .record(z.string(), z.number())
+    .describe("For each actor id, the open tickets assigned to it."),
+  locations: z
+    .record(z.string(), z.number())
+    .describe("For each location id, the open tickets that have it."),
+});
+export type Usage = z.infer<typeof Usage>;
+
 export type Tickets = {
   get(id: string): Ticket;
   board(project: string, narrow?: Narrow): Board;
@@ -194,6 +211,14 @@ export type Tickets = {
     },
   ): Feature;
   archiveFeature(id: string, archived: boolean): Feature;
+  /** Deletes a feature no ticket was ever put in. */
+  deleteFeature(id: string): Feature;
+  /** How many tickets use each label, actor, location and project. */
+  usage(): Usage;
+  /** Puts every ticket that has one label under another, and takes the first off them. */
+  mergeLabel(from: string, into: string): number;
+  /** Moves a ticket to another project. It gets the next id there; its earlier id still finds it. */
+  toProject(id: string, project: string): Ticket;
   edit(id: string, patch: { title?: string | undefined; description?: string | undefined }): Ticket;
   /** Moves an open ticket to any column of its board. */
   move(id: string, column: string): Ticket;
@@ -226,6 +251,7 @@ export type Tickets = {
 };
 
 export function migrateTickets(db: DatabaseSync): void {
+  migrateAliases(db);
   db.exec(
     "CREATE TABLE IF NOT EXISTS tickets (id TEXT PRIMARY KEY, project TEXT NOT NULL REFERENCES projects (id), number INTEGER NOT NULL, title TEXT NOT NULL, description TEXT NOT NULL, column_id TEXT NOT NULL REFERENCES columns (id), assignee TEXT REFERENCES actors (id), blocked TEXT, state TEXT NOT NULL DEFAULT 'open', created_at TEXT NOT NULL, created_by TEXT NOT NULL)",
   );
@@ -324,6 +350,20 @@ export function sqliteTickets(
         .prepare("SELECT count(*) AS n FROM tickets WHERE feature = ? AND state = 'open'")
         .get(r.id) as { n: number }
     ).n,
+    left: (
+      db
+        .prepare(
+          "SELECT count(*) AS n FROM tickets t JOIN columns c ON c.id = t.column_id WHERE t.feature = ? AND t.state = 'open' AND c.kind != 'done'",
+        )
+        .get(r.id) as { n: number }
+    ).n,
+    done: (
+      db
+        .prepare(
+          "SELECT count(*) AS n FROM tickets t JOIN columns c ON c.id = t.column_id WHERE t.feature = ? AND (t.state = 'archived' OR (t.state = 'open' AND c.kind = 'done'))",
+        )
+        .get(r.id) as { n: number }
+    ).n,
   });
   const feature = (id: string) => {
     const found = featureRow(id);
@@ -409,8 +449,11 @@ export function sqliteTickets(
         ).at ?? r.created_at,
     };
   };
+  const byId = (id: string) =>
+    db.prepare("SELECT * FROM tickets WHERE id = ?").get(id) as TicketRow | undefined;
   const row = (id: string) => {
-    const found = db.prepare("SELECT * FROM tickets WHERE id = ?").get(id) as TicketRow | undefined;
+    // An id a ticket had before its prefix changed, or before it moved project, still finds it.
+    const found = byId(id) ?? byId(aliasOf(db, id) ?? "");
     if (!found) throw new Refusal("unknown-ticket", `No ticket has id ${id}.`);
     return found;
   };
@@ -645,6 +688,74 @@ export function sqliteTickets(
       feature(id);
       rows.update("features", id, { archived: archived ? 1 : 0 });
       return feature(id);
+    },
+    deleteFeature: (id) => {
+      const found = feature(id);
+      const used = (
+        db.prepare("SELECT count(*) AS n FROM tickets WHERE feature = ?").get(id) as { n: number }
+      ).n;
+      if (used > 0) {
+        throw new Refusal(
+          "in-use",
+          `${found.name} cannot be deleted: ${used} ${used === 1 ? "ticket is" : "tickets are"} in it. Archive it instead.`,
+        );
+      }
+      rows.remove("features", id);
+      return found;
+    },
+    usage: () => {
+      const count = (sql: string) =>
+        Object.fromEntries(
+          (db.prepare(sql).all() as { id: string; n: number }[]).map((r) => [r.id, r.n]),
+        );
+      return {
+        labels: count(
+          "SELECT tl.label AS id, count(*) AS n FROM ticket_labels tl JOIN tickets t ON t.id = tl.ticket WHERE t.state = 'open' GROUP BY tl.label",
+        ),
+        projects: count(
+          "SELECT t.project AS id, count(*) AS n FROM tickets t JOIN columns c ON c.id = t.column_id WHERE t.state = 'open' AND c.kind != 'done' GROUP BY t.project",
+        ),
+        actors: count(
+          "SELECT assignee AS id, count(*) AS n FROM tickets WHERE state = 'open' AND assignee IS NOT NULL GROUP BY assignee",
+        ),
+        locations: count(
+          "SELECT location AS id, count(*) AS n FROM tickets WHERE state = 'open' AND location IS NOT NULL GROUP BY location",
+        ),
+      };
+    },
+    mergeLabel: (from, into) => {
+      catalog.label(from);
+      catalog.label(into);
+      if (from === into) throw new Refusal("no-change", "A label cannot be merged into itself.");
+      const had = db.prepare("SELECT ticket FROM ticket_labels WHERE label = ?").all(from) as {
+        ticket: string;
+      }[];
+      for (const { ticket } of had) {
+        rows.remove("ticket_labels", `${ticket}:${from}`);
+        attach(ticket, into);
+      }
+      return had.length;
+    },
+    toProject: (id, projectId) => {
+      const found = open(id);
+      const project = catalog.project(projectId);
+      if (found.project === project.id) {
+        throw new Refusal("no-change", `${found.id} is already in ${project.name}.`);
+      }
+      if (project.archived) {
+        throw new Refusal("archived-project", `Project ${project.id} is archived.`);
+      }
+      const kind = catalog.column(found.column_id).kind;
+      const column = catalog.firstColumn(project.id, kind) ?? project.columns[0];
+      if (!column) throw new Refusal("no-column", `The board of ${project.id} has no columns.`);
+      const number = nextNumber(db, `ticket:${project.id}`);
+      const next = `${project.id}-${number}`;
+      rekey(db, [[found.id, next]]);
+      // A feature belongs to one project, so the ticket leaves its feature behind.
+      db.prepare(
+        "UPDATE tickets SET project = ?, number = ?, column_id = ?, feature = NULL WHERE id = ?",
+      ).run(project.id, number, column.id, next);
+      return get(next);
     },
     edit: (id, patch) => {
       open(id);

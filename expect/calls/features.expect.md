@@ -36,7 +36,9 @@
     "description": "Recording and playing voice notes.",
     "favourite": true,
     "archived": false,
-    "tickets": 1
+    "tickets": 1,
+    "left": 1,
+    "done": 0
   },
   {
     "id": "f2",
@@ -45,7 +47,9 @@
     "description": "",
     "favourite": false,
     "archived": false,
-    "tickets": 1
+    "tickets": 1,
+    "left": 1,
+    "done": 0
   }
 ]
 ```
@@ -141,7 +145,9 @@
     "description": "Recording and playing voice notes.",
     "favourite": true,
     "archived": false,
-    "tickets": 1
+    "tickets": 1,
+    "left": 1,
+    "done": 0
   }
 ]
 ```
@@ -157,7 +163,9 @@
     "description": "Recording and playing voice notes.",
     "favourite": true,
     "archived": false,
-    "tickets": 1
+    "tickets": 1,
+    "left": 1,
+    "done": 0
   },
   {
     "id": "f2",
@@ -166,7 +174,9 @@
     "description": "",
     "favourite": false,
     "archived": true,
-    "tickets": 1
+    "tickets": 1,
+    "left": 1,
+    "done": 0
   }
 ]
 ```

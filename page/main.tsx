@@ -9,11 +9,19 @@ import { Input } from "@jaetask/toolkit/ui/input";
 import { Toaster } from "@jaetask/toolkit/ui/toaster";
 import {
   IconArchive,
+  IconArrowLeft,
+  IconDeviceLaptop,
+  IconFilter,
+  IconFolder,
   IconHelpCircle,
   IconHistory,
   IconLayoutGrid,
+  IconMapPin,
   IconMessage,
   IconPlug,
+  IconTag,
+  IconUser,
+  IconUsers,
 } from "@tabler/icons-react";
 import { type FormEvent, useCallback, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
@@ -33,18 +41,7 @@ import {
 import { type App, AppContext, useApp, useRead } from "./app.js";
 import { OverviewPage } from "./overview.js";
 import { BacklogPage, BoardPage } from "./board.js";
-import {
-  ActorEdit,
-  ColumnsEdit,
-  ConnectionApprove,
-  FeatureEdit,
-  LabelEdit,
-  LocationEdit,
-  OwnerEdit,
-  ProjectEdit,
-  StepEdit,
-  TicketNew,
-} from "./edits.js";
+import { ColumnsEdit, ConnectionApprove, FeatureEdit, TicketNew } from "./edits.js";
 import { IntakePage } from "./inbox.js";
 import {
   ArchivePage,
@@ -53,8 +50,8 @@ import {
   FeaturesPage,
   InputPage,
   RepliesPage,
-  SettingsPage,
 } from "./pages.js";
+import { SECTIONS, type Section, SettingsPage } from "./settings.js";
 import { ProjectsNav } from "./projects-nav.js";
 import { TicketPage } from "./ticket.js";
 
@@ -86,6 +83,16 @@ const ICONS = {
   archive: <IconArchive size={16} aria-hidden />,
   connections: <IconPlug size={16} aria-hidden />,
   changes: <IconHistory size={16} aria-hidden />,
+};
+
+const SETTINGS_ICONS: Record<Section, React.ReactNode> = {
+  you: <IconUser size={16} aria-hidden />,
+  actors: <IconUsers size={16} aria-hidden />,
+  projects: <IconFolder size={16} aria-hidden />,
+  labels: <IconTag size={16} aria-hidden />,
+  locations: <IconMapPin size={16} aria-hidden />,
+  steps: <IconFilter size={16} aria-hidden />,
+  browser: <IconDeviceLaptop size={16} aria-hidden />,
 };
 
 // ---------- Signing in, and the first start ----------
@@ -174,21 +181,15 @@ function Page({ path, onSignOut }: { path: string; onSignOut: () => void }) {
     if (c === "features") return <FeaturesPage project={project} />;
     if (c === "new") return <TicketNew project={project} />;
     if (c === "columns") return <ColumnsEdit project={project} />;
-    if (c === "edit") return <ProjectEdit key={project.id} project={project} />;
     return <BoardPage project={project} />;
   }
   if (a === "t" && b) {
     return <TicketPage key={b} id={b} />;
   }
-  if (a === "steps" && b) return <StepEdit id={b === "new" ? null : b} />;
   if (a === "connections" && b) return <ConnectionApprove id={b} />;
   if (a === "settings") {
-    if (b === "owner") return <OwnerEdit />;
-    if (b === "actors" && c) return <ActorEdit key={c} id={c === "new" ? null : c} />;
-    if (b === "labels" && c) return <LabelEdit key={c} id={c === "new" ? null : c} />;
-    if (b === "locations" && c) return <LocationEdit key={c} id={c === "new" ? null : c} />;
-    if (b === "projects" && c === "new") return <ProjectEdit project={null} />;
-    return <SettingsPage onSignOut={onSignOut} />;
+    const section = SECTIONS.find(([id]) => id === b)?.[0] ?? "you";
+    return <SettingsPage section={section as Section} onSignOut={onSignOut} />;
   }
   if (a === "input") return <InputPage />;
   if (a === "replies") return <RepliesPage />;
@@ -199,7 +200,6 @@ function Page({ path, onSignOut }: { path: string; onSignOut: () => void }) {
 }
 
 function Shell({ path, onSignOut }: { path: string; onSignOut: () => void }) {
-  const { catalog } = useApp();
   const awaiting = useRead<InputRequest[]>("input.input-list", { state: "awaiting" }) ?? [];
   const asking = (useRead<Connection[]>("connections.connection-list") ?? []).filter(
     (c) => c.state === "pairing",
@@ -228,18 +228,34 @@ function Shell({ path, onSignOut }: { path: string; onSignOut: () => void }) {
     },
     { href: "/changes", label: "Changes", icon: ICONS.changes, current: top === "changes" },
   ];
-  const here = top === "p" ? parts[1] : undefined;
-  const project = catalog.projects.find((p) => p.id === here);
-  const title = project
-    ? project.name
-    : top === "t"
-      ? (parts[1] ?? "Ticket")
-      : ([...nav, ...bottom].find((n) => n.current)?.label ??
-        (top === "settings" ? "Settings" : "Tasks"));
+  if (top === "settings") {
+    const section = SECTIONS.find(([id]) => id === parts[1])?.[0] ?? "you";
+    return (
+      <AppShell
+        app={{ name: "Tasks", href: "/overview" }}
+        bar={false}
+        nav={[
+          {
+            href: "/overview",
+            label: "Back to Tasks",
+            icon: <IconArrowLeft size={16} aria-hidden />,
+          },
+          ...SECTIONS.map(([id, label]) => ({
+            href: `/settings/${id}`,
+            label,
+            icon: SETTINGS_ICONS[id],
+            current: section === id,
+          })),
+        ]}
+      >
+        <Page path={path} onSignOut={onSignOut} />
+      </AppShell>
+    );
+  }
   return (
     <AppShell
       app={{ name: "Tasks", href: "/overview" }}
-      title={title}
+      bar={false}
       nav={nav}
       bottom={bottom}
       side={(collapsed) => <ProjectsNav collapsed={collapsed} />}

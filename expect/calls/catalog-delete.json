@@ -1,0 +1,168 @@
+{
+  "steps": [
+    {
+      "call": "catalog.actor-create",
+      "input": {
+        "name": "Coder"
+      }
+    },
+    {
+      "call": "catalog.actor-create",
+      "input": {
+        "name": "Spare"
+      }
+    },
+    {
+      "call": "catalog.location-create",
+      "input": {
+        "name": "Laptop"
+      }
+    },
+    {
+      "call": "catalog.location-create",
+      "input": {
+        "name": "Shed"
+      }
+    },
+    {
+      "call": "catalog.project-create",
+      "input": {
+        "name": "Talk",
+        "prefix": "TLK"
+      }
+    },
+    {
+      "call": "catalog.project-create",
+      "input": {
+        "name": "Empty",
+        "prefix": "EMP"
+      }
+    },
+    {
+      "call": "catalog.project-create",
+      "input": {
+        "name": "Planned",
+        "prefix": "PLN"
+      }
+    },
+    {
+      "call": "tickets.feature-create",
+      "input": {
+        "project": "PLN",
+        "name": "Voice"
+      }
+    },
+    {
+      "call": "tickets.feature-create",
+      "input": {
+        "project": "TLK",
+        "name": "Search"
+      }
+    },
+    {
+      "call": "tickets.feature-create",
+      "input": {
+        "project": "TLK",
+        "name": "Unused"
+      }
+    },
+    {
+      "call": "tickets.ticket-create",
+      "input": {
+        "project": "TLK",
+        "title": "Find by word",
+        "assignee": "a1",
+        "location": "p1",
+        "feature": "f2"
+      }
+    },
+    {
+      "call": "catalog.actor-delete",
+      "input": {
+        "actor": "a1"
+      }
+    },
+    {
+      "call": "catalog.actor-delete",
+      "input": {
+        "actor": "owner"
+      }
+    },
+    {
+      "call": "catalog.actor-delete",
+      "input": {
+        "actor": "a2"
+      }
+    },
+    {
+      "call": "catalog.location-delete",
+      "input": {
+        "location": "p1"
+      }
+    },
+    {
+      "call": "catalog.location-delete",
+      "input": {
+        "location": "p2"
+      }
+    },
+    {
+      "call": "catalog.project-delete",
+      "input": {
+        "project": "TLK"
+      }
+    },
+    {
+      "call": "catalog.project-delete",
+      "input": {
+        "project": "PLN"
+      }
+    },
+    {
+      "call": "catalog.project-delete",
+      "input": {
+        "project": "EMP"
+      }
+    },
+    {
+      "call": "tickets.feature-delete",
+      "input": {
+        "feature": "f2"
+      }
+    },
+    {
+      "call": "tickets.feature-delete",
+      "input": {
+        "feature": "f3"
+      }
+    },
+    {
+      "as": "a1",
+      "call": "tickets.feature-delete",
+      "input": {
+        "feature": "f3"
+      }
+    },
+    {
+      "call": "catalog.actor-delete",
+      "input": {
+        "actor": "a9"
+      }
+    },
+    {
+      "call": "history.change-list",
+      "input": {
+        "limit": 4
+      }
+    },
+    {
+      "call": "history.change-undo",
+      "input": {
+        "change": "h12"
+      }
+    },
+    {
+      "call": "catalog.catalog-read"
+    }
+  ]
+}
