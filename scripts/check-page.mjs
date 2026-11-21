@@ -779,6 +779,38 @@ try {
     await open("/p/TLK/board");
     await page.waitForSelector(".lane");
   });
+  await step(
+    "the sidebar's edge drags between a least and a most width, and is remembered",
+    async () => {
+      const width = () =>
+        page.evaluate(() =>
+          Math.round(document.querySelector(".tk-side").getBoundingClientRect().width),
+        );
+      const dragTo = async (x) => {
+        const from = await width();
+        await page.mouse.move(from, 300);
+        await page.mouse.down();
+        await page.mouse.move((from + x) / 2, 300, { steps: 4 });
+        await page.mouse.move(x, 300, { steps: 4 });
+        await page.mouse.up();
+      };
+      await until(() => !document.querySelector("[role=dialog]"));
+      const usual = await width();
+      await dragTo(900);
+      if ((await width()) !== 440) throw new Error(`the sidebar grew to ${await width()}`);
+      await dragTo(40);
+      if ((await width()) !== 200) throw new Error(`the sidebar shrank to ${await width()}`);
+      await dragTo(330);
+      await page.reload();
+      await page.waitForSelector(".lane");
+      await until(
+        () => Math.round(document.querySelector(".tk-side").getBoundingClientRect().width) === 330,
+      );
+      await page.locator(".tk-side-resize").dblclick();
+      if ((await width()) !== usual)
+        throw new Error("a double click did not put the usual width back");
+    },
+  );
   await step("drag a ticket to another column", async () => {
     const from = await page
       .locator(".ticket", { hasText: "Show the recording length" })
