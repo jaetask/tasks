@@ -1,19 +1,22 @@
 import {
   EmptyLine,
-  IconAction,
   Field,
   type FilterChoice,
   FilterMenu,
   FormDialog,
-  ListCard,
+  IconAction,
   InlineText,
   Link,
-  RowMenu,
-  WorkPage,
+  ListCard,
+  PageControls,
+  PageGroup,
+  PageGroups,
   ProjectIcon,
   PropertyPills,
+  RowMenu,
   type ViewChoice as SuiteViewChoice,
   ViewToggle,
+  WorkPage,
 } from "@jaetask/toolkit/suite";
 import { Button } from "@jaetask/toolkit/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@jaetask/toolkit/ui/dialog";
@@ -234,7 +237,7 @@ export function FilterBar({
     },
   ];
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <PageControls>
       <Input
         aria-label="Search tickets"
         placeholder="Search this page..."
@@ -259,7 +262,7 @@ export function FilterBar({
         }
       />
       {right && <div className="ml-auto flex flex-wrap items-center gap-4">{right}</div>}
-    </div>
+    </PageControls>
   );
 }
 
@@ -776,14 +779,9 @@ export function GroupList({
   across?: boolean;
 }) {
   return (
-    <div className="grid gap-4">
+    <PageGroups>
       {groups.map((g) => (
-        <section key={g.id} aria-label={g.title} className="group-list grid gap-1">
-          <h2 className="m-0 flex items-center gap-2 text-xs font-medium text-muted-foreground">
-            {g.icon}
-            {g.title}
-            <span className="font-normal">{g.tickets.length}</span>
-          </h2>
+        <PageGroup key={g.id} title={g.title} icon={g.icon} count={g.tickets.length}>
           {g.tickets.length > 0 && (
             <ListCard>
               {g.tickets.map((t) => (
@@ -791,9 +789,9 @@ export function GroupList({
               ))}
             </ListCard>
           )}
-        </section>
+        </PageGroup>
       ))}
-    </div>
+    </PageGroups>
   );
 }
 

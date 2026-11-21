@@ -9,6 +9,7 @@ import {
   InlineText,
   ListCard,
   type MenuEntry,
+  PageControls,
   Panel,
   ProjectIcon,
   ProjectIconPicker,
@@ -143,7 +144,9 @@ function ActorsSection({ usage }: { usage: Usage | undefined }) {
         />
       }
     >
-      <Tick label="Show archived" checked={archived} onChange={setArchived} />
+      <PageControls>
+        <Tick label="Show archived" checked={archived} onChange={setArchived} />
+      </PageControls>
       {actors.length > 0 ? (
         <ListCard>
           {actors.map((a) => (
@@ -342,7 +345,9 @@ function ProjectsSection({ usage }: { usage: Usage | undefined }) {
         />
       }
     >
-      <Tick label="Show archived" checked={archived} onChange={setArchived} />
+      <PageControls>
+        <Tick label="Show archived" checked={archived} onChange={setArchived} />
+      </PageControls>
       {projects.length > 0 ? (
         <ListCard>
           {projects.map((p) => {
@@ -625,7 +630,9 @@ function LocationsSection({ usage }: { usage: Usage | undefined }) {
         />
       }
     >
-      <Tick label="Show archived" checked={archived} onChange={setArchived} />
+      <PageControls>
+        <Tick label="Show archived" checked={archived} onChange={setArchived} />
+      </PageControls>
       {locations.length > 0 ? (
         <ListCard>
           {locations.map((l) => (

@@ -4,6 +4,9 @@ import {
   FormDialog,
   IconAction,
   ListCard,
+  PageControls,
+  PageGroup,
+  PageGroups,
   PageLink,
   RowMenu,
   TimeAgo,
@@ -79,7 +82,7 @@ export function InputPage() {
       title="Human input"
       help="Questions your agents asked you on a ticket. An agent waits for your answer before it goes on. Answer here, or on the ticket."
     >
-      <div className="flex flex-wrap items-center gap-2">
+      <PageControls>
         <TabBar
           label="Which questions"
           value={state}
@@ -98,7 +101,7 @@ export function InputPage() {
             ...catalog.projects.map((p) => ({ id: p.id, name: p.name })),
           ]}
         />
-      </div>
+      </PageControls>
       {requests && requests.length > 0 ? (
         <div className="grid max-w-4xl gap-3">
           {requests.map((r) => (
@@ -133,7 +136,7 @@ export function RepliesPage() {
       title="Agent inbox"
       help="What was said to your agents: replies to their comments, comments on their tickets, and your answers. An agent acknowledges each one when it has dealt with it."
     >
-      <div className="flex flex-wrap items-center gap-2">
+      <PageControls>
         <TabBar
           label="Which replies"
           value={state}
@@ -155,7 +158,7 @@ export function RepliesPage() {
               .map((a) => ({ id: a.id, name: a.name })),
           ]}
         />
-      </div>
+      </PageControls>
       {replies && replies.length > 0 ? (
         <ListCard>
           {replies.map((r) => (
@@ -229,7 +232,7 @@ export function ArchivePage() {
       title="Archive"
       help="Archived and canceled tickets are kept here until you restore them. Open one to read it; tick some to restore them or delete them for good."
     >
-      <div className="flex flex-wrap items-center gap-2">
+      <PageControls>
         <Input
           aria-label="Search the archive"
           placeholder="Search the archive..."
@@ -259,7 +262,7 @@ export function ArchivePage() {
         <span className="ml-auto text-xs text-muted-foreground">
           {`${all.length} ${all.length === 1 ? "ticket" : "tickets"}`}
         </span>
-      </div>
+      </PageControls>
       {shown.length > 0 ? (
         <>
           <div className="flex min-h-8 flex-wrap items-center gap-2 text-xs">
@@ -400,7 +403,7 @@ export function ChangesPage() {
       title="Changes"
       help="Every change, newest first, with who made it. Undo puts back what a change changed; point at a change to see it."
     >
-      <div className="flex flex-wrap items-center gap-2">
+      <PageControls>
         <Picker
           label="Project"
           value={project}
@@ -429,48 +432,53 @@ export function ChangesPage() {
         <span className="ml-auto">
           <Tick label="Show imported changes" checked={imported} onChange={setImported} />
         </span>
-      </div>
+      </PageControls>
       {newest.length === 0 && <EmptyLine>{changes ? "No change matches." : ""}</EmptyLine>}
-      {days.map((day) => (
-        <section key={day} aria-label={day} className="grid gap-1" id="changes">
-          <h2 className="m-0 text-xs font-medium text-muted-foreground">{day}</h2>
-          <ListCard>
-            {newest
-              .filter((c) => dayOf(c.at) === day)
-              .map((c) => (
-                <li key={c.id} className="tk-list-row group gap-3 py-2 text-sm">
-                  <ActorAvatar id={c.actor} name={actorLabel(catalog, c.actor)} size={20} />
-                  <span className={`min-w-0 flex-1 ${c.undoneBy ? "text-muted-foreground" : ""}`}>
-                    <b className="font-medium">{actorLabel(catalog, c.actor)}</b> {c.summary}
-                  </span>
-                  {c.ticket && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 px-1.5 text-xs text-muted-foreground opacity-0 focus-visible:opacity-100 group-hover:opacity-100"
-                      onClick={() => go(`/changes?ticket=${c.ticket}`)}
-                    >
-                      Open
-                    </Button>
-                  )}
-                  {c.undoable && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-6 px-2 text-xs opacity-0 focus-visible:opacity-100 group-hover:opacity-100"
-                      onClick={() => void act("history.change-undo", { change: c.id })}
-                    >
-                      Undo
-                    </Button>
-                  )}
-                  <span className="w-16 shrink-0 text-right text-xs text-muted-foreground">
-                    <TimeAgo at={c.at} />
-                  </span>
-                </li>
-              ))}
-          </ListCard>
-        </section>
-      ))}
+      <div id="changes">
+        <PageGroups>
+          {days.map((day) => (
+            <PageGroup key={day} title={day}>
+              <ListCard>
+                {newest
+                  .filter((c) => dayOf(c.at) === day)
+                  .map((c) => (
+                    <li key={c.id} className="tk-list-row group gap-3 py-2 text-sm">
+                      <ActorAvatar id={c.actor} name={actorLabel(catalog, c.actor)} size={20} />
+                      <span
+                        className={`min-w-0 flex-1 ${c.undoneBy ? "text-muted-foreground" : ""}`}
+                      >
+                        <b className="font-medium">{actorLabel(catalog, c.actor)}</b> {c.summary}
+                      </span>
+                      {c.ticket && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 px-1.5 text-xs text-muted-foreground opacity-0 focus-visible:opacity-100 group-hover:opacity-100"
+                          onClick={() => go(`/changes?ticket=${c.ticket}`)}
+                        >
+                          Open
+                        </Button>
+                      )}
+                      {c.undoable && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-6 px-2 text-xs opacity-0 focus-visible:opacity-100 group-hover:opacity-100"
+                          onClick={() => void act("history.change-undo", { change: c.id })}
+                        >
+                          Undo
+                        </Button>
+                      )}
+                      <span className="w-16 shrink-0 text-right text-xs text-muted-foreground">
+                        <TimeAgo at={c.at} />
+                      </span>
+                    </li>
+                  ))}
+              </ListCard>
+            </PageGroup>
+          ))}
+        </PageGroups>
+      </div>
       {changes && changes.length >= limit && limit < 500 && (
         <div>
           <Button variant="outline" size="sm" onClick={() => setLimit(Math.min(500, limit + 200))}>
@@ -612,8 +620,7 @@ export function ConnectionsPage() {
       }
     >
       {waiting.length > 0 && (
-        <section aria-label="Waiting for you" className="grid gap-1">
-          <h2 className="m-0 text-xs font-medium text-muted-foreground">Waiting for you</h2>
+        <PageGroup title="Waiting for you">
           <ListCard>
             {waiting.map((c) => (
               <li key={c.id} className="tk-list-row">
@@ -625,9 +632,11 @@ export function ConnectionsPage() {
               </li>
             ))}
           </ListCard>
-        </section>
+        </PageGroup>
       )}
-      <Tick label="Show revoked" checked={revoked} onChange={setRevoked} />
+      <PageControls>
+        <Tick label="Show revoked" checked={revoked} onChange={setRevoked} />
+      </PageControls>
       {rest.length > 0 ? (
         <ListCard>
           {rest.map((c) => (

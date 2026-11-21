@@ -737,10 +737,10 @@ try {
       await button("Display").click();
       await page.getByRole("radio", { name: "List" }).click();
       await page.keyboard.press("Escape");
-      await page.waitForSelector(".group-list .ticket-line");
+      await page.waitForSelector(".tk-group-list .ticket-line");
       if ((await count(".lane")) !== 0) throw new Error("the lanes still show in the list");
       await page.reload();
-      await page.waitForSelector(".group-list .ticket-line");
+      await page.waitForSelector(".tk-group-list .ticket-line");
       await button("Display").click();
       await page.getByRole("radio", { name: "Board" }).click();
       await page.keyboard.press("Escape");

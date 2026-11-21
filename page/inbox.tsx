@@ -1,4 +1,4 @@
-import { EmptyLine, Link, ListCard, TimeAgo, WorkPage } from "@jaetask/toolkit/suite";
+import { EmptyLine, Link, ListCard, PageControls, TimeAgo, WorkPage } from "@jaetask/toolkit/suite";
 import { Button } from "@jaetask/toolkit/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@jaetask/toolkit/ui/dialog";
 import { Input } from "@jaetask/toolkit/ui/input";
@@ -341,12 +341,14 @@ export function IntakePage({ project }: { project: Project }) {
         </Lanes>
       ) : (
         <>
-          <TabBar
-            label="Which items"
-            value={state}
-            options={tabs.map((s) => ({ id: s.id, name: `${s.name} ${s.count}` }))}
-            onChange={setState}
-          />
+          <PageControls>
+            <TabBar
+              label="Which items"
+              value={state}
+              options={tabs.map((s) => ({ id: s.id, name: `${s.name} ${s.count}` }))}
+              onChange={setState}
+            />
+          </PageControls>
           {items.length > 0 ? (
             <ListCard>
               {items.map((i) => (
