@@ -1,6 +1,3 @@
-// A ticket's activity: one stream in time order. Changes are quiet one-line
-// rows; a comment is a card that holds its replies and a row to add one.
-
 import {
   AddReactionButton,
   AttachButton,
@@ -42,7 +39,6 @@ import { useApp } from "./app.js";
 import { Editor } from "./editor.js";
 import { ActorAvatar } from "./local.js";
 
-/** How long ago, in the shortest form: now, 5m ago, 3h ago, 18d ago. */
 export function ago(at: string): string {
   const minutes = Math.max(0, Math.round((Date.now() - Date.parse(at)) / 60_000));
   if (minutes < 1) return "now";
@@ -51,10 +47,6 @@ export function ago(at: string): string {
   return `${Math.round(minutes / (60 * 24))}d ago`;
 }
 
-/**
- * A change as it reads inside its own ticket: "created this ticket", not the ticket's id and
- * title again. The full words stay on the Changes page.
- */
 export function inTicket(summary: string, ticket: string): string {
   const id = ticket.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   return summary
@@ -66,12 +58,9 @@ function Who({ id, name }: { id: string; name: string }) {
   return <ActorAvatar id={id} name={name} />;
 }
 
-/** A paperclip that picks image files and attaches them to the ticket. */
 const IMAGES = ["image/png", "image/jpeg", "image/gif", "image/webp"];
-/** Small images are kept with the ticket's images and shown as thumbnails. */
 const SMALL_IMAGE = 2 * 1024 * 1024;
 
-/** Attaches files to a ticket: small images as its images, anything else as its files. */
 function useAttach(ticket: string) {
   const { act, upload } = useApp();
   return (files: Iterable<File> | null | undefined) => {
@@ -95,10 +84,8 @@ function useAttach(ticket: string) {
   };
 }
 
-/** Stores a picture put into a ticket's text as one of its files, and says where it is read. */
 export function usePictures(ticket: string) {
   const { upload } = useApp();
-  // The same function from one render to the next: the editor is built again when it changes.
   return useCallback(
     async (file: File) => {
       const stored = await upload(ticket, file);
@@ -109,19 +96,16 @@ export function usePictures(ticket: string) {
   );
 }
 
-/** The paperclip of a ticket: whatever is chosen is attached to it. */
 export function Attach({ ticket, shortcut }: { ticket: string; shortcut?: boolean }) {
   const attach = useAttach(ticket);
   return <AttachButton onFiles={attach} {...(shortcut ? { shortcut } : {})} />;
 }
 
-/** The reactions under a comment or a description: a pill for each emoji, then the add button. */
 export function ReactionRow({
   reactions,
   onToggle,
 }: {
   reactions: { emoji: string; actors: string[] }[];
-  /** Adds the owner's reaction when `active`, takes it back when not. */
   onToggle: (emoji: string, active: boolean) => void;
 }) {
   const mine = (emoji: string) =>
@@ -153,7 +137,6 @@ function CommentBody({
   root?: Comment;
   replies?: Reply[];
   canWrite: boolean;
-  /** True for a reply that another reply follows. */
   joined?: boolean;
 }) {
   const { act, go, path } = useApp();
@@ -169,7 +152,6 @@ function CommentBody({
   return (
     <div
       id={`comment-${comment.id}`}
-      // Between two replies the line starts under the words, not at the card's edge.
       className={`comment group/comment grid gap-2 px-4 py-3 ${joined ? "relative border-b-0 after:absolute after:right-0 after:bottom-0 after:left-12 after:border-b" : ""}`}
     >
       <div className="flex items-center gap-2">
@@ -239,7 +221,6 @@ function CommentBody({
           </span>
         )}
       </div>
-      {/* A comment's text starts under its avatar; a reply's lines up with its name. */}
       <div className={`grid gap-2 ${root ? "" : "pl-8"}`}>
         {editing !== null ? (
           <form
@@ -313,7 +294,6 @@ function CommentBody({
   );
 }
 
-/** A box to write in, with the paperclip and the send arrow at its right. */
 function Write({
   label,
   tall,
@@ -328,11 +308,8 @@ function Write({
   onSend: (text: string) => Promise<unknown>;
 }) {
   const [text, setText] = useState("");
-  // The editor starts again, empty, after each send.
   const [sent, setSent] = useState(0);
   const attach = useAttach(ticket);
-  // A file pasted or dropped into the box is attached to the ticket; text is the editor's.
-  // A picture goes into the text where it was put, which is the editor's own work.
   const pictures = usePictures(ticket);
   const take = (e: { preventDefault(): void }, files: FileList | undefined) => {
     const others = [...(files ?? [])].filter((f) => !f.type.startsWith("image/"));
@@ -342,7 +319,6 @@ function Write({
   };
   const send = () => {
     const wanted = text.trim();
-    // An empty heading, quote or list item is Markdown marks with no words: nothing to send.
     if (!wanted.replace(/[#>*_`~\-\s]/g, "")) return;
     setText("");
     setSent(sent + 1);
@@ -352,24 +328,16 @@ function Write({
     <form
       className={
         tall
-          ? // Room on the left for the editor's handle, which sits beside the line being written.
-            "write grid gap-1 rounded-xl border bg-card py-3 pr-3 pl-9"
-          : // A reply is one short line beside an avatar: no handle there. The editor shows its
-            // handle with a style of its own, so hiding it has to outrank that.
-            "write flex items-start gap-2 px-4 py-2 [&_.drag-handle]:hidden!"
+          ? "write grid gap-1 rounded-xl border bg-card py-3 pr-3 pl-9"
+          : "write flex items-start gap-2 px-4 py-2 [&_.drag-handle]:hidden!"
       }
       onSubmit={(e) => {
         e.preventDefault();
         send();
       }}
-      // Return sends; Shift+Return starts a new line. Caught before the editor, which would
-      // otherwise start a paragraph. Left alone while the editor's own menu is choosing a block,
-      // and while a word is still being composed on an input-method keyboard.
       onKeyDownCapture={(e) => {
         if (e.key !== "Enter" || e.shiftKey || e.altKey || e.nativeEvent.isComposing) return;
-        // The editor's own menu takes Return first, to pick a block, and marks the key as used.
         if (e.defaultPrevented || document.querySelector(".an-rich-md-slash-menu")) return;
-        // A lone "/word" is a block being asked for, not a message, even when no block matches.
         if (/^\/\S*$/.test(text.trim())) return;
         e.preventDefault();
         e.stopPropagation();

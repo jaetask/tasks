@@ -61,7 +61,6 @@ test("a file is uploaded, listed, and read back whole or in part", async () => {
 
     const listed = await call("files.file-list", { ticket: "TLK-1" });
     assert.equal((listed.output as { name: string }[])[0]?.name, "clip.mp4");
-    // Nothing is left waiting among the uploads.
     assert.deepEqual(readdirSync(join(filesDir, "staged")), []);
 
     const whole = await fetch(`${base}/api/files/${id}`, { headers: { cookie } });
@@ -112,7 +111,6 @@ test("bytes are only for the signed-in person, from this page", async () => {
     const sent = await upload(base, cookie, "page.html", "text/html", bytes);
     const id = ((await sent.json()) as { output: { id: string } }).output.id;
     assert.equal((await fetch(`${base}/api/files/${id}`)).status, 401);
-    // A file a browser could run is only ever handed over as a download.
     const got = await fetch(`${base}/api/files/${id}`, { headers: { cookie } });
     assert.equal(got.headers.get("content-type"), "application/octet-stream");
     assert.match(got.headers.get("content-disposition") ?? "", /^attachment/);
@@ -130,7 +128,6 @@ test("a file over the limit for its type is refused and not kept", async () => {
     const big = new Uint8Array(25 * 1024 * 1024 + 1);
     const sent = await upload(base, cookie, "big.bin", "application/zip", big);
     assert.equal(sent.status, 413);
-    // The same bytes as a video are within the video limit.
     const video = await upload(base, cookie, "big.mp4", "video/mp4", big);
     assert.equal(((await video.json()) as { state: string }).state, "succeeded");
     const listed = await call("files.file-list", { ticket: "TLK-1" });

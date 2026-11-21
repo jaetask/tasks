@@ -1,5 +1,3 @@
-// The comments repository: a ticket's conversation. A comment can have
-// replies, one level deep, and reactions.
 import type { DatabaseSync } from "node:sqlite";
 import { z } from "zod";
 import { nextId } from "../ids.js";
@@ -32,19 +30,15 @@ export const Comment = Reply.extend({ replies: z.array(Reply) });
 export type Comment = z.infer<typeof Comment>;
 
 export type Comments = {
-  /** How many comments a ticket has, replies included, removed ones not. */
   count(ticket: string): number;
-  /** A ticket's comments, oldest first, each with its replies. */
   thread(ticket: string): Comment[];
   get(id: string): Reply;
   add(by: string, at: string, ticket: string, text: string, replyTo?: string): Reply;
   edit(id: string, at: string, text: string): Reply;
   remove(id: string): Reply;
-  /** Marks a comment's thread resolved, or open again. Only a comment that starts a thread can be. */
   resolve(id: string, resolved: boolean): Reply;
   react(id: string, actor: string, emoji: string): Reply;
   unreact(id: string, actor: string, emoji: string): Reply;
-  /** Deletes every comment and reaction of a ticket. They cannot be brought back. */
   purge(ticket: string): void;
 };
 
@@ -52,7 +46,6 @@ export function migrateComments(db: DatabaseSync): void {
   db.exec(
     "CREATE TABLE IF NOT EXISTS comments (id TEXT PRIMARY KEY, ticket TEXT NOT NULL REFERENCES tickets (id), parent TEXT REFERENCES comments (id), author TEXT NOT NULL, text TEXT NOT NULL, at TEXT NOT NULL, edited_at TEXT, removed INTEGER NOT NULL DEFAULT 0)",
   );
-  // Added after the first version: a database made before it gets the column here.
   const columns = db.prepare("PRAGMA table_info(comments)").all() as { name: string }[];
   if (!columns.some((c) => c.name === "resolved")) {
     db.exec("ALTER TABLE comments ADD COLUMN resolved INTEGER NOT NULL DEFAULT 0");
@@ -140,7 +133,6 @@ export function sqliteComments(
         if (to.ticket !== ticket) {
           throw new Refusal("other-ticket", `Comment ${replyTo} is not on ${ticket}.`);
         }
-        // A reply to a reply joins the same thread.
         parent = to.parent ?? to.id;
       }
       const id = nextId(db, "m");

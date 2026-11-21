@@ -1,6 +1,3 @@
-// A project's board and backlog: working surfaces that use the full width.
-// The board groups the same tickets four ways: by column, by feature, by
-// actor and by location. Dragging a ticket changes what the view groups by.
 import {
   EmptyLine,
   Field,
@@ -73,7 +70,6 @@ export const VIEWS: readonly ViewChoice[] = [
 type View = "features" | "actors" | "locations" | "status" | "projects";
 type ViewChoice = SuiteViewChoice<View> & { heading: string };
 
-/** How a board or backlog is narrowed. "" means all; "none" means tickets with none. */
 type Filters = {
   view: View;
   text: string;
@@ -86,7 +82,6 @@ type Filters = {
   due: string;
   hideDone: boolean;
   hideEmpty: boolean;
-  /** On the Overview: the projects to show. Empty means all. */
   projects: string[];
 };
 export type { Filters, View, ViewChoice };
@@ -105,7 +100,6 @@ const ALL: Filters = {
   projects: [],
 };
 
-/** The filters of one screen of one project, remembered in this browser. */
 export function useFilters(
   key: string,
   start: Partial<Filters> = {},
@@ -127,9 +121,7 @@ export function useFilters(
       setFilters(next);
       try {
         localStorage.setItem(key, JSON.stringify(next));
-      } catch {
-        // Without storage the filters still work; they are forgotten on reload.
-      }
+      } catch {}
     },
   ];
 }
@@ -158,7 +150,6 @@ export function narrowed(tickets: Ticket[], f: Filters): Ticket[] {
     );
 }
 
-/** The search box, the Filter button and the chips of the filters in use, above a board or a list. */
 export function FilterBar({
   filters,
   set,
@@ -168,9 +159,7 @@ export function FilterBar({
 }: {
   filters: Filters;
   set: (patch: Partial<Filters>) => void;
-  /** The features to choose from. Left out where projects are mixed, which have no features in common. */
   features?: Feature[];
-  /** The projects to choose from, where projects are mixed. */
   projects?: Project[];
   right?: ReactNode;
 }) {
@@ -277,14 +266,12 @@ const _KIND_DOT: Record<Kind, string> = {
   waiting: "bg-violet-500",
   done: "bg-emerald-500",
 };
-/** A compact time since: 5m, 3h, 16d. */
 const since = (at: string) => {
   const minutes = Math.max(0, Math.round((Date.now() - Date.parse(at)) / 60_000));
   if (minutes < 60) return `${minutes}m`;
   if (minutes < 60 * 24) return `${Math.round(minutes / 60)}h`;
   return `${Math.round(minutes / (60 * 24))}d`;
 };
-/** A short date: Nov 20, with the year only when it is not this year. */
 const shortDate = (at: string) => {
   const date = new Date(at);
   return date.toLocaleDateString("en-US", {
@@ -296,7 +283,6 @@ const shortDate = (at: string) => {
 const PILL =
   "inline-flex h-6 items-center gap-1.5 rounded-full border bg-transparent px-2 text-xs font-normal";
 
-/** A chip on a card that opens a picker or a link: it keeps its click and its drag to itself. */
 function Chip({ className, ...rest }: React.ComponentProps<typeof Button>) {
   return (
     <Button
@@ -309,10 +295,6 @@ function Chip({ className, ...rest }: React.ComponentProps<typeof Button>) {
   );
 }
 
-/**
- * A ticket as a card on a board. Anywhere on it opens the ticket, except a property, which opens
- * that property's picker. It can be dragged to a lane. `show` says which properties it carries.
- */
 export function TicketCard({
   ticket,
   action,
@@ -321,9 +303,7 @@ export function TicketCard({
 }: {
   ticket: Ticket;
   action?: ReactNode;
-  /** True on a screen that mixes projects: the card then names its project, as a pill to its board. */
   across?: boolean;
-  /** The properties to show. The ticket's project decides if left out. */
   show?: readonly string[];
 }) {
   const { catalog, go, path } = useApp();
@@ -335,7 +315,6 @@ export function TicketCard({
   const open = () => go(`${path}?ticket=${ticket.id}`);
   const avatar = actor && <ActorAvatar id={actor.id} name={actor.name} />;
   const status = <StatusIcon kind={ticket.column.kind} backlog={ticket.backlog} />;
-  // Status and actor share a line when both are shown; alone, each takes less room.
   const together = has("status") && has("actor");
   const top = has("id") || has("type") || has("priority") || (has("actor") && !together);
   const byService = new Map<string, string[]>();
@@ -351,8 +330,6 @@ export function TicketCard({
     has("time-in-status");
   const bare = shown.size === 0;
   return (
-    // The whole card opens the ticket; it can be dragged, and on the backlog it holds a button of its own.
-    // A right click opens its menu.
     <TicketMenu ticket={ticket}>
       <article
         draggable
@@ -365,7 +342,6 @@ export function TicketCard({
           e.dataTransfer.effectAllowed = "move";
         }}
         onClick={(e) => {
-          // A click in a picker, which is drawn outside the card, or on a chip is not for the card.
           const target = e.target as HTMLElement;
           if (!e.currentTarget.contains(target) || target.closest("[data-chip]")) return;
           open();
@@ -520,7 +496,6 @@ export function TicketCard({
 const LANE_FIRST = 30;
 const LANE_MORE = 100;
 
-/** One column of a board: a name, a count and its cards. A card can be dropped on it. */
 export function Lane({
   id,
   title,
@@ -532,9 +507,7 @@ export function Lane({
   onDrop,
   children,
 }: {
-  /** The lane's "..." menu, when it has one. */
   menu?: ReactNode;
-  /** Given when the lane's name can be changed where it is shown. */
   rename?: {
     editing: boolean;
     onEditing: (editing: boolean) => void;
@@ -544,13 +517,11 @@ export function Lane({
   title: string;
   icon?: ReactNode;
   count: number;
-  /** Where "+" goes: the new-ticket page, starting in this lane. */
   addTo?: string;
   onDrop?: (ticket: string) => void;
   children?: ReactNode;
 }) {
   const [over, setOver] = useState(false);
-  // A long lane shows its first cards, and the rest when asked.
   const [shown, setShown] = useState(LANE_FIRST);
   const dragging = (e: DragEvent) => onDrop !== undefined && e.dataTransfer.types.includes(DRAG);
   return (
@@ -630,14 +601,12 @@ export function Lane({
   );
 }
 
-/** Lanes side by side, scrolling sideways when they do not fit. */
 export function Lanes({
   label,
   after,
   children,
 }: {
   label: string;
-  /** Something after the last lane, such as the way to add a column. */
   after?: ReactNode;
   children: ReactNode;
 }) {
@@ -656,14 +625,12 @@ function TicketTitle({ id }: { id: string }) {
   return <DialogTitle className="sr-only">{ticket?.title ?? id}</DialogTitle>;
 }
 
-/** The ticket named after ?ticket= in the address, opened over the page it was opened from. */
 export function TicketDialog() {
   const { query, path, go } = useApp();
   const id = query.get("ticket");
   if (!id) return null;
   return (
     <Dialog open onOpenChange={(open) => !open && go(path)}>
-      {/* A fixed height: the dialog stays where it is as the ticket inside it grows or shrinks. */}
       <DialogContent className="h-[90vh] w-[min(64rem,95vw)] max-w-none content-start overflow-y-auto">
         <TicketTitle id={id} />
         <DialogDescription className="sr-only">The ticket and its conversation.</DialogDescription>
@@ -690,7 +657,6 @@ const CARD_PROPERTIES: [string, string][] = [
   ["updated", "Updated"],
 ];
 
-/** The Display button: which properties a card shows on this project's board and backlog. */
 function Display({ project }: { project: Project }) {
   const { act } = useApp();
   return (
@@ -745,7 +711,6 @@ const ORDERINGS = [
   { id: "updated", name: "Updated" },
 ];
 const RANK: Record<string, number> = { urgent: 0, high: 1, medium: 2, low: 3, none: 4 };
-/** Tickets in a project's chosen order. Ties, and "created", keep the order they came in. */
 export function ordered(tickets: Ticket[], ordering: Project["ordering"]): Ticket[] {
   if (ordering === "created") return tickets;
   const key = (t: Ticket): number | string =>
@@ -760,7 +725,6 @@ export function ordered(tickets: Ticket[], ordering: Project["ordering"]): Ticke
   });
 }
 
-/** A column's "..." menu on the status view: its name, what it means, its place, and its tickets. */
 function ColumnMenu({
   project,
   column,
@@ -771,7 +735,6 @@ function ColumnMenu({
   project: Project;
   column: string;
   name: string;
-  /** How many tickets the column holds; with none there is nothing to archive. */
   count: number;
   onRename: () => void;
 }) {
@@ -819,7 +782,6 @@ function ColumnMenu({
   );
 }
 
-/** What each kind of column is called where one is chosen. */
 export const KIND_TITLE: Record<Kind, string> = {
   todo: "To do",
   doing: "Doing",
@@ -827,7 +789,6 @@ export const KIND_TITLE: Record<Kind, string> = {
   done: "Done",
 };
 
-/** After the last column of a board: the way to add one. */
 function AddColumn({ project }: { project: Project }) {
   const { act } = useApp();
   const [open, setOpen] = useState(false);
@@ -888,7 +849,6 @@ export type Group = {
   id: string;
   title: string;
   kind?: Kind;
-  /** What a new ticket made in this lane starts with, as the new-ticket page reads it. */
   start: string;
   tickets: Ticket[];
   drop: (ticket: string) => unknown;
@@ -896,7 +856,6 @@ export type Group = {
 
 const title = (project: Project, screen?: string) =>
   `${project.name}${screen ? ` · ${screen}` : ""}`;
-/** A project's icon, for the start of a page's title. */
 export const titleIcon = (project: Project) => <ProjectIcon {...projectLook(project)} size={18} />;
 
 export function BoardPage({ project }: { project: Project }) {
@@ -907,10 +866,8 @@ export function BoardPage({ project }: { project: Project }) {
   const features = useRead<Feature[]>("tickets.feature-find", { project: project.id }) ?? [];
   const board = useRead<BoardData>("tickets.board-read", { project: project.id });
   const view = filters.view;
-  // A favourite feature in the sidebar opens the board narrowed to it.
   const { query } = useApp();
   const asked = query.get("feature");
-  // The arrow beside a ticket's location opens the board narrowed to it.
   const where = query.get("location");
   // biome-ignore lint/correctness/useExhaustiveDependencies: only when the address asks for one
   useEffect(() => {
@@ -922,7 +879,6 @@ export function BoardPage({ project }: { project: Project }) {
     (board?.columns ?? []).flatMap((c) => c.tickets),
     filters,
   );
-  // In the status view "Hide done" hides the done columns; in the others, the tickets in them.
   const shown =
     filters.hideDone && view !== "status" ? all.filter((t) => t.column.kind !== "done") : all;
   const by = (key: (t: Ticket) => string | null, id: string | null) =>

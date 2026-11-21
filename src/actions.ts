@@ -1,21 +1,16 @@
-// How Tasks defines its Actions. Any Action may refuse by throwing a Refusal;
-// a write also checks its actor and records its change.
 import type { DatabaseSync } from "node:sqlite";
 import { type Card, type Change, defineAction, type RunContext } from "@jaetask/open-agent-kit";
 import type { z } from "zod";
 import type { Journal } from "./journal.js";
 import { Refusal } from "./refusal.js";
 
-/** What every Domain's Actions get: the database, the record of changes, and who the actors are. */
 export type Base = {
   db: DatabaseSync;
   journal: Journal;
-  /** The name of an actor that may act now, or undefined. */
   actorName(id: string): string | undefined;
 };
 
 export type WriteContext<Deps> = RunContext<Deps> & {
-  /** Records this Call's change, with the actor who made it. */
   log(summary: string, change: Change, ticket?: string): void;
 };
 
@@ -50,7 +45,6 @@ export function writeAction<Input extends z.ZodType, Output extends z.ZodType, D
       return run(input, {
         ...context,
         log: (summary, change, ticket) => {
-          // A write that changed nothing, such as the same reaction twice, is not a change.
           if (context.journal.pending() === 0) return;
           context.journal.record({
             actor,

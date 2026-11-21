@@ -1,11 +1,4 @@
 #!/usr/bin/env node
-// Two checks on the public docs.
-// 1. Decisions only (README.md, docs/): open questions and undecided items
-//    belong in issues or the conversation.
-// 2. Plain language (README.md, GLOSSARY.md, AGENTS.md, docs/): no slogans,
-//    hype or rhetorical phrasing. The list is scripts/docs-phrases.json; it
-//    grows through the pave skill whenever someone flags a phrase.
-// Text inside code (<code>, <pre>, `inline`, fenced blocks) is not checked.
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 
@@ -30,7 +23,6 @@ function walk(dir) {
   });
 }
 
-// Blank out code, keeping line breaks so line numbers stay true.
 const blank = (match) => match.replace(/[^\n]/g, " ");
 function prose(text) {
   return text
@@ -40,7 +32,6 @@ function prose(text) {
     .replace(/`[^`\n]*`/g, blank);
 }
 
-// The heading text on a line, or null: Markdown #, HTML h1-h6 and summary.
 function heading(line) {
   const md = line.match(/^#+\s+(.*)/);
   if (md) return md[1];

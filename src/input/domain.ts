@@ -1,5 +1,3 @@
-// The input Domain: an agent asks the owner a question on a ticket and
-// waits; the owner answers. Only the owner answers.
 import { defineCard, defineDomain } from "@jaetask/open-agent-kit";
 import { z } from "zod";
 import { type Base, readAction, writeAction } from "../actions.js";
@@ -12,7 +10,6 @@ export type InputDeps = Base & {
   tickets: Pick<Tickets, "get">;
   inputs: Inputs;
   now(): number;
-  /** Tells an agent that its question was answered. */
   answered(request: InputRequest, by: string, at: string): void;
 };
 

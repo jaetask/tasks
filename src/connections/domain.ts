@@ -1,7 +1,3 @@
-// The connections Domain: the agents and Apps that asked to connect. The
-// owner approves each one, chooses whether it may only read or also change
-// things, and picks the actor it acts as. A Connection never acts as the
-// owner.
 import {
   type Connections,
   defineAction,

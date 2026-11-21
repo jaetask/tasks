@@ -1,4 +1,3 @@
-// Sorts requests into a category.
 export default function sort({ item }) {
   const category = item.fields.format ? "export" : "other";
   return {

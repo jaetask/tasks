@@ -1,7 +1,3 @@
-// Runs the owner's steps on an inbox item, in order. Each step's Calls go
-// through the Call pipeline as the step's actor, limited to the Actions the
-// step was given. A reject, dismiss or promote ends the run. Every run is
-// recorded.
 import type { DatabaseSync } from "node:sqlite";
 import { type ActionName, type Calls, contract } from "@jaetask/open-agent-kit";
 import { openJournal } from "../journal.js";
@@ -19,11 +15,8 @@ export type PipelineOptions = {
 };
 
 export type Pipeline = {
-  /** Runs the steps on an item and returns the run's record. Runs take turns. */
   run(item: string): Promise<Run>;
-  /** Runs the steps on every received item no run has looked at yet. */
   catchUp(): Promise<void>;
-  /** Resolves when no run is under way or waiting. */
   idle(): Promise<void>;
 };
 

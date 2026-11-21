@@ -1,4 +1,3 @@
-// The form of an intake step, in a dialog: what looks at each new item, and what it may do.
 import { Field, FormDialog } from "@jaetask/toolkit/suite";
 import { Input } from "@jaetask/toolkit/ui/input";
 import { Textarea } from "@jaetask/toolkit/ui/textarea";
@@ -16,7 +15,6 @@ export const KIND_NAMES: Record<Step["kind"], string> = {
   app: "Another App",
 };
 
-// What a step may ask for, in the words of what happens to the item.
 const SORT: [string, string][] = [
   ["item-tag", "Add tags"],
   ["item-untag", "Remove tags"],
@@ -36,7 +34,6 @@ const options = (list: [string, string][]) => list.map(([id, name]) => ({ id, na
 const within = (list: [string, string][], chosen: string[]) =>
   chosen.filter((a) => list.some(([id]) => id === a));
 
-// What each kind of step needs, as [setting, label, what it is].
 const SETTINGS: Record<Step["kind"], [string, string, string][]> = {
   script: [["file", "File", "A module in the steps folder, such as spam-check.mjs."]],
   "local-model": [

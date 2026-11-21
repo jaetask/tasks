@@ -1,4 +1,3 @@
-// Search across every project's tickets: "/" or Cmd+K opens it, as does the sidebar's button.
 import { ProjectIcon } from "@jaetask/toolkit/suite";
 import {
   CommandDialog,
@@ -18,7 +17,6 @@ const typing = (target: EventTarget | null) =>
   target instanceof HTMLElement &&
   (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName));
 
-/** Opens the search with "/" or Cmd+K. Returns whether it is open, and the way to set that. */
 export function useSearchKey(): [boolean, (open: boolean) => void] {
   const [open, setOpen] = useState(false);
   useEffect(() => {
@@ -99,7 +97,6 @@ export function SearchDialog({
 }) {
   const { go } = useApp();
   const [text, setText] = useState("");
-  // What is searched for follows the typing a moment later, so each key is not a search.
   const [asked, setAsked] = useState("");
   useEffect(() => {
     const timer = setTimeout(() => setAsked(text), 200);

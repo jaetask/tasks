@@ -1,6 +1,3 @@
-// Expect tests: each .json file in a suite folder is an input; its approved
-// output sits beside it as name.expect.md. Run `npm run expect -- --update`
-// to write new output, then read it before committing.
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { contract } from "@jaetask/open-agent-kit";
@@ -13,7 +10,6 @@ import { renderContract } from "./render.js";
 
 const failed = await snap([
   {
-    // Input: { "domain": name }. Output: that Domain's Contract.
     dir: "expect/contract",
     render: (input) => {
       const { domain: name } = JSON.parse(input) as { domain: string };
@@ -23,18 +19,14 @@ const failed = await snap([
     },
   },
   {
-    // Input: a Call script. Output: each step's Outcome, then the data.
     dir: "expect/calls",
     render: renderScript,
   },
   {
-    // The inbox and its steps: script, model, classifier and another App.
     dir: "expect/inbox",
     render: runInbox,
   },
   {
-    // Input: { "folder": path }. Output: every Action the page's scripts
-    // call, and whether Tasks has it.
     dir: "expect/page",
     render: (input) => {
       const { folder } = JSON.parse(input) as { folder: string };
@@ -58,7 +50,6 @@ const failed = await snap([
     },
   },
   {
-    // Tasks as a running App over real HTTP and MCP.
     dir: "expect/app",
     render: runApp,
   },

@@ -1,9 +1,6 @@
-// The toolkit's rich Markdown editor, loaded when a ticket first needs it.
-// What is written is saved as Markdown, so agents read and write plain text.
 import type { SlashCommandItem } from "@jaetask/toolkit/editor";
 import { type ComponentProps, lazy, Suspense } from "react";
 
-// Short names for the editor's blocks, so "/h1" finds "Heading 1" as well as "/heading" does.
 const SHORT: Record<string, string> = {
   Text: "p paragraph plain",
   "Heading 1": "h1 title",
@@ -19,7 +16,6 @@ const SHORT: Record<string, string> = {
   Image: "img picture photo",
 };
 
-// Filled in when the editor has loaded: its blocks, each findable by its short names too.
 let slashItems: SlashCommandItem[] | undefined;
 
 const Rich = lazy(() =>
@@ -32,13 +28,10 @@ const Rich = lazy(() =>
   }),
 );
 
-/** The editor with its blocks. Drawn inside Suspense, so it is drawn again once the editor loads. */
 function Loaded(props: ComponentProps<typeof Rich>) {
   return <Rich {...(slashItems ? { slashItems } : {})} {...props} />;
 }
 
-// Pictures are a part of the editor that is off unless asked for. One object, so the editor is
-// not built again on every render.
 const PICTURES = { image: true };
 
 export function Editor({
@@ -56,7 +49,6 @@ export function Editor({
   onBlur?: () => void;
   placeholder?: string;
   className?: string;
-  /** Stores a picture pasted, dropped or chosen in the text, and says where it can be read. */
   onImageUpload?: (file: File) => Promise<{ src: string; alt?: string }>;
 }) {
   return (

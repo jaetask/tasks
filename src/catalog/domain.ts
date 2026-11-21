@@ -1,5 +1,3 @@
-// The catalog Domain: actors, projects with their columns, labels and locations.
-// Anyone may read it; only the owner changes it.
 import { defineCard, defineDomain } from "@jaetask/open-agent-kit";
 import { z } from "zod";
 import { type Base, readAction, writeAction } from "../actions.js";
@@ -23,16 +21,12 @@ import {
 
 export type CatalogDeps = Base & {
   catalog: Catalog;
-  /** Moves every ticket in a column to another column of the same board. */
   vacate(from: string, to: Column): void;
-  /** Why an actor, a location or a project cannot be deleted: what was done with it. Null if nothing. */
   used(what: "actor" | "location" | "project", id: string): string | null;
-  /** Gives a project another prefix: its id, and the start of every one of its ticket ids. */
   reprefix(from: string, to: string): void;
 };
 
 const name = z.string().trim().min(1).max(60);
-// A word in small letters must be one of the icon names; anything else is an emoji.
 const projectIcon = z
   .string()
   .trim()

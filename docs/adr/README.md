@@ -1,0 +1,27 @@
+# Decisions
+
+Decisions about the code live here, since comments are not kept in the code.
+
+- [1. Every read and change from the page is a Call](0001-every-read-and-change-from-the-page-is-a-call.md)
+- [2. A refusal ends the Call as rejected and keeps nothing the Action changed](0002-a-refusal-ends-the-call-and-keeps-nothing.md)
+- [3. Every write goes through the record of changes, and undo is itself a recorded change](0003-every-write-is-recorded-and-undo-is-a-change.md)
+- [4. Ids are a prefix and a counter that never goes back](0004-ids-come-from-counters-that-never-go-back.md)
+- [5. A ticket that gets another id keeps its earlier id as another name](0005-a-ticket-that-gets-another-id-keeps-its-earlier-id.md)
+- [6. A Connection is approved only through its Action and never acts as the owner](0006-a-connection-is-approved-through-its-action-and-never-acts-as-the-owner.md)
+- [7. Only the owner, on the page, deletes a ticket for good](0007-only-the-owner-on-the-page-deletes-a-ticket-for-good.md)
+- [8. A file's bytes travel outside Calls](0008-file-bytes-travel-outside-calls.md)
+- [9. Only images and video are shown in the page; any other file is a download](0009-only-images-and-video-are-shown-in-the-page.md)
+- [10. Every request for a link's title is guarded](0010-requests-for-link-titles-are-guarded.md)
+- [11. Link titles are read after the Call, once, and only when turned on](0011-link-titles-are-read-after-the-call-and-only-when-turned-on.md)
+- [12. Inbox steps act through the Call pipeline with only the Actions they were given](0012-inbox-steps-act-through-the-call-pipeline.md)
+- [13. Evidence on a ticket is recorded and not checked](0013-evidence-is-recorded-and-not-checked.md)
+- [14. Ticket text is saved as Markdown and the editor loads when first needed](0014-text-is-saved-as-markdown.md)
+- [15. Return sends from the write box](0015-return-sends-from-the-write-box.md)
+- [16. The page shows the latest read and announces only deletions](0016-the-page-shows-the-latest-read-and-announces-only-deletions.md)
+- [17. A menu item that opens a dialog runs after the menu has closed](0017-a-menu-item-that-opens-a-dialog-waits-for-the-menu-to-close.md)
+- [18. A card ignores clicks from pickers drawn outside it, and an empty choice travels as a stand-in value](0018-parts-drawn-outside-their-parent-and-empty-select-values.md)
+- [19. The ticket dialog and the labels list keep their position](0019-the-ticket-dialog-and-the-labels-list-keep-their-position.md)
+- [20. Filters are remembered in the browser and work without storage](0020-filters-are-remembered-in-the-browser.md)
+- [21. The page build splits chunks and defines import.meta.env](0021-the-page-build-splits-chunks-and-defines-import-meta-env.md)
+- [22. Branches merge through auto-pr, and the job deletes the branch](0022-branches-merge-through-auto-pr.md)
+- [23. A backlog ticket goes on the board before it moves to a column](0023-a-backlog-ticket-goes-on-the-board-before-it-moves.md)

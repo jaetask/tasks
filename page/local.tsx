@@ -1,6 +1,3 @@
-// Tasks' own small pieces, each made only of toolkit parts: a ticket as a
-// list row, the badges for kinds and labels, and short forms of the parts
-// the pages use most.
 import { IconCircleDashed, IconUser } from "@tabler/icons-react";
 import { Composer, IconAvatar, PROJECT_ICONS } from "@jaetask/toolkit/suite";
 import {
@@ -32,10 +29,8 @@ import { useApp } from "./app.js";
 
 type Option = { id: string; name: string };
 
-// A Select item cannot have an empty value, so "" travels as this.
 const NONE = "__none";
 
-/** A dropdown over options. An option with the id "" is the "none" or "any" choice. */
 export function Picker({
   id,
   label,
@@ -67,7 +62,6 @@ export function Picker({
   );
 }
 
-/** Pick one of a few values. */
 export function Choice<T extends string>({
   label,
   value,
@@ -99,7 +93,6 @@ export function Choice<T extends string>({
   );
 }
 
-/** Pick any number of a few values. */
 export function Choices({
   label,
   value,
@@ -129,7 +122,6 @@ export function Choices({
   );
 }
 
-/** Tabs that narrow a list. */
 export function TabBar<T extends string>({
   label,
   value,
@@ -180,7 +172,6 @@ const TINT: Record<Colour, string> = {
   pink: "bg-pink-100 text-pink-900",
 };
 
-/** A small badge, in one of the named colours when given one. */
 export function Pill({ children, colour }: { children: ReactNode; colour?: Colour }) {
   return (
     <Badge
@@ -192,7 +183,6 @@ export function Pill({ children, colour }: { children: ReactNode; colour?: Colou
   );
 }
 
-/** A round mark: an icon in its colour, an emoji, or the first letter of a name. */
 export function Face({
   name,
   emoji,
@@ -200,7 +190,6 @@ export function Face({
   size = 24,
 }: {
   name: string;
-  /** An icon name or an emoji. */
   emoji?: string;
   colour?: string;
   size?: number;
@@ -208,7 +197,6 @@ export function Face({
   return <IconAvatar name={name} icon={emoji ?? ""} colour={colour ?? ""} size={size} />;
 }
 
-/** Delete for good, confirmed by typing the name. Opened from a menu or a quiet button. */
 export function DeleteForGood({
   name,
   what,
@@ -257,16 +245,13 @@ export function DeleteForGood({
   );
 }
 
-/** A project's emoji, or "" when its icon is an icon name or it has none. */
 export const projectEmoji = (project: Project) =>
   /^[a-z-]*$/.test(project.icon) ? "" : project.icon;
 
-/** A project's round picture: its emoji or first letter. */
 export function ProjectAvatar({ project }: { project: Project }) {
   return <Face name={project.name} emoji={projectEmoji(project)} />;
 }
 
-/** An actor's round mark: its icon in its colour, or the first letter of its name. */
 export function ActorAvatar({
   id,
   name,
@@ -304,10 +289,8 @@ export function LabelChip({ label }: { label: { name: string; colour: Colour } }
   return <Pill colour={label.colour}>{label.name}</Pill>;
 }
 
-/** The drag type of a ticket: a card or a line dragged onto a column, or onto a board. */
 export const TICKET_DRAG = "application/x-tasks-ticket";
 
-/** One line to add something: a comment, an inbox item, an answer. */
 export function Say({
   label,
   button,
@@ -333,7 +316,6 @@ export function Say({
   );
 }
 
-// Projects made before the picker have a colour name; this is the swatch each one maps to.
 const NAMED: Record<string, string> = {
   blue: "#6366f1", // toolkit-guard-allow
   teal: "#1db4cb", // toolkit-guard-allow
@@ -343,10 +325,8 @@ const NAMED: Record<string, string> = {
   pink: "#c99b94", // toolkit-guard-allow
 };
 
-/** The swatch of a named colour, as hex. */
 export const namedColour = (name: string) => NAMED[name] ?? name;
 
-/** A project's colour as hex, and its icon name, whatever form they were stored in. */
 export const projectLook = (project: { icon: string; colour: string }) => ({
   projectIcon: (PROJECT_ICONS as readonly string[]).includes(project.icon)
     ? project.icon
@@ -354,16 +334,13 @@ export const projectLook = (project: { icon: string; colour: string }) => ({
   iconColour: NAMED[project.colour] ?? project.colour,
 });
 
-/** What the Add link dialog says under its heading on a ticket. */
 export const LINK_LINE = "A web address that belongs to this ticket, such as a pull request.";
 
-/** Adds a link to a ticket, as the Add link dialog asks: true once it is added. */
 export const addLink =
   (act: (action: string, input: unknown) => Promise<unknown>, ticket: string) =>
   async (url: string, title: string | undefined) =>
     (await act("tickets.ticket-link-add", { ticket, url, ...(title ? { title } : {}) })) !== null;
 
-/** The mark of a ticket nobody is assigned to: a person in a dashed circle. */
 export function NoActor({ size = 16 }: { size?: number }) {
   return (
     <span

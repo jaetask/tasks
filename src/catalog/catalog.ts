@@ -1,25 +1,19 @@
-// The catalog repository: the actors, the projects with their columns, the
-// labels and the locations. All of it is data the owner creates; only the owner actor
-// exists in a new install.
 import type { DatabaseSync } from "node:sqlite";
 import { z } from "zod";
 import { nextId } from "../ids.js";
 import type { Rows } from "../journal.js";
 import { Refusal } from "../refusal.js";
 
-/** The owner's actor id. The one actor a new install has. */
 export const OWNER = "owner";
 
 export const KINDS = ["todo", "doing", "waiting", "done"] as const;
 export const Kind = z.enum(KINDS).describe("What a column means: todo, doing, waiting or done.");
 export type Kind = z.infer<typeof Kind>;
 
-// The six colours of the toolkit the page is built from.
 export const COLOURS = ["blue", "teal", "green", "amber", "purple", "pink"] as const;
 export const Colour = z.enum(COLOURS);
 export type Colour = z.infer<typeof Colour>;
 
-// The line icons a project can show, by name.
 export const PROJECT_ICONS = [
   "folder",
   "robot",
@@ -51,7 +45,6 @@ export const PROJECT_ICONS = [
   "coffee",
 ] as const;
 
-/** A project's colour: one of the six named colours, or any colour as six-digit hex. */
 export const ProjectColour = z
   .string()
   .refine(
@@ -61,7 +54,6 @@ export const ProjectColour = z
   .transform((v) => v.toLowerCase());
 export type ProjectColour = z.infer<typeof ProjectColour>;
 
-// What a ticket's card can show on a board, besides its title.
 export const CARD_PROPERTIES = [
   "id",
   "type",
@@ -80,7 +72,6 @@ export const CARD_PROPERTIES = [
 ] as const;
 export const CardProperty = z.enum(CARD_PROPERTIES);
 export type CardProperty = z.infer<typeof CardProperty>;
-/** What a card shows until the owner chooses otherwise. */
 export const DEFAULT_CARD: readonly CardProperty[] = [
   "id",
   "type",
@@ -91,7 +82,6 @@ export const DEFAULT_CARD: readonly CardProperty[] = [
   "updated",
 ];
 
-// How the cards of a board's column are ordered.
 export const ORDERINGS = ["created", "priority", "due", "updated"] as const;
 export const Ordering = z.enum(ORDERINGS);
 export type Ordering = z.infer<typeof Ordering>;
@@ -144,7 +134,6 @@ export const CatalogView = z.object({
 });
 export type CatalogView = z.infer<typeof CatalogView>;
 
-/** The columns a new project starts with. */
 export const FIRST_COLUMNS: readonly (readonly [string, Kind])[] = [
   ["To do", "todo"],
   ["Doing", "doing"],
@@ -156,21 +145,17 @@ export type Catalog = {
   read(): CatalogView;
   actor(id: string): Actor;
   project(id: string): Project;
-  /** A column, with the project it belongs to. */
   column(id: string): Column & { project: string };
   label(id: string): Label;
   location(id: string): Location;
-  /** The first column of this kind on a project's board, or undefined. */
   firstColumn(project: string, kind: Kind): Column | undefined;
   createActor(name: string, icon: string, colour?: string): Actor;
   renameActor(id: string, name: string): Actor;
   setActorIcon(id: string, icon: string, colour?: string): Actor;
   archiveActor(id: string, archived: boolean): Actor;
-  /** Deletes an actor. The caller checks first that nothing was ever done as it. */
   deleteActor(id: string): Actor;
   createProject(name: string, prefix: string): Project;
   archiveProject(id: string, archived: boolean): Project;
-  /** Deletes a project and its columns. The caller checks first that it holds nothing. */
   deleteProject(id: string): Project;
   editProject(
     id: string,
@@ -180,22 +165,13 @@ export type Catalog = {
       colour?: ProjectColour | undefined;
     },
   ): Project;
-  /** Sets what a ticket's card shows on a project's board, or the usual set with null. */
   setCard(id: string, show: CardProperty[] | null): Project;
-  /** Sets how the cards of a project's columns are ordered. */
   setOrdering(id: string, ordering: Ordering): Project;
-  /** Moves a project to sit before `before` in the list, or to the end. */
   moveProject(id: string, before?: string): Project[];
-  /** Adds a column before `before`, or at the end. */
   addColumn(project: string, name: string, kind: Kind, before?: string): Column;
   renameColumn(id: string, name: string): Column;
   setColumnKind(id: string, kind: Kind): Column;
-  /** Moves a column to sit before `before`, or to the end. */
   moveColumn(id: string, before?: string): Project;
-  /**
-   * Removes a column. `vacate` is called first, to move its tickets to the
-   * column before it (or after it, for the first column).
-   */
   removeColumn(
     id: string,
     vacate: (from: string, to: Column) => void,
@@ -207,7 +183,6 @@ export type Catalog = {
   createLocation(name: string): Location;
   renameLocation(id: string, name: string): Location;
   archiveLocation(id: string, archived: boolean): Location;
-  /** Deletes a location. The caller checks first that no ticket has it. */
   deleteLocation(id: string): Location;
 };
 
@@ -215,7 +190,6 @@ export function migrateCatalog(db: DatabaseSync): void {
   db.exec(
     "CREATE TABLE IF NOT EXISTS actors (id TEXT PRIMARY KEY, name TEXT NOT NULL, archived INTEGER NOT NULL DEFAULT 0)",
   );
-  // Added after the first version: a database made before it gets the column here.
   const actorColumns = db.prepare("PRAGMA table_info(actors)").all() as { name: string }[];
   if (!actorColumns.some((c) => c.name === "icon")) {
     db.exec("ALTER TABLE actors ADD COLUMN icon TEXT NOT NULL DEFAULT ''");
@@ -229,7 +203,6 @@ export function migrateCatalog(db: DatabaseSync): void {
   db.exec(
     "CREATE TABLE IF NOT EXISTS projects (id TEXT PRIMARY KEY, name TEXT NOT NULL, position INTEGER NOT NULL, archived INTEGER NOT NULL DEFAULT 0)",
   );
-  // Added after the first version: a database made before it gets the columns here.
   const columns = db.prepare("PRAGMA table_info(projects)").all() as { name: string }[];
   if (!columns.some((c) => c.name === "icon")) {
     db.exec("ALTER TABLE projects ADD COLUMN icon TEXT NOT NULL DEFAULT ''");
@@ -249,7 +222,6 @@ export function migrateCatalog(db: DatabaseSync): void {
   db.exec(
     "CREATE TABLE IF NOT EXISTS labels (id TEXT PRIMARY KEY, name TEXT NOT NULL, colour TEXT NOT NULL, removed INTEGER NOT NULL DEFAULT 0)",
   );
-  // The colours were renamed once: a database made before gets the new names.
   const renamed: [string, string][] = [
     ["plum", "purple"],
     ["red", "pink"],
@@ -370,11 +342,9 @@ export function sqliteCatalog(db: DatabaseSync, rows: Rows): Catalog {
     }
   };
 
-  // Writes the order of a project's columns as positions 1, 2, 3.
   const order = (ids: string[]) => {
     for (const [i, id] of ids.entries()) rows.update("columns", id, { position: i + 1 });
   };
-  // `ids` with `id` placed before `before`, or at the end.
   const placed = (ids: string[], id: string, before?: string) => {
     const rest = ids.filter((x) => x !== id);
     if (before === undefined) return [...rest, id];

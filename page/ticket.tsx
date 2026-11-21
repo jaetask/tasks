@@ -1,6 +1,3 @@
-// A ticket's page: what it is, where it is, its images, the questions on it
-// and its conversation, all from toolkit parts.
-
 import {
   FormDialog,
   InlineText,
@@ -68,7 +65,6 @@ import {
 } from "./properties.js";
 import { TicketActions, TicketMenu } from "./ticket-menu.js";
 
-/** The images of a ticket with their data, read one by one as they are needed. */
 function useThumbs(images: Image[] | undefined) {
   const [data, setData] = useState<Record<string, string>>({});
   const wanted = (images ?? []).map((i) => i.id).join(" ");
@@ -98,9 +94,7 @@ const _KIND_DOT: Record<Kind, string> = {
   done: "bg-emerald-500",
 };
 
-/** A ticket's own page, for its address. From a board it opens in a dialog with the same view. */
 export function TicketPage({ id }: { id: string }) {
-  // The ticket's own title is the page's heading: its id and project sit above it, small.
   return (
     <div className="max-w-5xl pt-1">
       <TicketView id={id} />
@@ -108,7 +102,6 @@ export function TicketPage({ id }: { id: string }) {
   );
 }
 
-/** A small round button that goes to where a property's value is shown across tickets. */
 function GoTo({ label, onClick }: { label: string; onClick: () => void }) {
   return (
     <TooltipProvider>
@@ -129,7 +122,6 @@ function GoTo({ label, onClick }: { label: string; onClick: () => void }) {
   );
 }
 
-/** A ticket's checklist: tick a step, leave a note on it, add one at the end. */
 function Steps({ ticket, open }: { ticket: string; open: boolean }) {
   const { act } = useApp();
   const steps = useRead<TicketStep[]>("steps.ticket-step-list", { ticket }) ?? [];
@@ -162,7 +154,6 @@ function Steps({ ticket, open }: { ticket: string; open: boolean }) {
               }
             />
             {editing === step.id ? (
-              // Enter or leaving the box saves the new wording; Escape leaves it as it was.
               <Input
                 autoFocus
                 aria-label={`Rename ${step.title}`}
@@ -258,7 +249,6 @@ function Steps({ ticket, open }: { ticket: string; open: boolean }) {
   );
 }
 
-/** Asked when a ticket is given to an actor: what the next actor needs to know. It can be left empty. */
 function HandoffDialog({
   ticket,
   to,
@@ -294,7 +284,6 @@ function HandoffDialog({
         maxLength={5000}
         onChange={(e) => setNote(e.target.value)}
         onKeyDown={(e) => {
-          // Enter assigns; Shift+Enter starts a new line.
           if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
             e.currentTarget.form?.requestSubmit();
@@ -305,13 +294,11 @@ function HandoffDialog({
   );
 }
 
-/** What a ticket is, its steps, images and conversation, with its properties in a rail on the right. */
 export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) {
   const { catalog, act, go } = useApp();
   const ticket = useRead<Ticket>("tickets.ticket-read", { ticket: id });
   const conversation = useRead<Conversation>("comments.conversation-read", { ticket: id });
   const images = useRead<Image[]>("images.image-list", { ticket: id });
-  // Every question asked on the ticket: those awaiting an answer first, then the answered ones.
   const asked = useRead<InputRequest[]>("input.input-list", { ticket: id });
   const awaiting = (asked ?? []).filter((r) => r.state === "awaiting");
   const requests = asked && [...awaiting, ...asked.filter((r) => r.state !== "awaiting")];
@@ -325,9 +312,7 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
   const [renaming, setRenaming] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
   const [title, setTitle] = useState<string | null>(null);
-  // What the description editor holds, until it is saved on leaving it.
   const draft = useRef<string | null>(null);
-  // The labels list opens beside this heading, which does not move as labels come and go.
   const labelsAt = useRef<HTMLHeadingElement>(null);
   const pictures = usePictures(id);
   if (!ticket) return <EmptyLine>{`No ticket has the id ${id}.`}</EmptyLine>;
@@ -335,7 +320,6 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
   const project = catalog.projects.find((p) => p.id === ticket.project);
   const actor = catalog.actors.find((a) => a.id === ticket.assignee);
   const entries = conversation?.entries ?? [];
-  // Everything written on the ticket: a file shown inside it is not listed again under it.
   const written = [
     ticket?.description ?? "",
     ...entries.flatMap((e) =>
@@ -358,7 +342,6 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
               .join(" / ")}
             {!open && ` · ${titleCase(ticket.state)}`}
           </p>
-          {/* Leaves room for the dialog's own close button, which sits in this corner. */}
           <span>
             <TicketActions ticket={ticket} onGone={gone} />
           </span>

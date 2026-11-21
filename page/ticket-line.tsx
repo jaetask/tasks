@@ -1,5 +1,3 @@
-// A ticket as one line of a list: its status, id and title, then what it carries, quietly.
-// A click opens it over the page; a right click opens its menu; it can be dragged.
 import { DueIcon, dueLabel } from "@jaetask/toolkit/suite";
 import type { ReactNode } from "react";
 import type { Ticket } from "./api.js";
@@ -16,11 +14,8 @@ export function TicketLine({
   feature = true,
 }: {
   ticket: Ticket;
-  /** Something before the line, such as a tick box. */
   lead?: ReactNode;
-  /** Something at its end, after the actor. */
   aside?: ReactNode;
-  /** False where the list already says the status, or the feature. */
   status?: boolean;
   feature?: boolean;
 }) {

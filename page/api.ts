@@ -1,6 +1,3 @@
-// How the page talks to Tasks: every read and every change is a Call to an
-// Action, through POST /api/calls, the same pipeline agents use.
-
 export type Kind = "todo" | "doing" | "waiting" | "done";
 export type Colour = "blue" | "teal" | "green" | "amber" | "purple" | "pink";
 export type Actor = { id: string; name: string; icon: string; colour: string; archived: boolean };
@@ -16,7 +13,6 @@ export type Project = {
   id: string;
   name: string;
   icon: string;
-  /** One of the six named colours, or six-digit hex. */
   colour: string;
   archived: boolean;
   columns: Column[];
@@ -76,7 +72,6 @@ export type Feature = {
   favourite: boolean;
   archived: boolean;
   tickets: number;
-  /** Open tickets not in a done column, and tickets that are done or archived. */
   left: number;
   done: number;
 };
@@ -117,7 +112,6 @@ export type TicketFile = {
   at: string;
 };
 
-/** Sends a file's bytes to be attached to a ticket. The answer is the Outcome of that Call. */
 export async function uploadFile(ticket: string, file: File): Promise<Outcome | { error: string }> {
   const response = await fetch(
     `/api/files?ticket=${encodeURIComponent(ticket)}&name=${encodeURIComponent(file.name || "pasted file")}`,
@@ -216,7 +210,6 @@ export type Outcome = {
   state: string;
   output?: unknown;
   card?: { html?: string };
-  /** What a succeeded Call changed. */
   changes?: { kind: "created" | "updated" | "deleted"; subject: string; id: string }[];
   reason?: { message: string };
   error?: string;
@@ -256,7 +249,6 @@ export const call = (action: string, input: unknown = {}) =>
     body: { id: globalThis.crypto.randomUUID?.(), action, input },
   });
 
-/** Why a Call did not do what was asked, or null when it did. */
 export function refusal(outcome: Outcome): string | null {
   if (outcome.state === "succeeded") return null;
   return outcome.reason?.message ?? outcome.error ?? `The Call was ${outcome.state}.`;

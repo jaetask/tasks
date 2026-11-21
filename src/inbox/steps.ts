@@ -1,6 +1,3 @@
-// The kinds of inbox step. Every kind is the same small function: in, the
-// item as it stands, what earlier steps did and the Actions this step may
-// ask for; out, a list of Calls and a reason.
 import { isAbsolute, relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import type { ActionName, Calls, contract } from "@jaetask/open-agent-kit";
@@ -19,12 +16,9 @@ export const StepAnswer = z.object({
 export type StepAnswer = z.infer<typeof StepAnswer>;
 
 export type StepContext = {
-  /** The folder the owner's script steps are in. */
   stepsDir: string;
-  /** The Call pipeline, for a step that asks another App. */
   calls: Calls;
   env: Record<string, string | undefined>;
-  /** The inbox Domain's Contract: what each Action is and takes. */
   actions: ReturnType<typeof contract>["actions"];
 };
 
@@ -34,7 +28,6 @@ const text = (config: Step["config"], key: string): string => {
   return value;
 };
 
-// One request to an OpenAI-compatible chat endpoint, local or hosted.
 async function chat(step: Step, env: StepContext["env"], body: Record<string, unknown>) {
   const keyName = step.config.key_env;
   const key = typeof keyName === "string" && keyName ? env[keyName] : undefined;
@@ -74,7 +67,6 @@ const described = ({ item, earlier }: StepInput) =>
     earlier_steps: earlier.map((s) => ({ step: s.name, reason: s.reason, calls: s.calls })),
   });
 
-/** A model given the item and, as tools, the Actions the step may use. */
 async function model(step: Step, input: StepInput, context: StepContext): Promise<StepAnswer> {
   const tools = input.actions.map((name) => {
     const action = context.actions.find((a) => a.name === `inbox.${name}`);
@@ -111,7 +103,6 @@ async function model(step: Step, input: StepInput, context: StepContext): Promis
   };
 }
 
-/** A model that answers with one label; the owner maps each label to Calls. */
 async function classifier(step: Step, input: StepInput, context: StepContext): Promise<StepAnswer> {
   const labels = z.record(z.string(), StepAnswer.shape.calls).parse(step.config.labels ?? {});
   const names = Object.keys(labels);
@@ -132,7 +123,6 @@ async function classifier(step: Step, input: StepInput, context: StepContext): P
     : { calls: [], reason: `answered ${JSON.stringify(label)}, which is not one of the labels` };
 }
 
-/** A module the owner wrote, in the steps folder: an item in, Calls out. */
 async function script(step: Step, input: StepInput, context: StepContext): Promise<StepAnswer> {
   const file = resolve(context.stepsDir, text(step.config, "file"));
   const inside = relative(context.stepsDir, file);
@@ -146,7 +136,6 @@ async function script(step: Step, input: StepInput, context: StepContext): Promi
   return StepAnswer.parse(await loaded.default(input));
 }
 
-/** An Action of another App, connected as a Plugin, that answers with the Calls. */
 async function app(step: Step, input: StepInput, context: StepContext): Promise<StepAnswer> {
   const outcome = await context.calls.invoke({
     id: crypto.randomUUID(),
@@ -171,6 +160,5 @@ const KINDS = {
   app,
 } satisfies Record<Step["kind"], unknown>;
 
-/** Asks a step what to do with an item. Throws with the reason if it cannot answer. */
 export const ask = (step: Step, input: StepInput, context: StepContext): Promise<StepAnswer> =>
   KINDS[step.kind](step, input, context);

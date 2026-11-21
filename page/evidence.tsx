@@ -1,5 +1,3 @@
-// A ticket's evidence: what was done and how it was checked, written by whoever did the work.
-// Tasks checks none of it, and none is needed to move a ticket.
 import { Button } from "@jaetask/toolkit/ui/button";
 import { PageSection } from "@jaetask/toolkit/suite";
 import { Input } from "@jaetask/toolkit/ui/input";
@@ -88,7 +86,6 @@ export function EvidenceSection({ ticket, open }: { ticket: Ticket; open: boolea
                   variant="outline"
                   size="sm"
                   onClick={() => {
-                    // The form starts from what is recorded now, which an agent may have changed.
                     setKind(had.kind);
                     setSummary(had.summary);
                     setChecks(had.checks);

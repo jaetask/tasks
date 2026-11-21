@@ -1,4 +1,3 @@
-// Tidies the title, pulls out details, and removes the tag the spam check left.
 export default function details({ item, earlier }) {
   const calls = [{ action: "item-untag", input: { tags: ["unsorted"] } }];
   const app = item.text.match(/for the (\w+) app/i)?.[1];

@@ -1,6 +1,3 @@
-// The agent inbox repository: what an agent needs to hear about. A reply
-// to its comment, a comment on a ticket assigned to it, or the owner's
-// answer to its question.
 import type { DatabaseSync } from "node:sqlite";
 import { z } from "zod";
 import { OWNER } from "../catalog/catalog.js";
@@ -36,7 +33,6 @@ export type AgentReply = z.infer<typeof AgentReply>;
 export type Replies = {
   list(filter?: { to?: string | undefined; state?: ReplyState | undefined }): AgentReply[];
   get(id: string): AgentReply;
-  /** Leaves a reply for an agent. Nothing is left for the owner, or for whoever wrote it. */
   leave(reply: {
     to: string;
     from: string;
@@ -47,7 +43,6 @@ export type Replies = {
     at: string;
   }): void;
   acknowledge(id: string): AgentReply;
-  /** Deletes every reply about a ticket. They cannot be brought back. */
   purge(ticket: string): void;
 };
 

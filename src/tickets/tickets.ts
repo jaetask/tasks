@@ -1,6 +1,3 @@
-// The tickets repository. A ticket is a title, a description, labels, the
-// column it is in and who it is assigned to. It can be blocked in any
-// column, and archived or canceled without losing its column.
 import type { DatabaseSync } from "node:sqlite";
 import { z } from "zod";
 import { type Catalog, Column, KINDS, Kind, Label } from "../catalog/catalog.js";
@@ -42,7 +39,6 @@ export const Feature = z.object({
 });
 export type Feature = z.infer<typeof Feature>;
 
-/** What was done on a ticket and how it was checked. Recorded by its author; nothing here is verified. */
 export const Evidence = z.object({
   kind: z
     .enum(["code", "non-code"])
@@ -109,7 +105,6 @@ export const Overview = z.object({
 });
 export type Overview = z.infer<typeof Overview>;
 
-/** Narrows a board or the overview to some of its tickets. */
 export const Narrow = z.object({
   text: z.string().optional().describe("Words to look for in the id, title and description."),
   assignee: z
@@ -171,7 +166,6 @@ export type Usage = z.infer<typeof Usage>;
 export type Tickets = {
   get(id: string): Ticket;
   board(project: string, narrow?: Narrow): Board;
-  /** The open tickets of every project that is not archived, lined up by column kind. */
   overview(narrow?: Narrow): Overview;
   find(filter: Find): Ticket[];
   create(
@@ -192,13 +186,9 @@ export type Tickets = {
       backlog?: boolean | undefined;
     },
   ): Ticket;
-  /** A project's open tickets that wait in the backlog, oldest first. */
   backlog(project: string, narrow?: Narrow): Ticket[];
-  /** Sends an open ticket to the backlog, or puts it on the board in the first to-do column. */
   setBacklog(id: string, backlog: boolean): Ticket;
-  /** Puts a ticket in a feature of its project, or in none with null. */
   setFeature(id: string, feature: string | null): Ticket;
-  /** A project's features, oldest first; archived ones only when asked. */
   features(project: string, archived?: boolean): Feature[];
   feature(id: string): Feature;
   createFeature(project: string, name: string, description: string): Feature;
@@ -211,42 +201,29 @@ export type Tickets = {
     },
   ): Feature;
   archiveFeature(id: string, archived: boolean): Feature;
-  /** Deletes a feature no ticket was ever put in. */
   deleteFeature(id: string): Feature;
-  /** How many tickets use each label, actor, location and project. */
   usage(): Usage;
-  /** Puts every ticket that has one label under another, and takes the first off them. */
   mergeLabel(from: string, into: string): number;
-  /** Moves a ticket to another project. It gets the next id there; its earlier id still finds it. */
   toProject(id: string, project: string): Ticket;
   edit(id: string, patch: { title?: string | undefined; description?: string | undefined }): Ticket;
-  /** Moves an open ticket to any column of its board. */
   move(id: string, column: string): Ticket;
-  /** Moves an open ticket to the first column of a kind on its board. */
   moveToKind(id: string, kind: Kind): Ticket;
   assign(id: string, actor: string | null): Ticket;
-  /** Sets the day a ticket is due, or none with null. */
   setDue(id: string, due: string | null): Ticket;
-  /** Records what was done on a ticket and how it was checked, or removes the record with null. */
   setEvidence(id: string, evidence: Evidence | null): Ticket;
   setType(id: string, type: Type): Ticket;
   setPriority(id: string, priority: Priority): Ticket;
-  /** Adds an actor's reaction to a ticket. The same emoji again changes nothing. */
   react(id: string, actor: string, emoji: string): Ticket;
   unreact(id: string, actor: string, emoji: string): Ticket;
   addLink(id: string, url: string, title?: string): Ticket;
   removeLink(id: string, link: string): Ticket;
-  /** Sets the title and description shown for a link. */
   describeLink(link: string, title: string, description: string): Ticket;
-  /** Gives a ticket a location, or none with null. */
   setLocation(id: string, location: string | null): Ticket;
   addLabel(id: string, label: string): Ticket;
   removeLabel(id: string, label: string): Ticket;
   block(id: string, note: string | null): Ticket;
   setState(id: string, state: State): Ticket;
-  /** Moves every ticket in a column to another column. */
   vacate(from: string, to: string): void;
-  /** Deletes a ticket and its labels. It cannot be brought back. */
   purge(id: string): void;
 };
 
@@ -258,7 +235,6 @@ export function migrateTickets(db: DatabaseSync): void {
   db.exec(
     "CREATE TABLE IF NOT EXISTS features (id TEXT PRIMARY KEY, project TEXT NOT NULL REFERENCES projects (id), name TEXT NOT NULL, description TEXT NOT NULL, favourite INTEGER NOT NULL DEFAULT 0, archived INTEGER NOT NULL DEFAULT 0)",
   );
-  // Added after the first version: a database made before it gets the column here.
   const columns = db.prepare("PRAGMA table_info(tickets)").all() as { name: string }[];
   if (!columns.some((c) => c.name === "feature")) {
     db.exec("ALTER TABLE tickets ADD COLUMN feature TEXT REFERENCES features (id)");
@@ -318,7 +294,6 @@ type TicketRow = {
   created_by: string;
 };
 
-/** How many comments, images and open questions a ticket has. Other Domains keep them. */
 export type Counts = (ticket: string) => { comments: number; images: number; awaiting: number };
 
 export function sqliteTickets(
@@ -370,7 +345,6 @@ export function sqliteTickets(
     if (!found) throw new Refusal("unknown-feature", `No feature has id ${id}.`);
     return toFeature(found);
   };
-  // A feature a ticket of `project` can be put in: of that project, not archived.
   const featureOf = (project: string, id: string) => {
     const found = feature(id);
     if (found.project !== project) {
@@ -431,8 +405,6 @@ export function sqliteTickets(
       ...counts(r.id),
       createdAt: r.created_at,
       createdBy: r.created_by,
-      // The record of changes says when a ticket last changed.
-      // The last time a Call moved it, or when it was made.
       columnSince:
         (
           db
@@ -452,7 +424,6 @@ export function sqliteTickets(
   const byId = (id: string) =>
     db.prepare("SELECT * FROM tickets WHERE id = ?").get(id) as TicketRow | undefined;
   const row = (id: string) => {
-    // An id a ticket had before its prefix changed, or before it moved project, still finds it.
     const found = byId(id) ?? byId(aliasOf(db, id) ?? "");
     if (!found) throw new Refusal("unknown-ticket", `No ticket has id ${id}.`);
     return found;
@@ -464,7 +435,6 @@ export function sqliteTickets(
     }
     return found;
   };
-  // An open ticket that is on the board: one that can move between columns.
   const onBoard = (id: string) => {
     const found = open(id);
     if (found.backlog) {
@@ -751,7 +721,6 @@ export function sqliteTickets(
       const number = nextNumber(db, `ticket:${project.id}`);
       const next = `${project.id}-${number}`;
       rekey(db, [[found.id, next]]);
-      // A feature belongs to one project, so the ticket leaves its feature behind.
       db.prepare(
         "UPDATE tickets SET project = ?, number = ?, column_id = ?, feature = NULL WHERE id = ?",
       ).run(project.id, number, column.id, next);

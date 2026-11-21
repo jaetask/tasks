@@ -1,20 +1,15 @@
-// Reads the title and description of a web page a link points to. The address was typed by a
-// person or an agent, so every request is guarded: public addresses only, a short timeout, a
-// small read, few redirects. Nothing here follows what the page says.
 import { lookup as dnsLookup } from "node:dns";
 import { request as httpRequest } from "node:http";
 import { request as httpsRequest } from "node:https";
 import { BlockList, isIP, type LookupFunction } from "node:net";
 
 export type PageTitle = { title: string; description: string };
-/** Reads a page's title, or null when it cannot be read or may not be asked. */
 export type ReadTitle = (url: string) => Promise<PageTitle | null>;
 
 const TIMEOUT_MS = 5000;
 const MAX_BYTES = 512 * 1024;
 const MAX_REDIRECTS = 3;
 
-// Addresses that are this machine, a private network, or not a host at all.
 const closed = new BlockList();
 for (const [net, bits] of [
   ["0.0.0.0", 8],
@@ -40,12 +35,10 @@ for (const [net, bits] of [
   closed.addSubnet(net, bits, "ipv6");
 }
 
-/** True when an IP address is one a typed link may reach: public, not local, not private. */
 export function publicAddress(address: string): boolean {
   const family = isIP(address);
   if (family === 0) return false;
   if (family === 6) {
-    // An IPv4 address written as IPv6 is judged as the IPv4 address it is.
     const mapped = /^::ffff:(\d+\.\d+\.\d+\.\d+)$/i.exec(address);
     if (mapped?.[1]) return publicAddress(mapped[1]);
     if (/^::ffff:/i.test(address)) return false;
@@ -54,7 +47,6 @@ export function publicAddress(address: string): boolean {
   return !closed.check(address, "ipv4");
 }
 
-/** True when a host name may be asked at all, before it is looked up. */
 export function publicName(host: string): boolean {
   const name = host.toLowerCase().replace(/\.$/, "");
   if (name === "" || name === "localhost") return false;
@@ -64,7 +56,6 @@ export function publicName(host: string): boolean {
   return name.includes(".");
 }
 
-// Looks a name up and hands back only public addresses, so the connection itself is checked.
 const guardedLookup: LookupFunction = (hostname, options, callback) => {
   dnsLookup(hostname, { ...options, all: true }, (error, found) => {
     if (error) return callback(error, "", 0);
@@ -124,7 +115,6 @@ function get(url: URL, accept: string): Promise<Got> {
   });
 }
 
-/** A web address a typed link may be read from, or null. */
 function allowed(text: string, base?: URL): URL | null {
   let url: URL;
   try {
@@ -161,7 +151,6 @@ const ENTITIES: Record<string, string> = {
   nbsp: " ",
 };
 
-/** Text out of a piece of HTML: no tags, entities read, spaces folded, cut to `max`. */
 function plain(html: string, max: number): string {
   return html
     .replace(/<[^>]*>/g, " ")
@@ -190,7 +179,6 @@ function meta(html: string, property: string): string {
   return "";
 }
 
-/** The title and description a page's HTML states: og:title or title, and og:description. */
 export function titleOf(html: string): PageTitle {
   const head = html.slice(0, MAX_BYTES);
   const title =
@@ -200,7 +188,6 @@ export function titleOf(html: string): PageTitle {
 
 const YOUTUBE = /^(www\.|m\.)?(youtube\.com|youtu\.be)$/;
 
-/** Reads a page's title over the network, under the guards above. Never throws. */
 export const readTitle: ReadTitle = async (text) => {
   try {
     const url = allowed(text);

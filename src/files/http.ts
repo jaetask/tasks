@@ -1,6 +1,3 @@
-// The two paths that carry a file's bytes for the page: an upload, and a download that a
-// browser can seek in, so a video plays. Everything else about a file is a Call. Both ask the
-// App whether the request comes from the signed-in person before they touch a byte.
 import { randomBytes } from "node:crypto";
 import { createReadStream, createWriteStream, mkdirSync, rmSync, statSync } from "node:fs";
 import { join } from "node:path";
@@ -10,7 +7,6 @@ import type { App } from "@jaetask/open-agent-kit/app";
 import { OWNER } from "../catalog/catalog.js";
 import { type File, limitFor, mediaType, VIDEO_TYPES } from "./files.js";
 
-/** Types a browser may show in the page. Any other file is only ever downloaded. */
 const SHOWN = new Set<string>([
   ...VIDEO_TYPES,
   "image/png",
@@ -21,7 +17,6 @@ const SHOWN = new Set<string>([
 
 const json = (body: unknown, status = 200) => Response.json(body, { status });
 
-/** Answers `/api/files...`, or returns null for any other path. */
 export function filesRoutes(options: {
   app: Pick<App, "fetch" | "calls">;
   db: DatabaseSync;
@@ -30,7 +25,6 @@ export function filesRoutes(options: {
 }) {
   const { app, db, dir, stagedDir } = options;
 
-  // The App owns sign-in: ask it, with this request's cookie, whether someone is signed in.
   const signedIn = async (request: Request) => {
     const asked = await app.fetch(
       new Request(new URL("/api/session", request.url), {
@@ -41,7 +35,6 @@ export function filesRoutes(options: {
   };
 
   const upload = async (request: Request): Promise<Response> => {
-    // The same guard the App puts on its own writes: this page's script, from this origin.
     if (request.headers.get("x-kit-request") !== "1") {
       return json({ error: "missing X-Kit-Request header" }, 403);
     }
@@ -87,7 +80,6 @@ export function filesRoutes(options: {
       principal: { id: OWNER },
       caller: "ui",
     });
-    // A refused Call leaves the bytes where no one will use them: remove them.
     rmSync(path, { force: true });
     return json(outcome);
   };

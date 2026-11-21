@@ -1,8 +1,4 @@
 #!/usr/bin/env node
-// Drives Tasks' page in headless Chromium, as the owner would use it, with an
-// agent connecting and working over MCP beside it. Prints each step, and
-// retakes the screenshots in docs/img. Needs Chromium once:
-//   npx playwright-core install chromium
 import { spawn } from "node:child_process";
 import { cpSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -13,7 +9,6 @@ const PORT = process.env.CHECK_PORT ?? "18083";
 const SECRET = "check-page-secret";
 const base = `http://127.0.0.1:${PORT}`;
 const data = mkdtempSync(join(tmpdir(), "tasks-page-"));
-// The owner's script steps are in the data folder.
 cpSync("expect/inbox/steps", join(data, "steps"), { recursive: true });
 const server = spawn("node", ["--import", "tsx", "src/main.ts"], {
   env: { ...process.env, PORT, DATA_DIR: data, KIT_SETUP_SECRET: SECRET },
@@ -46,13 +41,11 @@ const count = (selector) => page.locator(selector).count();
 const until = (fn, arg) => page.waitForFunction(fn, arg);
 const see = (text) => page.getByText(text, { exact: false }).first().waitFor();
 const button = (name) => page.getByRole("button", { name, exact: true }).first();
-// Chooses an option of a dropdown: open it, then press the option.
 const pick = async (selector, option) => {
   await page.locator(selector).click();
   await page.getByRole("option", { name: option, exact: true }).click();
 };
 const link = (name) => page.getByRole("link", { name, exact: true }).first();
-// Opens a page by its address, as a bookmark would.
 const open = (path) =>
   page.evaluate((p) => {
     window.location.hash = p;
@@ -71,7 +64,6 @@ async function step(name, run) {
   }
 }
 
-// An agent's side: it asks to connect, collects its key, and calls tools over MCP.
 const json = { "content-type": "application/json" };
 const post = (path, body, headers = {}) =>
   fetch(`${base}${path}`, {
@@ -111,7 +103,6 @@ try {
     await button("Create a project").click();
     await see("New project");
     await page.fill("#project-name", "Talk");
-    // The prefix is suggested from the name, and can be typed over.
     if ((await page.inputValue("#project-prefix")) !== "TALK") {
       throw new Error("no prefix was suggested from the name");
     }
@@ -133,12 +124,10 @@ try {
     await page.waitForSelector(".lane");
     await open("/p/TLK/board");
     await page.waitForSelector(".lane");
-    // Both projects have been visited, so both are open, each with its own screens.
     await until(() => document.querySelectorAll('.tk-side a[href$="/intake"]').length === 2);
     await shot("sidebar");
     await button("Toggle Money project").click();
     await until(() => document.querySelectorAll('.tk-side a[href$="/intake"]').length === 1);
-    // Clicking a closed project's name goes to it and opens it.
     await page.getByRole("link", { name: "Money", exact: true }).click();
     await until(() => document.querySelectorAll('.tk-side a[href$="/intake"]').length === 2);
     await until(() => window.location.hash.startsWith("#/p/MNY/board"));
@@ -164,7 +153,6 @@ try {
       .or(page.getByRole("group", { name: "Board view" }))
       .first()
       .waitFor();
-    // A board opens grouped by feature; the status view shows the project's columns.
     await page.getByRole("radio", { name: "Status view" }).click();
     await until(() => document.querySelectorAll(".lane").length === 4);
     await page
@@ -185,7 +173,6 @@ try {
     await page.keyboard.press("Escape");
     await button("Add actor").click();
     await page.locator(".tk-list").getByText("Coder").waitFor();
-    // Its mark is its icon, and opens the icon and colour picker.
     await page.locator('.tk-list [aria-label="Icon and colour of Coder"] svg').waitFor();
     await open("/settings/labels");
     await button("New label").click();
@@ -194,7 +181,6 @@ try {
     await page.locator(".tk-list").getByText("voices").waitFor();
     await button("New label").click();
     await page.fill("#label-name", "bug");
-    // A label's colour is chosen from swatches, never by name.
     await button("green label colour").click();
     await button("Add label").click();
     await page.locator(".tk-list").getByText("bug").waitFor();
@@ -212,7 +198,6 @@ try {
       await page.fill('[aria-label="Rename voices"]', "voice");
       await page.keyboard.press("Enter");
       await page.locator(".tk-list").getByRole("button", { name: "voice", exact: true }).waitFor();
-      // Escape leaves a name as it was.
       await page.locator(".tk-list").getByRole("button", { name: "voice", exact: true }).click();
       await page.fill('[aria-label="Rename voice"]', "something else");
       await page.keyboard.press("Escape");
@@ -223,7 +208,6 @@ try {
       await button("Label spare").click();
       await page.getByRole("menuitem", { name: "Remove", exact: true }).click();
       await until(() => !document.querySelector(".tk-list")?.textContent.includes("spare"));
-      // Rename from the menu opens the same box.
       await button("Label bug").click();
       await page.getByRole("menuitem", { name: "Rename", exact: true }).click();
       await page.locator('[aria-label="Rename bug"]').waitFor();
@@ -239,7 +223,6 @@ try {
     await button("Create ticket").click();
     await until(() => document.querySelectorAll(".lane .ticket").length === 1);
     await until(() => !document.querySelector('[role="dialog"]'));
-    // C opens the same dialog; its chips set the properties; Cmd+Enter creates the ticket.
     await page.keyboard.press("c");
     await page.fill('[aria-label="Title"]', "Fix the crash on send");
     await button("Priority").click();
@@ -252,7 +235,6 @@ try {
     await open("/t/TLK-2");
     await page.locator('[data-property="priority"]', { hasText: "High" }).waitFor();
     await page.locator("#place .pill", { hasText: "bug" }).waitFor();
-    // Put it back as the steps after this expect it: no priority, no label.
     await page.locator('[data-property="priority"]').click();
     await page.getByRole("option", { name: /^No priority/ }).click();
     await page.locator('[aria-label="Change or add labels"]').click();
@@ -264,14 +246,12 @@ try {
   await step("open a ticket; edit it where it is shown; comment and react", async () => {
     await page.locator(".ticket").getByText("Voice notes on the phone").click();
     await page.getByRole("dialog").waitFor();
-    // The description is edited in place and saved on leaving it.
     await page.fill(
       '[aria-label="Description"]',
       "Record a voice note from the phone and attach it to a chat. It should work with the screen locked.",
     );
     await button("Change or add labels").click();
     await page.getByRole("option", { name: "voice", exact: true }).click();
-    // The list stays where it opened as the label lands on the ticket and the plus moves along.
     const at = () =>
       page.evaluate(() => {
         const box = document
@@ -299,7 +279,6 @@ try {
     await button("Add reaction").click();
     await button("👀").click();
     await page.waitForSelector('.reactions [aria-pressed="true"]');
-    // The same emoji again takes it back; a different one is added beside it.
     await button("Add reaction").click();
     await button("🎉").click();
     await until(() => document.querySelectorAll(".reactions [aria-pressed]").length === 2);
@@ -322,7 +301,6 @@ try {
     ]);
     await page.locator("#files a", { hasText: "build.log" }).waitFor();
     await page.locator("#files video").waitFor();
-    // The bytes come back whole, to the signed-in page.
     const got = await page.evaluate(async () => {
       const link = document.querySelector("#files a");
       const response = await fetch(link.getAttribute("href"));
@@ -334,7 +312,6 @@ try {
     await page.locator("#files .file", { hasText: "build.log" }).hover();
     await button("Remove the file build.log").click();
     await until(() => !document.querySelector("#files a"));
-    // A removal is announced in plain words, with a button that undoes it.
     await page.getByText("Removed the file build.log", { exact: false }).first().waitFor();
     await page.getByRole("button", { name: "Undo", exact: true }).last().click();
     await page.locator("#files .file", { hasText: "build.log" }).waitFor();
@@ -370,7 +347,6 @@ try {
       await page.keyboard.type(" Here is the screen.");
       await page.keyboard.press("Control+Enter");
       await page.locator('.thread .comment img[src^="/api/files/"]').waitFor();
-      // It is part of the comment, so it is not listed again among the ticket's files.
       if (await page.locator("#files a").count())
         throw new Error("the picture is listed as a file");
     },
@@ -390,7 +366,6 @@ try {
   await step(
     "mark it blocked from its menu, then undo that from its line in the activity",
     async () => {
-      // Not blocked, a ticket shows nothing about it.
       if ((await count('[data-property="blocked"]')) !== 0) throw new Error("a blocked row shows");
       await button("Ticket TLK-1").click();
       await page.getByRole("menuitem", { name: "Mark as" }).click();
@@ -400,7 +375,6 @@ try {
       await page
         .locator('[data-property="blocked"]', { hasText: "waiting on the API key" })
         .waitFor();
-      // Inside the ticket a change reads "this ticket", not its id again.
       await see("marked this ticket blocked");
       await page.locator("#conversation").getByRole("button", { name: "Undo" }).last().click();
       await until(() => !document.querySelector('[data-property="blocked"]'));
@@ -409,7 +383,6 @@ try {
   await step("give it a location in its properties, and a step", async () => {
     await pick('[data-property="location"]', "Studio");
     await page.locator('[data-property="location"]', { hasText: "Studio" }).waitFor();
-    // A due date typed in words.
     await page.locator('[data-property="due"]').click();
     await page.fill('[aria-label="Due date"]', "tomorrow");
     await page
@@ -419,7 +392,6 @@ try {
     await page.locator('[data-property="due"]', { hasText: "Tomorrow" }).waitFor();
     await page.fill('[aria-label="New step"]', "Record with the screen locked");
     await page.press('[aria-label="New step"]', "Enter");
-    // Clicking a step's words edits them in place.
     await page
       .locator("#steps")
       .getByRole("button", { name: "Record with the screen locked", exact: true })
@@ -443,7 +415,6 @@ try {
     await see("Approve Coding agent");
     await page.getByRole("dialog").getByRole("button", { name: "Approve", exact: true }).click();
     await button("Connection Coding agent").waitFor();
-    // The addresses an agent uses are behind a button, each with a way to copy it.
     await button("How an agent connects").click();
     await see("/pair");
     await button("Copy then calls").waitFor();
@@ -492,9 +463,7 @@ try {
       .fill("Good. Ask for review when the lock screen works.");
     await thread.locator('[aria-label="Leave a reply"]').press("Control+Enter");
     await thread.locator(".comment").nth(1).waitFor();
-    // "/h1" then Return picks Heading 1; it does not send "/h1" as a reply.
     await thread.locator('[aria-label="Leave a reply"]').click();
-    // A reply row is one line beside an avatar: the editor's handle is not drawn there.
     await page.keyboard.type("x");
     await thread.locator("form.write").hover();
     const handle = await thread.locator("form.write").evaluate((form) => {
@@ -515,7 +484,6 @@ try {
     await page.keyboard.press("Enter");
     if ((await thread.locator(".comment").count()) !== 2) throw new Error("a slash word was sent");
     for (let i = 0; i < 14; i += 1) await page.keyboard.press("Backspace");
-    // Return sends; Shift+Return starts a new line in the same reply.
     await thread.locator('[aria-label="Leave a reply"]').click();
     await page.keyboard.type("And tell me which phones you tried.");
     await page.keyboard.press("Shift+Enter");
@@ -525,7 +493,6 @@ try {
     if ((await thread.locator(".comment").count()) !== 3) throw new Error("Shift+Return sent");
     await thread.scrollIntoViewIfNeeded();
     await thread.screenshot({ path: "docs/img/thread.png" });
-    // Resolving a thread folds it to one line; Show opens it again.
     await thread.getByRole("button", { name: "Comment actions" }).first().click();
     await page.getByRole("menuitem", { name: "Resolve thread" }).click();
     await see("Resolved · Coder");
@@ -579,7 +546,6 @@ try {
     await button("New feature").click();
     await page.fill("#feature-name", "Voice");
     await button("Add feature").click();
-    // A new feature opens on its own page: its name and what it covers are edited there.
     await until(() => /#\/p\/TLK\/features\/f\d+/.test(window.location.hash));
     await see("No open ticket is in this feature");
     await page.getByRole("button", { name: "Voice", exact: true }).click();
@@ -589,12 +555,10 @@ try {
     await page.fill('[aria-label="Rename Voices"]', "Voice");
     await page.keyboard.press("Enter");
     await page.getByRole("button", { name: "Voice", exact: true }).waitFor();
-    // An address for a feature that is not there says so.
     await open("/p/TLK/features/f999");
     await see("No feature of Talk has the id f999");
     await open("/p/TLK/features");
     await see("0 open · 0 done");
-    // The star makes it a favourite, which shows in the sidebar.
     await button("Make Voice a favourite").click();
     await button("Remove Voice from favourites").waitFor();
     await open("/t/TLK-1");
@@ -602,7 +566,6 @@ try {
     await page.getByRole("option", { name: "Voice", exact: true }).click();
     await page.locator('[data-property="feature"]', { hasText: "Voice" }).waitFor();
     await open("/p/TLK/board");
-    // One Filter button lists what can be filtered by; a filter in use shows as a chip.
     await button("Filter").click();
     await page.getByRole("menuitem", { name: "Feature" }).click();
     await page.getByRole("menuitemcheckbox", { name: "Voice" }).click();
@@ -631,8 +594,6 @@ try {
     await page.keyboard.press("Escape");
     const card = page.locator(".ticket", { hasText: "Voice notes on the phone" });
     await card.getByText("voice", { exact: true }).waitFor();
-    // Changing the priority on the card does not open the ticket.
-    // A card with no priority shows the chip only while it is pointed at.
     await card.hover();
     await card.getByRole("button", { name: "Priority" }).click();
     await page.getByRole("option", { name: "High", exact: true }).click();
@@ -652,7 +613,6 @@ try {
     await page.getByRole("radio", { name: "Status view" }).click();
     await page.locator(".lane", { hasText: "To do" }).waitFor();
     await page.mouse.move(0, 0);
-    // Opened from the keyboard: the dropdown sits in a popover.
     const choose = async (name) => {
       await page.locator('[aria-label="Ordering"]').press("Enter");
       await page.getByRole("option", { name, exact: true }).press("Enter");
@@ -690,7 +650,6 @@ try {
     await button("Remove the project filter").click();
     await page.waitForFunction((n) => document.querySelectorAll(".lane").length === n, lanes);
     await page.getByRole("radio", { name: "Status view" }).click();
-    // The lanes are named as a board's columns are, and done is hidden until asked for.
     await page.locator(".lane", { hasText: "To do" }).waitFor();
     await page.locator(".lane", { hasText: "Review" }).waitFor();
     if ((await page.locator(".lane", { hasText: "Done" }).count()) !== 0) {
@@ -702,12 +661,10 @@ try {
     await page.getByRole("link", { name: "The board of Talk" }).first().click();
     await page.locator(".lane", { hasText: "To do" }).waitFor();
     await page.waitForFunction(() => window.location.hash.includes("/p/TLK/board"));
-    // A project's own board does not repeat the project on its cards.
     await until(() => !document.querySelector('.ticket a[aria-label="The board of Talk"]'));
   });
   await step("a right click on a card opens its menu: blocked and due date", async () => {
     const card = page.locator(".ticket", { hasText: "Show the recording length" });
-    // Enter in the box submits what was typed, every time: BLOCK_RUNS repeats it.
     for (let run = 0; run < Number(process.env.BLOCK_RUNS ?? 1); run += 1) {
       await card.click({ button: "right" });
       await page.getByRole("menuitem", { name: "Mark as" }).press("ArrowRight");
@@ -736,7 +693,6 @@ try {
     await page.fill("#link-title", "Check this out");
     await page.keyboard.press("Enter");
     await page.getByRole("heading", { name: "Add link to TLK-3" }).waitFor({ state: "detached" });
-    // The ticket lists it under Resources, by its title.
     await card.click();
     await page.locator("#links .resource", { hasText: "Check this out" }).waitFor();
     await page.keyboard.press("Escape");
@@ -760,11 +716,9 @@ try {
       .click();
     await see("The backlog is empty");
     await link("New ticket").click();
-    // Made from the backlog, it starts in the backlog.
     await page.getByRole("button", { name: "Status", exact: true }).getByText("Backlog").waitFor();
     await page.fill('[aria-label="Title"]', "Trim silence from recordings");
     await button("Create ticket").click();
-    // The backlog is a list, one line a ticket.
     await page.waitForSelector(".ticket-line");
     await open("/p/TLK/board");
     await until(() => document.querySelectorAll(".lane .ticket").length === 3);
@@ -776,7 +730,6 @@ try {
     await until(() => document.querySelectorAll(".lane .ticket").length === 4);
   });
   await step("drag a ticket to another column", async () => {
-    // By hand, in small moves, as a person drags.
     const from = await page
       .locator(".ticket", { hasText: "Show the recording length" })
       .boundingBox();
@@ -795,13 +748,11 @@ try {
   await step("edit the columns on the board: rename, add, move, remove", async () => {
     await open("/p/TLK/board");
     await page.waitForSelector(".lane");
-    // The names of the board's columns, in order.
     const columns = (wanted) =>
       [...document.querySelectorAll(".lane h2")]
         .map((h) => (h.querySelector("button")?.textContent ?? "").trim())
         .join("|") === wanted;
     await until(columns, "To do|Doing|Review|Done");
-    // A click on a column's name changes it where it is.
     await page.locator(".lane h2").getByRole("button", { name: "Review", exact: true }).click();
     await page.fill('[aria-label="Rename the column Review"]', "Code review");
     await page.keyboard.press("Enter");
@@ -851,7 +802,6 @@ try {
     await page.locator(".item .pill", { hasText: "bug" }).waitFor();
     if ((await count(".item")) !== 2) throw new Error("the spam is in the inbox");
     await shot("inbox");
-    // An item opens in a dialog: what the steps did, its text and its tags.
     await page.locator(".item").nth(1).getByRole("button").click();
     await button("What the steps did").click();
     await see("not spam; a bug");
@@ -862,7 +812,6 @@ try {
     await page.press('[aria-label="Item title"]', "Enter");
     await page.keyboard.press("Escape");
     await page.locator(".item", { hasText: "The board crashes on drag" }).waitFor();
-    // Each state shows how many items it holds; one with none is left out.
     await page.getByRole("tab", { name: "Rejected 1" }).click();
     await page.locator(".item").first().getByRole("button").click();
     await see("Reason: looks like spam");
@@ -888,7 +837,6 @@ try {
     await page.locator("#place").getByText("archived").waitFor();
     await link("Archive").click();
     await see("Show the recording length");
-    // The archive can be searched; a ticked ticket is restored with the others ticked.
     await page.fill('[aria-label="Search the archive"]', "nothing like this");
     await see("Nothing here.");
     await page.fill('[aria-label="Search the archive"]', "recording");
@@ -901,7 +849,6 @@ try {
     await link("Changes").click();
     await see("restored TLK-3");
     await page.locator("#changes b", { hasText: "Coder" }).first().waitFor();
-    // Changes are under a heading for their day, and can be narrowed to one actor.
     await page.getByRole("heading", { name: "Today" }).waitFor();
     await pick('[aria-label="Actor"]', "Coder");
     await until(() =>
@@ -933,7 +880,6 @@ try {
     await button("Prefix TALK. Change it").waitFor();
     await open("/t/TALK-1");
     await see("Voice notes on the phone");
-    // The id a ticket had before still opens it.
     await open("/t/TLK-2");
     await see("TALK-2");
     await open("/settings/projects");

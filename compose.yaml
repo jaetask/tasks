@@ -1,7 +1,3 @@
-# Tasks in one container:
-#   docker compose up --build
-# The setup secret is printed once in the log at first start:
-#   docker compose logs tasks
 services:
   tasks:
     build: .

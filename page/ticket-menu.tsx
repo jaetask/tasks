@@ -1,5 +1,3 @@
-// Everything that can be done to a ticket, in one menu. A right click on its card or its
-// properties opens it, and so does the "..." at the top of an open ticket.
 import {
   AddLinkDialog,
   day,
@@ -28,7 +26,6 @@ import { addLink, DeleteForGood, LINK_LINE } from "./local.js";
 
 type Ask = "link" | "block" | "delete" | null;
 
-/** A ticket's menu as a list, and the dialogs its items open. */
 function useTicketMenu(
   ticket: Ticket,
   onGone?: () => void,
@@ -109,7 +106,6 @@ function useTicketMenu(
               onSelect: () =>
                 void act<Ticket>("tickets.ticket-project-set", { ticket: id, project: p.id }).then(
                   (moved) => {
-                    // The ticket has another id now: an address that named it follows it.
                     if (!moved) return;
                     if (path === `/t/${id}`) go(`/t/${moved.id}`);
                     else if (window.location.hash.includes(`ticket=${id}`)) {
@@ -241,20 +237,16 @@ function ContextEntries({ items }: { items: MenuEntry[] }) {
   );
 }
 
-/** The menu a right click opens on a ticket: on its card, its line, or its properties. */
 export function TicketMenu({
   ticket,
   onGone,
   children,
 }: {
   ticket: Ticket;
-  /** Told when the ticket was deleted for good. */
   onGone?: () => void;
   children: ReactElement;
 }) {
   const { items, dialogs } = useTicketMenu(ticket, onGone);
-  // What an item does runs once the menu has closed and given up the focus: opened sooner, a
-  // dialog would have the focus taken out of its box by the closing menu.
   const after = useRef<(() => void) | null>(null);
   const later = (entries: MenuEntry[]): MenuEntry[] =>
     entries.map((e) =>
@@ -262,8 +254,7 @@ export function TicketMenu({
         ? e
         : "items" in e
           ? { ...e, items: later(e.items) }
-          : // Only an item that opens a dialog, named with "...", waits for the menu to close.
-            e.label.endsWith("...")
+          : e.label.endsWith("...")
             ? {
                 ...e,
                 onSelect: () => {
@@ -295,7 +286,6 @@ export function TicketMenu({
   );
 }
 
-/** The "..." at the top of an open ticket: the same menu as a right click. */
 export function TicketActions({ ticket, onGone }: { ticket: Ticket; onGone?: () => void }) {
   const { items, dialogs } = useTicketMenu(ticket, onGone);
   return (

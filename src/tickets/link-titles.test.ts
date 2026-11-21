@@ -40,7 +40,6 @@ test("a new link gets its page's title once; a page with none keeps its address"
     links: ["https://example.com/guide"],
   });
   await call("tickets.ticket-link-add", { ticket: "TLK-1", url: "https://example.com/none" });
-  // Changing the ticket in other ways asks no page anything.
   await call("tickets.ticket-edit", { ticket: "TLK-1", title: "Write the Talk guide" });
   await app.close();
   assert.deepEqual(asked.sort(), ["https://example.com/guide", "https://example.com/none"]);
@@ -69,7 +68,6 @@ test("the title read is recorded on the link", async () => {
     ticket: "TLK-1",
     url: "https://example.com/pull/7",
   });
-  // The title arrives after the Call that added the link has answered.
   for (let i = 0; i < 50; i += 1) {
     const read = await invoke(`r${i}`, "tickets.ticket-read", { ticket: "TLK-1" });
     const ticket = (read as unknown as { output: Ticket }).output;

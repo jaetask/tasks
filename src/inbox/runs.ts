@@ -1,5 +1,3 @@
-// The record of each run of the steps on an inbox item: which steps ran, in
-// what order, what each asked for and what came of it.
 import type { DatabaseSync } from "node:sqlite";
 import { z } from "zod";
 
@@ -44,7 +42,6 @@ const toRun = (r: Row): Run => ({
 
 export function sqliteRuns(db: DatabaseSync) {
   return {
-    /** Starts a run's record and returns its id. */
     start: (item: string, at: string): string => {
       const made = db
         .prepare("INSERT INTO inbox_runs (item, at, steps, ended) VALUES (?, ?, '[]', 'running')")
@@ -62,7 +59,6 @@ export function sqliteRuns(db: DatabaseSync) {
       (db.prepare("SELECT * FROM inbox_runs WHERE item = ? ORDER BY seq").all(item) as Row[]).map(
         toRun,
       ),
-    /** Items still as received that no run has looked at. */
     waiting: (): string[] =>
       (
         db

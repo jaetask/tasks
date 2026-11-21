@@ -1,5 +1,3 @@
-// The Overview: every project's open tickets on one board, grouped by project, actor, location or
-// status, with the same filters as a project's board.
 import { EmptyLine, ProjectIcon, ViewToggle, WorkPage } from "@jaetask/toolkit/suite";
 import { Button } from "@jaetask/toolkit/ui/button";
 import { IconCircleCheck, IconFolders, IconMapPin, IconUsers } from "@tabler/icons-react";
@@ -39,7 +37,6 @@ type Group = {
   drop?: (ticket: string) => unknown;
 };
 
-/** The Overview before there is a project: one line and the way to make the first. */
 function FirstProject() {
   const [adding, setAdding] = useState(false);
   return (
@@ -61,7 +58,6 @@ export function OverviewPage() {
   const [filters, set] = useFilters("tasks.overview", { view: "status", hideDone: true });
   useNewTicketKey(projects.length > 0);
   const overview = useRead<Overview>("tickets.overview-read", {});
-  // The arrow beside a ticket's actor opens the Overview narrowed to that actor.
   const asked = query.get("actor");
   // biome-ignore lint/correctness/useExhaustiveDependencies: only when the address asks for an actor
   useEffect(() => {
@@ -75,7 +71,6 @@ export function OverviewPage() {
     every.filter((t) => chosen.length === 0 || chosen.includes(t.project)),
     { ...filters, feature: "" },
   );
-  // In the status view "Hide done" hides the done lane; in the others, the tickets that are done.
   const shown =
     filters.hideDone && view !== "status" ? all.filter((t) => t.column.kind !== "done") : all;
   const by = (key: (t: Ticket) => string | null, id: string | null) =>
@@ -113,7 +108,6 @@ export function OverviewPage() {
       }),
     );
   } else {
-    // Dropping a ticket on a kind moves it to its own board's first column of that kind.
     const drop = (id: string, kind: Kind) => {
       const project = projects.find((p) => id.startsWith(`${p.id}-`));
       const column = project?.columns.find((c) => c.kind === kind);

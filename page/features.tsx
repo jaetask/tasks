@@ -1,5 +1,3 @@
-// A project's features: a list with one line each, and a page for each feature with what it
-// covers and its tickets.
 import {
   EmptyLine,
   Field,
@@ -24,7 +22,6 @@ import { newTicketAt } from "./new-ticket.js";
 import { StatusIcon } from "./pickers.js";
 import { TicketLine } from "./ticket-line.js";
 
-/** How far along a feature is: a thin bar, and the numbers beside it. */
 function Progress({ feature }: { feature: Feature }) {
   const all = feature.left + feature.done;
   const part = all === 0 ? 0 : Math.round((feature.done / all) * 100);
@@ -45,7 +42,6 @@ function Progress({ feature }: { feature: Feature }) {
   );
 }
 
-/** The star of a feature: a favourite shows in the sidebar. A click turns it on or off. */
 function Star({ feature }: { feature: Feature }) {
   const { act } = useApp();
   return (
@@ -204,7 +200,6 @@ export function FeaturesPage({ project }: { project: Project }) {
   );
 }
 
-/** One feature: its name and what it covers, edited where they are shown, then its tickets. */
 export function FeaturePage({ project, id }: { project: Project; id: string }) {
   const app = useApp();
   const { act, go, path } = app;

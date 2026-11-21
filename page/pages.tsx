@@ -1,5 +1,3 @@
-// The list pages: questions for the owner, what was said to agents, the archive, the record of
-// changes and the Connections. Each is one list straight on the page.
 import {
   EmptyLine,
   Field,
@@ -33,7 +31,6 @@ import { TicketLine } from "./ticket-line.js";
 
 export const projectTitle = (p: Project, screen: string) => `${p.name} · ${screen}`;
 
-/** One question an agent asked, with the place to answer it while it waits. */
 export function RequestCard({ request, link }: { request: InputRequest; link?: boolean }) {
   const { act } = useApp();
   return (
@@ -485,7 +482,6 @@ export function ChangesPage() {
   );
 }
 
-/** A line of text with a button that copies it. */
 function Copy({ label, text }: { label: string; text: string }) {
   const [copied, setCopied] = useState(false);
   return (
@@ -511,7 +507,6 @@ function Copy({ label, text }: { label: string; text: string }) {
   );
 }
 
-/** Approving a Connection that asked to connect: who it acts as, and what it may do. */
 function ApproveDialog({ connection, onClose }: { connection: Connection; onClose: () => void }) {
   const { catalog, act } = useApp();
   const agents = catalog.actors.filter((a) => a.id !== OWNER && !a.archived);

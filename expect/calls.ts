@@ -1,6 +1,3 @@
-// Runs a Call script against Tasks' Domains on the Call pipeline, with the
-// App's data and its Calls in one SQLite database in memory, and renders
-// what happened and what the data is afterwards.
 import { DatabaseSync } from "node:sqlite";
 import { type ActionName, createCalls, type Outcome } from "@jaetask/open-agent-kit";
 import { sqliteStore } from "@jaetask/open-agent-kit/sqlite";
@@ -16,11 +13,9 @@ import { sqliteSteps } from "../src/steps/steps.js";
 import { sqliteTickets } from "../src/tickets/tickets.js";
 
 type Step = {
-  /** The actor id the Call acts as. Defaults to the owner. */
   as?: string;
   call: string;
   input?: unknown;
-  /** The Call id. Defaults to c1, c2, and so on. */
   id?: string;
 };
 
@@ -37,7 +32,6 @@ export function said(outcome: Outcome, read: boolean): string {
   return `succeeded${changes ? `; ${changes}` : ""}`;
 }
 
-/** The data after the script, one section per part of Tasks. */
 export function renderData(db: DatabaseSync): string[] {
   const journal = openJournal(db, () => START);
   const repository = sqliteCatalog(db, journal.rows);

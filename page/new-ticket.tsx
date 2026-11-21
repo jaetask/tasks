@@ -1,6 +1,3 @@
-// The New ticket dialog: a title, a description in the editor, and a row of property chips.
-// It opens over the page it was asked for on, from ?new=1 in the address, so "+" on a column,
-// the New ticket button and the C key all open the same thing.
 import {
   DueDatePicker,
   DueIcon,
@@ -22,7 +19,6 @@ import { LabelDot, PRIORITY_NAME, PriorityIcon, StatusIcon } from "./pickers.js"
 const BACKLOG = "backlog";
 const titleCase = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
-/** A property of the ticket being made: a small outlined button that opens its picker. */
 function Chip({ label, children, ...rest }: { label: string; children: ReactNode }) {
   return (
     <Button
@@ -42,7 +38,6 @@ const typing = (target: EventTarget | null) =>
   target instanceof HTMLElement &&
   (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName));
 
-/** While a board or a list is shown, the C key opens the New ticket dialog. */
 export function useNewTicketKey(enabled: boolean) {
   const { go, path, query } = useApp();
   const open = query.has("new") || query.has("ticket");
@@ -59,7 +54,6 @@ export function useNewTicketKey(enabled: boolean) {
   }, [enabled, open, go, path]);
 }
 
-/** Where a New ticket button or a column's "+" goes: this page, with the dialog open. */
 export const newTicketAt = (path: string, start = "") => `${path}?new=1${start ? `&${start}` : ""}`;
 
 function NewTicket({ onClose }: { onClose: () => void }) {
@@ -72,7 +66,6 @@ function NewTicket({ onClose }: { onClose: () => void }) {
   const chosen = projects.find((p) => p.id === project) ?? projects[0];
   const features =
     useRead<Feature[]>(chosen ? "tickets.feature-find" : null, { project: chosen?.id }) ?? [];
-  // A ticket made from another's menu starts by naming it.
   const related = query.get("related");
   const [title, setTitle] = useState("");
   const description = useRef(related ? `Related to ${related}.` : "");
@@ -283,7 +276,6 @@ function NewTicket({ onClose }: { onClose: () => void }) {
   );
 }
 
-/** The New ticket dialog, shown while the address asks for it with ?new=1. */
 export function NewTicketDialog() {
   const { query, path, go } = useApp();
   if (!query.has("new")) return null;

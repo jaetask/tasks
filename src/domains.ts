@@ -1,4 +1,3 @@
-// Tasks' Domains, each paired with its dependencies on the App database.
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { DatabaseSync } from "node:sqlite";
@@ -32,7 +31,6 @@ import { migrateTickets, sqliteTickets } from "./tickets/tickets.js";
 
 const migrated = new WeakSet<DatabaseSync>();
 
-/** Creates Tasks' tables in `db`, once per open database. */
 export function migrate(db: DatabaseSync): void {
   if (migrated.has(db)) return;
   db.exec("PRAGMA foreign_keys = ON");
@@ -51,10 +49,8 @@ export function migrate(db: DatabaseSync): void {
   migrated.add(db);
 }
 
-/** Where files are kept. */
 export type FilesPlace = { dir: string };
 
-/** Everything one Call needs, built on the store's connection. */
 function openWith(db: DatabaseSync, now: () => number, place: FilesPlace) {
   migrate(db);
   const journal = openJournal(db, now);
@@ -201,8 +197,6 @@ export function domains(
       const deps = open(db, now);
       return {
         ...deps,
-        // A reply goes to whoever wrote the comment it answers. Any other
-        // comment goes to the agent the ticket is assigned to.
         said: (comment, assignee, repliedTo) => {
           const about = { ticket: comment.ticket, about: comment.id, text: comment.text };
           const from = { from: comment.author, at: comment.at };

@@ -1,5 +1,3 @@
-// Builds Tasks' page into public/: app.js from page/main.tsx with esbuild,
-// app.css from page/app.css with Tailwind, and fonts.css with the Inter font files.
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
@@ -11,7 +9,6 @@ await build({
   outdir: at("../public"),
   assetNames: "[name]",
   bundle: true,
-  // The toolkit loads its icon catalogue on demand; splitting keeps it out of app.js.
   splitting: true,
   chunkNames: "chunk-[hash]",
   minify: true,
@@ -19,7 +16,6 @@ await build({
   target: "es2022",
   jsx: "automatic",
   loader: { ".woff2": "file" },
-  // The toolkit's parts read these, as they do under Vite.
   define: { "import.meta.env": '{"SSR":false,"MODE":"production","DEV":false}' },
   logLevel: "warning",
 });

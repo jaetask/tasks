@@ -1,6 +1,3 @@
-// The projects in the sidebar: each opens to its Intake, Backlog, Board and
-// Features, with its favourite features under Features. A project can be
-// dragged, or moved up and down, to reorder the list.
 import { Link, ProjectIcon } from "@jaetask/toolkit/suite";
 import { Button } from "@jaetask/toolkit/ui/button";
 import {
@@ -32,7 +29,6 @@ import { projectLook, TICKET_DRAG } from "./local.js";
 
 const STORE = "tasks:nav-expanded";
 
-/** A project's favourite features, each a link to its board narrowed to that feature. */
 function Favourites({ project, feature }: { project: Project; feature: string | null }) {
   const features = useRead<Feature[]>("tickets.feature-find", { project: project.id }) ?? [];
   return (
@@ -163,7 +159,6 @@ export function ProjectsNav({ collapsed }: { collapsed: boolean }) {
                   href={`/p/${p.id}/board`}
                   title={p.name}
                   aria-label={p.name}
-                  // Going to a project opens it, even when it was closed by hand before.
                   onClick={() => remember(`project:${p.id}`, true)}
                   aria-current={
                     selected === p.id && screen === "board" && !selectedFeature ? "page" : undefined
@@ -238,8 +233,6 @@ export function ProjectsNav({ collapsed }: { collapsed: boolean }) {
                 <Link
                   key={id}
                   href={`/p/${p.id}/${id}`}
-                  // A ticket dragged from the backlog onto Board goes on the board, and one
-                  // dragged from the board onto Backlog goes back.
                   {...(id === "intake"
                     ? {}
                     : {

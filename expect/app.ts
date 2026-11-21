@@ -1,6 +1,3 @@
-// Tasks as a running App, driven over real HTTP: the page signs in and makes
-// Calls, agents ask to connect and make Calls over MCP, and the change event
-// stream is read like a page reads it.
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -16,13 +13,13 @@ import { renderData, said } from "./calls.js";
 type Step =
   | { sign_in: string }
   | { page: { call: string; input?: unknown; id?: string } }
-  | { pair: { name: string; effects: string[] } } // POST /pair, as an agent does
-  | { claim: string } // the agent fetches its key
-  | { tools: string } // the agent lists its tools over MCP
-  | { contracts: string } // the agent lists the Contract resources
+  | { pair: { name: string; effects: string[] } }
+  | { claim: string }
+  | { tools: string }
+  | { contracts: string }
   | { mcp: { as: string; tool: string; arguments?: unknown; id?: string } }
   | { raw: { method: string; path: string; body?: unknown; session?: boolean } }
-  | { get: string } // a file of the page
+  | { get: string }
   | { restart: true };
 
 const tick = () => new Promise((resolve) => setTimeout(resolve, 5));
@@ -40,8 +37,6 @@ export async function runApp(input: string): Promise<string> {
   const pairings = new Map<string, { id: string; claim: string; token?: string }>();
   const clients = new Map<string, Client>();
 
-  // Connection ids are random: a script names a Connection as "$name", and
-  // the output shows its id as <name>.
   const withIds = (value: unknown) =>
     JSON.parse(
       JSON.stringify(value ?? {}).replace(/"\$([^"]+)"/g, (whole, name: string) => {

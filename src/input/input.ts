@@ -1,5 +1,3 @@
-// The human input repository: questions an agent asks the owner on a
-// ticket, and the owner's answers.
 import type { DatabaseSync } from "node:sqlite";
 import { z } from "zod";
 import { nextId } from "../ids.js";
@@ -32,7 +30,6 @@ export type Inputs = {
     ticket?: string | undefined;
   }): InputRequest[];
   get(id: string): InputRequest;
-  /** How many requests on a ticket still await an answer. */
   awaiting(ticket: string): number;
   ask(
     by: string,
@@ -41,7 +38,6 @@ export type Inputs = {
   ): InputRequest;
   resolve(id: string, at: string, answer: string): InputRequest;
   withdraw(id: string): InputRequest;
-  /** Deletes every request on a ticket. They cannot be brought back. */
   purge(ticket: string): void;
 };
 
