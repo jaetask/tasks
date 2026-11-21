@@ -41,16 +41,11 @@ import {
 import { type App, AppContext, useApp, useRead } from "./app.js";
 import { OverviewPage } from "./overview.js";
 import { BacklogPage, BoardPage } from "./board.js";
-import { ColumnsEdit, ConnectionApprove, FeatureEdit, TicketNew } from "./edits.js";
+import { ConnectionApprove } from "./edits.js";
+import { FeaturePage, FeaturesPage } from "./features.js";
+import { NewTicketDialog } from "./new-ticket.js";
 import { IntakePage } from "./inbox.js";
-import {
-  ArchivePage,
-  ChangesPage,
-  ConnectionsPage,
-  FeaturesPage,
-  InputPage,
-  RepliesPage,
-} from "./pages.js";
+import { ArchivePage, ChangesPage, ConnectionsPage, InputPage, RepliesPage } from "./pages.js";
 import { SECTIONS, type Section, SettingsPage } from "./settings.js";
 import { ProjectsNav } from "./projects-nav.js";
 import { TicketPage } from "./ticket.js";
@@ -175,12 +170,8 @@ function Page({ path, onSignOut }: { path: string; onSignOut: () => void }) {
     if (!project) return <OverviewPage />;
     if (c === "intake") return <IntakePage project={project} />;
     if (c === "backlog") return <BacklogPage project={project} />;
-    if (c === "features" && d) {
-      return <FeatureEdit project={project} id={d === "new" ? null : d} />;
-    }
+    if (c === "features" && d) return <FeaturePage key={d} project={project} id={d} />;
     if (c === "features") return <FeaturesPage project={project} />;
-    if (c === "new") return <TicketNew project={project} />;
-    if (c === "columns") return <ColumnsEdit project={project} />;
     return <BoardPage project={project} />;
   }
   if (a === "t" && b) {
@@ -262,6 +253,7 @@ function Shell({ path, onSignOut }: { path: string; onSignOut: () => void }) {
       settingsHref="/settings"
     >
       <Page path={path} onSignOut={onSignOut} />
+      <NewTicketDialog />
     </AppShell>
   );
 }

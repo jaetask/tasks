@@ -137,6 +137,8 @@
 ]
 ```
 
+16. owner calls tickets.ticket-create {"project":"TLK","title":"Due from the start","due":"2026-02-09"} → succeeded; created ticket TLK-4
+17. owner calls tickets.ticket-create {"project":"TLK","title":"A bad day","due":"soon"} → rejected: invalid-input: due: a due date is a day written as YYYY-MM-DD; due: a due date is a day written as YYYY-MM-DD
 
 ### Actors
 
@@ -170,6 +172,7 @@ None.
 | TLK-1 | Voice notes on the phone |  | To do |  |  |  |  | open |
 | TLK-2 | Crash on send |  | To do |  |  |  |  | open |
 | TLK-3 | Write the guide |  | To do |  |  |  |  | open |
+| TLK-4 | Due from the start |  | To do |  |  |  |  | open |
 
 ### Comments
 
@@ -206,3 +209,4 @@ None.
 | h9 | 09:09 | owner | tickets.ticket-due-set | set TLK-3 due on 2026-01-05 | TLK-3 |  |
 | h10 | 09:13 | owner | tickets.ticket-due-set | removed the due date of TLK-2 | TLK-2 | h11 |
 | h11 | 09:14 | owner | history.change-undo | undid: removed the due date of TLK-2 | TLK-2 |  |
+| h12 | 09:16 | owner | tickets.ticket-create | created TLK-4 in To do: Due from the start | TLK-4 |  |

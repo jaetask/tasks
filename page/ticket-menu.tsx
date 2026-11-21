@@ -92,7 +92,9 @@ export function TicketMenu({ ticket, children }: { ticket: Ticket; children: Rea
           >
             Add link...
           </ContextMenuItem>
-          <ContextMenuItem onSelect={() => go(`/p/${ticket.project}/new?related=${id}`)}>
+          <ContextMenuItem
+            onSelect={() => go(`${path}?new=1&project=${ticket.project}&related=${id}`)}
+          >
             Create related
           </ContextMenuItem>
           <ContextMenuSub>

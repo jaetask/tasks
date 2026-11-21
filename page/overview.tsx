@@ -30,6 +30,7 @@ import {
   type ViewChoice,
 } from "./board.js";
 import { Nothing, projectLook } from "./local.js";
+import { newTicketAt, useNewTicketKey } from "./new-ticket.js";
 import { StatusIcon } from "./pickers.js";
 import { NewProjectDialog } from "./settings.js";
 
@@ -69,6 +70,7 @@ export function OverviewPage() {
   const { catalog, act, query } = useApp();
   const projects = catalog.projects.filter((p) => !p.archived);
   const [filters, set] = useFilters("tasks.overview", { view: "status" });
+  useNewTicketKey(projects.length > 0);
   const overview = useRead<Overview>("tickets.overview-read", {});
   // The arrow beside a ticket's actor opens the Overview narrowed to that actor.
   const asked = query.get("actor");
@@ -100,7 +102,7 @@ export function OverviewPage() {
         id: p.id,
         title: p.name,
         icon: <ProjectIcon {...projectLook(p)} size={16} />,
-        addTo: `/p/${p.id}/new`,
+        addTo: newTicketAt("/overview", `project=${p.id}`),
         tickets: by((t) => t.project, p.id),
       }));
   } else if (view === "actors") {

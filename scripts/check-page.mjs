@@ -232,14 +232,34 @@ try {
     },
   );
   await shot("settings");
-  await step("add two tickets, each on the new ticket page", async () => {
-    for (const [i, title] of ["Voice notes on the phone", "Fix the crash on send"].entries()) {
-      await open("/p/TLK/board");
-      await link("New ticket").click();
-      await page.fill("#title", title);
-      await button("Create ticket").click();
-      await until((n) => document.querySelectorAll(".lane .ticket").length === n, i + 1);
-    }
+  await step("add two tickets in the New ticket dialog: the button, then the C key", async () => {
+    await open("/p/TLK/board");
+    await link("New ticket").click();
+    await page.fill('[aria-label="Title"]', "Voice notes on the phone");
+    await button("Create ticket").click();
+    await until(() => document.querySelectorAll(".lane .ticket").length === 1);
+    await until(() => !document.querySelector('[role="dialog"]'));
+    // C opens the same dialog; its chips set the properties; Cmd+Enter creates the ticket.
+    await page.keyboard.press("c");
+    await page.fill('[aria-label="Title"]', "Fix the crash on send");
+    await button("Priority").click();
+    await page.getByRole("option", { name: /^High/ }).click();
+    await button("Labels").click();
+    await page.getByRole("option", { name: /^bug/ }).click();
+    await page.keyboard.press("Escape");
+    await page.locator('[aria-label="Title"]').press("ControlOrMeta+Enter");
+    await until(() => document.querySelectorAll(".lane .ticket").length === 2);
+    await open("/t/TLK-2");
+    await page.locator('[data-property="priority"]', { hasText: "High" }).waitFor();
+    await page.locator("#place .pill", { hasText: "bug" }).waitFor();
+    // Put it back as the steps after this expect it: no priority, no label.
+    await page.locator('[data-property="priority"]').click();
+    await page.getByRole("option", { name: /^No priority/ }).click();
+    await page.locator('[aria-label="Change or add labels"]').click();
+    await page.getByRole("option", { name: /^bug/ }).click();
+    await page.keyboard.press("Escape");
+    await until(() => !document.querySelector("#place .pill"));
+    await open("/p/TLK/board");
   });
   await step("open a ticket; edit it where it is shown; comment and react", async () => {
     await page.locator(".ticket").getByText("Voice notes on the phone").click();
@@ -535,10 +555,27 @@ try {
   await step("features: add one, put a ticket in it, and narrow the board to it", async () => {
     await open("/p/TLK/features");
     await see("No features yet");
-    await link("New feature").click();
-    await page.fill("#name", "Voice");
+    await button("New feature").click();
+    await page.fill("#feature-name", "Voice");
     await button("Add feature").click();
-    await see("0 open");
+    // A new feature opens on its own page: its name and what it covers are edited there.
+    await until(() => /#\/p\/TLK\/features\/f\d+/.test(window.location.hash));
+    await see("No open ticket is in this feature");
+    await page.getByRole("button", { name: "Voice", exact: true }).click();
+    await page.fill('[aria-label="Rename Voice"]', "Voices");
+    await page.keyboard.press("Enter");
+    await page.getByRole("button", { name: "Voices", exact: true }).click();
+    await page.fill('[aria-label="Rename Voices"]', "Voice");
+    await page.keyboard.press("Enter");
+    await page.getByRole("button", { name: "Voice", exact: true }).waitFor();
+    // An address for a feature that is not there says so.
+    await open("/p/TLK/features/f999");
+    await see("No feature of Talk has the id f999");
+    await open("/p/TLK/features");
+    await see("0 open · 0 done");
+    // The star makes it a favourite, which shows in the sidebar.
+    await button("Make Voice a favourite").click();
+    await button("Remove Voice from favourites").waitFor();
     await open("/t/TLK-1");
     await page.locator('[data-property="feature"]').click();
     await page.getByRole("option", { name: "Voice", exact: true }).click();
@@ -692,7 +729,9 @@ try {
       .click();
     await see("The backlog is empty");
     await link("New ticket").click();
-    await page.fill("#title", "Trim silence from recordings");
+    // Made from the backlog, it starts in the backlog.
+    await page.getByRole("button", { name: "Status", exact: true }).getByText("Backlog").waitFor();
+    await page.fill('[aria-label="Title"]', "Trim silence from recordings");
     await button("Create ticket").click();
     await page.waitForSelector(".ticket");
     await open("/p/TLK/board");
@@ -720,30 +759,31 @@ try {
       () => document.querySelectorAll(".lane")[3].querySelectorAll(".ticket").length === 1,
     );
   });
-  await step("edit the columns on their own page: rename, add, move, remove", async () => {
-    await link("Edit columns").click();
-    await see("Edit the columns of Talk");
-    // True when the column name at `index` is `name`, and there are `length` columns.
-    const columns = ([index, name, length]) => {
-      const names = [...document.querySelectorAll('[aria-label="Column name"]')].map(
-        (input) => input.value,
-      );
-      return names[index] === name && names.length === length;
-    };
-    await page.fill('[aria-label="Column name"] >> nth=2', "Code review");
-    await page.press('[aria-label="Column name"] >> nth=2', "Tab");
-    await see("Code review");
-    await page.fill('[aria-label="New column name"]', "Sign-off");
-    await button("Add column").click();
-    await until(columns, [4, "Sign-off", 5]);
-    await page.click('[aria-label="Move column left"] >> nth=4');
-    await until(columns, [3, "Sign-off", 5]);
-    await shot("columns");
-    await page.getByRole("button", { name: "Remove" }).nth(3).click();
-    await until(columns, [3, "Done", 4]);
-    await page.locator(".tk-edit-bar").getByRole("link").first().click();
+  await step("edit the columns on the board: rename, add, move, remove", async () => {
+    await open("/p/TLK/board");
     await page.waitForSelector(".lane");
-    await see("Code review");
+    // The names of the board's columns, in order.
+    const columns = (wanted) =>
+      [...document.querySelectorAll(".lane h2")]
+        .map((h) => (h.querySelector("button")?.textContent ?? "").trim())
+        .join("|") === wanted;
+    await until(columns, "To do|Doing|Review|Done");
+    // A click on a column's name changes it where it is.
+    await page.locator(".lane h2").getByRole("button", { name: "Review", exact: true }).click();
+    await page.fill('[aria-label="Rename the column Review"]', "Code review");
+    await page.keyboard.press("Enter");
+    await until(columns, "To do|Doing|Code review|Done");
+    await button("Add a column").click();
+    await page.fill("#column-name", "Sign-off");
+    await button("Add column").click();
+    await until(columns, "To do|Doing|Code review|Done|Sign-off");
+    await button("Column Sign-off").click();
+    await page.getByRole("menuitem", { name: "Move left", exact: true }).click();
+    await until(columns, "To do|Doing|Code review|Sign-off|Done");
+    await shot("columns");
+    await button("Column Sign-off").click();
+    await page.getByRole("menuitem", { name: "Remove column", exact: true }).click();
+    await until(columns, "To do|Doing|Code review|Done");
   });
   await step("intake: capture an item; with no steps it lands as received", async () => {
     await page
