@@ -38,6 +38,11 @@ const url = z
   .max(2000)
   .regex(/^https?:\/\/\S+$/, "a link is a web address that starts with http:// or https://");
 
+const day = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, "a due date is a day written as YYYY-MM-DD")
+  .refine((d) => !Number.isNaN(Date.parse(d)), "a due date is a day written as YYYY-MM-DD");
+
 export const ticketList = defineCard({
   name: "tickets",
   version: 1,
@@ -175,13 +180,15 @@ const ticketCreate = write({
     type: Type.optional().describe("task if left out."),
     priority: Priority.optional().describe("none if left out."),
     links: z.array(url).max(50).optional(),
+    due: day.optional().describe("The day it is due, as YYYY-MM-DD."),
     backlog: z
       .boolean()
       .default(false)
       .describe("True to put it in the backlog, to wait there until it is put on the board."),
   }),
-  run: (input, { tickets, actor, now }) => {
-    const ticket = tickets.create(actor, new Date(now()).toISOString(), input);
+  run: ({ due, ...input }, { tickets, actor, now }) => {
+    const made = tickets.create(actor, new Date(now()).toISOString(), input);
+    const ticket = due ? tickets.setDue(made.id, due) : made;
     return {
       ticket,
       summary: `created ${ticket.id} in ${ticket.backlog ? "the backlog" : ticket.column.name}: ${ticket.title}`,
@@ -296,11 +303,7 @@ const ticketDueSet = write({
   description: "Set the day a ticket is due, as YYYY-MM-DD, or no due date with null.",
   input: z.object({
     ticket: id,
-    due: z
-      .string()
-      .regex(/^\d{4}-\d{2}-\d{2}$/, "a due date is a day written as YYYY-MM-DD")
-      .refine((d) => !Number.isNaN(Date.parse(d)), "a due date is a day written as YYYY-MM-DD")
-      .nullable(),
+    due: day.nullable(),
   }),
   run: ({ ticket, due }, { tickets }) => ({
     ticket: tickets.setDue(ticket, due),

@@ -87,6 +87,7 @@
 | tickets.column-archive | write |
 | tickets.feature-archive | write |
 | tickets.feature-create | write |
+| tickets.feature-delete | write |
 | tickets.feature-edit | write |
 | tickets.feature-find | read |
 | tickets.feature-restore | write |

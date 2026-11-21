@@ -101,6 +101,22 @@
       "input": {
         "due": "week"
       }
+    },
+    {
+      "call": "tickets.ticket-create",
+      "input": {
+        "project": "TLK",
+        "title": "Due from the start",
+        "due": "2026-02-09"
+      }
+    },
+    {
+      "call": "tickets.ticket-create",
+      "input": {
+        "project": "TLK",
+        "title": "A bad day",
+        "due": "soon"
+      }
     }
   ]
 }

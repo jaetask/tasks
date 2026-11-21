@@ -2,7 +2,7 @@
 // list row, the badges for kinds and labels, and short forms of the parts
 // the pages use most.
 import { IconCircleDashed, IconUser } from "@tabler/icons-react";
-import { Composer, IconAvatar, ListRow, PROJECT_ICONS } from "@jaetask/toolkit/suite";
+import { Composer, IconAvatar, PROJECT_ICONS } from "@jaetask/toolkit/suite";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,7 +30,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@jaetask/toolkit/ui/tabs";
 import { ToggleGroup, ToggleGroupItem } from "@jaetask/toolkit/ui/toggle-group";
 import { type ReactNode, useState } from "react";
-import { type Colour, KINDS, type Kind, type Project, type Ticket } from "./api.js";
+import { type Colour, KINDS, type Kind, type Project } from "./api.js";
 import { useApp } from "./app.js";
 
 type Option = { id: string; name: string };
@@ -311,51 +311,8 @@ export function LabelChip({ label }: { label: { name: string; colour: Colour } }
   return <Pill colour={label.colour}>{label.name}</Pill>;
 }
 
-/** A ticket as a list row. It opens the ticket's page and can be dragged to a column. */
-export function TicketRow({
-  ticket,
-  aside,
-  column,
-}: {
-  ticket: Ticket;
-  aside?: ReactNode;
-  /** Show which column it is in, for views that do not group by column. */
-  column?: boolean;
-}) {
-  const meta = [
-    ticket.id,
-    column ? ticket.column.name : "",
-    ticket.featureName,
-    ticket.locationName ? `📍 ${ticket.locationName}` : "",
-    ticket.comments > 0 ? `💬 ${ticket.comments}` : "",
-    ticket.images > 0 ? `🖼 ${ticket.images}` : "",
-    ticket.awaiting > 0 ? `❓ ${ticket.awaiting}` : "",
-  ].filter(Boolean);
-  return (
-    <ListRow
-      to={`/t/${ticket.id}`}
-      dragId={ticket.id}
-      blocked={ticket.blocked !== null}
-      aside={
-        aside ??
-        (ticket.assignee ? (
-          <ActorAvatar id={ticket.assignee} name={ticket.assigneeName} />
-        ) : undefined)
-      }
-    >
-      <b>{ticket.title}</b>
-      {ticket.blocked && <span className="tk-muted">{`Blocked: ${ticket.blocked}`}</span>}
-      {ticket.labels.length > 0 && (
-        <span>
-          {ticket.labels.map((l) => (
-            <LabelChip key={l.id} label={l} />
-          ))}
-        </span>
-      )}
-      <span className="tk-muted">{meta.join(" · ")}</span>
-    </ListRow>
-  );
-}
+/** The drag type of a ticket: a card or a line dragged onto a column, or onto a board. */
+export const TICKET_DRAG = "application/x-tasks-ticket";
 
 /** One line to add something: a comment, an inbox item, an answer. */
 export function Say({

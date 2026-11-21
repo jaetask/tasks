@@ -524,6 +524,11 @@ A tool that changes something after the person says yes waits for them; tell the
         "pattern": "^https?:\\/\\/\\S+$"
       }
     },
+    "due": {
+      "description": "The day it is due, as YYYY-MM-DD.",
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
     "backlog": {
       "default": false,
       "description": "True to put it in the backlog, to wait there until it is put on the board.",

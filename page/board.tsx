@@ -2,10 +2,12 @@
 // The board groups the same tickets four ways: by column, by feature, by
 // actor and by location. Dragging a ticket changes what the view groups by.
 import {
-  EditLink,
+  Field,
+  FormDialog,
+  InlineText,
   Link,
+  RowMenu,
   WorkPage,
-  PrimaryLink,
   ProjectIcon,
   PropertyPills,
   type ViewChoice as SuiteViewChoice,
@@ -18,20 +20,12 @@ import {
   CollapsibleTrigger,
 } from "@jaetask/toolkit/ui/collapsible";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@jaetask/toolkit/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@jaetask/toolkit/ui/dropdown-menu";
 import { Input } from "@jaetask/toolkit/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@jaetask/toolkit/ui/popover";
 import {
   IconAdjustmentsHorizontal,
   IconChevronDown,
   IconCircleCheck,
-  IconDots,
   IconMapPin,
   IconPlus,
   IconStack2,
@@ -51,7 +45,7 @@ import {
 } from "./api.js";
 import { useApp, useRead } from "./app.js";
 import { ServiceIcon, service } from "@jaetask/toolkit/suite";
-import { ActorAvatar, Nothing, Picker, projectLook, NoActor, Tick } from "./local.js";
+import { ActorAvatar, Nothing, Picker, projectLook, NoActor, Tick, TICKET_DRAG } from "./local.js";
 export { Tick };
 import { LabelDot, PriorityIcon, StatusIcon } from "./pickers.js";
 import {
@@ -67,6 +61,7 @@ import {
   StatusPicker,
   TypePicker,
 } from "./properties.js";
+import { newTicketAt, useNewTicketKey } from "./new-ticket.js";
 import { TicketView } from "./ticket.js";
 import { TicketMenu } from "./ticket-menu.js";
 
@@ -288,7 +283,7 @@ export function FilterBar({
 
 export const titleCase = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
-const DRAG = "application/x-tasks-ticket";
+const DRAG = TICKET_DRAG;
 
 const _KIND_DOT: Record<Kind, string> = {
   todo: "bg-muted-foreground/50",
@@ -544,11 +539,18 @@ export function Lane({
   count,
   addTo,
   menu,
+  rename,
   onDrop,
   children,
 }: {
   /** The lane's "..." menu, when it has one. */
   menu?: ReactNode;
+  /** Given when the lane's name can be changed where it is shown. */
+  rename?: {
+    editing: boolean;
+    onEditing: (editing: boolean) => void;
+    onSave: (name: string) => void;
+  };
   id: string;
   title: string;
   icon?: ReactNode;
@@ -582,7 +584,18 @@ export function Lane({
       <div className="mb-3 flex items-center justify-between px-1">
         <h2 className="flex items-center gap-2 text-sm font-medium">
           {icon}
-          {title}
+          {rename ? (
+            <InlineText
+              value={title}
+              label={`Rename the column ${title}`}
+              className="text-sm font-medium"
+              editing={rename.editing}
+              onEditingChange={rename.onEditing}
+              onSave={rename.onSave}
+            />
+          ) : (
+            title
+          )}
           <span className="text-xs font-normal text-muted-foreground">{count}</span>
         </h2>
         <span className="flex items-center gap-1">
@@ -615,10 +628,22 @@ export function Lane({
 }
 
 /** Lanes side by side, scrolling sideways when they do not fit. */
-export function Lanes({ label, children }: { label: string; children: ReactNode }) {
+export function Lanes({
+  label,
+  after,
+  children,
+}: {
+  label: string;
+  /** Something after the last lane, such as the way to add a column. */
+  after?: ReactNode;
+  children: ReactNode;
+}) {
   return (
     <section aria-label={label} className="overflow-x-auto pb-2">
-      <div className="flex min-w-max items-start gap-4">{children}</div>
+      <div className="flex min-w-max items-start gap-4">
+        {children}
+        {after}
+      </div>
     </section>
   );
 }
@@ -732,57 +757,127 @@ export function ordered(tickets: Ticket[], ordering: Project["ordering"]): Ticke
   });
 }
 
-/** A column's "..." menu on the status view: its place on the board, and the way to its settings. */
+/** A column's "..." menu on the status view: its name, what it means, its place, and its tickets. */
 function ColumnMenu({
   project,
   column,
   name,
   count,
+  onRename,
 }: {
   project: Project;
   column: string;
   name: string;
   /** How many tickets the column holds; with none there is nothing to archive. */
   count: number;
+  onRename: () => void;
 }) {
   const { act } = useApp();
   const at = project.columns.findIndex((c) => c.id === column);
+  const kind = project.columns[at]?.kind;
   const move = (before: string | undefined) =>
     void act("catalog.column-move", { column, ...(before ? { before } : {}) });
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon-xs"
-          aria-label={`Column ${name}`}
-          className="text-muted-foreground"
+    <RowMenu
+      label={`Column ${name}`}
+      items={[
+        { label: "Rename", onSelect: onRename },
+        {
+          label: "It means",
+          items: (Object.keys(KINDS) as Kind[]).map((k) => ({
+            label: KIND_TITLE[k],
+            ...(k === kind ? { hint: "now" } : {}),
+            onSelect: () => void act("catalog.column-kind-set", { column, kind: k }),
+          })),
+        },
+        {
+          label: "Move left",
+          disabled: at <= 0,
+          onSelect: () => move(project.columns[at - 1]?.id),
+        },
+        {
+          label: "Move right",
+          disabled: at < 0 || at >= project.columns.length - 1,
+          onSelect: () => move(project.columns[at + 2]?.id),
+        },
+        "line",
+        {
+          label: "Archive all",
+          disabled: count === 0,
+          onSelect: () => void act("tickets.column-archive", { column }),
+        },
+        {
+          label: "Remove column",
+          disabled: project.columns.length === 1,
+          onSelect: () => void act("catalog.column-remove", { column }),
+        },
+      ]}
+    />
+  );
+}
+
+/** What each kind of column is called where one is chosen. */
+export const KIND_TITLE: Record<Kind, string> = {
+  todo: "To do",
+  doing: "Doing",
+  waiting: "Review",
+  done: "Done",
+};
+
+/** After the last column of a board: the way to add one. */
+function AddColumn({ project }: { project: Project }) {
+  const { act } = useApp();
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [kind, setKind] = useState<Kind>("waiting");
+  return (
+    <>
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        aria-label="Add a column"
+        title="Add a column"
+        className="mt-2 shrink-0 text-muted-foreground"
+        onClick={() => setOpen(true)}
+      >
+        <IconPlus size={16} aria-hidden />
+      </Button>
+      <FormDialog
+        open={open}
+        onOpenChange={setOpen}
+        title="New column"
+        line={`It goes last on the board of ${project.name}; move it from its menu.`}
+        saveLabel="Add column"
+        onSave={async () => {
+          const made = await act("catalog.column-add", { project: project.id, name, kind });
+          if (made) setName("");
+          return made !== null;
+        }}
+      >
+        <Field label="Name" htmlFor="column-name">
+          <Input
+            id="column-name"
+            autoFocus
+            required
+            value={name}
+            maxLength={60}
+            onChange={(e) => setName(e.target.value)}
+          />
+        </Field>
+        <Field
+          label="It means"
+          hint="What a ticket in it is: waiting to start, being worked on, waiting for review, or done."
         >
-          <IconDots aria-hidden />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem disabled={at <= 0} onSelect={() => move(project.columns[at - 1]?.id)}>
-          Move left
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          disabled={at < 0 || at >= project.columns.length - 1}
-          onSelect={() => move(project.columns[at + 2]?.id)}
-        >
-          Move right
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link href={`/p/${project.id}/columns`}>Rename or change kind</Link>
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          disabled={count === 0}
-          onSelect={() => void act("tickets.column-archive", { column })}
-        >
-          Archive all
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+          <Picker
+            label="It means"
+            value={kind}
+            className="w-full"
+            onChange={(v) => setKind(v as Kind)}
+            options={(Object.keys(KINDS) as Kind[]).map((k) => ({ id: k, name: KIND_TITLE[k] }))}
+          />
+        </Field>
+      </FormDialog>
+    </>
   );
 }
 
@@ -802,7 +897,9 @@ const title = (project: Project, screen?: string) =>
 export const titleIcon = (project: Project) => <ProjectIcon {...projectLook(project)} size={18} />;
 
 export function BoardPage({ project }: { project: Project }) {
-  const { catalog, act } = useApp();
+  const { catalog, act, path } = useApp();
+  const [renaming, setRenaming] = useState<string | null>(null);
+  useNewTicketKey(true);
   const [filters, set] = useFilters(`tasks.board.${project.id}`);
   const features = useRead<Feature[]>("tickets.feature-find", { project: project.id }) ?? [];
   const board = useRead<BoardData>("tickets.board-read", { project: project.id });
@@ -903,8 +1000,9 @@ export function BoardPage({ project }: { project: Project }) {
         <div className="flex flex-wrap items-center gap-2">
           <ViewToggle views={VIEWS} value={view} onChange={(v) => set({ view: v })} />
           <Display project={project} />
-          <EditLink to={`/p/${project.id}/columns`} label="Edit columns" />
-          <PrimaryLink to={`/p/${project.id}/new`}>New ticket</PrimaryLink>
+          <Button asChild size="sm">
+            <Link href={newTicketAt(path)}>New ticket</Link>
+          </Button>
         </div>
       }
     >
@@ -934,7 +1032,10 @@ export function BoardPage({ project }: { project: Project }) {
         <h2 className="m-0 text-sm font-semibold">{VIEWS.find((v) => v.id === view)?.heading}</h2>
       )}
       {groups.length > 0 ? (
-        <Lanes label={`The board of ${project.name}, by ${view}`}>
+        <Lanes
+          label={`The board of ${project.name}, by ${view}`}
+          {...(view === "status" ? { after: <AddColumn project={project} /> } : {})}
+        >
           {groups.map((g) => (
             <Lane
               key={g.id}
@@ -950,11 +1051,18 @@ export function BoardPage({ project }: { project: Project }) {
                         column={g.id}
                         name={g.title}
                         count={g.tickets.length}
+                        onRename={() => setRenaming(g.id)}
                       />
                     ),
+                    rename: {
+                      editing: renaming === g.id,
+                      onEditing: (on: boolean) => setRenaming(on ? g.id : null),
+                      onSave: (name: string) =>
+                        void act("catalog.column-rename", { column: g.id, name }),
+                    },
                   }
                 : {})}
-              addTo={`/p/${project.id}/new?${g.start}`}
+              addTo={newTicketAt(path, g.start)}
               onDrop={(ticket) => void g.drop(ticket)}
             >
               {g.tickets.map((t) => (
@@ -974,7 +1082,8 @@ export function BoardPage({ project }: { project: Project }) {
 const none = (title: string) => ({ id: null as string | null, title });
 
 export function BacklogPage({ project }: { project: Project }) {
-  const { act } = useApp();
+  const { act, path } = useApp();
+  useNewTicketKey(true);
   const [filters, set] = useFilters(`tasks.backlog.${project.id}`);
   const features = useRead<Feature[]>("tickets.feature-find", { project: project.id }) ?? [];
   const backlog = useRead<Ticket[]>("tickets.backlog-read", { project: project.id });
@@ -988,7 +1097,9 @@ export function BacklogPage({ project }: { project: Project }) {
       action={
         <div className="flex flex-wrap items-center gap-2">
           <Display project={project} />
-          <PrimaryLink to={`/p/${project.id}/new?backlog=1`}>New ticket</PrimaryLink>
+          <Button asChild size="sm">
+            <Link href={newTicketAt(path, "backlog=1")}>New ticket</Link>
+          </Button>
         </div>
       }
     >

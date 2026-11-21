@@ -1,6 +1,6 @@
 // The screens that show things. Each is a page of panels from the toolkit;
 // anything that is edited opens its own edit page (see edits.tsx).
-import { ListCard, ListRow, WorkPage, PageLink, Panel, PrimaryLink } from "@jaetask/toolkit/suite";
+import { ListCard, ListRow, WorkPage, PageLink, Panel } from "@jaetask/toolkit/suite";
 import { Button } from "@jaetask/toolkit/ui/button";
 import { Card } from "@jaetask/toolkit/ui/card";
 import { useState } from "react";
@@ -8,7 +8,6 @@ import {
   type AgentReply,
   type Change,
   type Connection,
-  type Feature,
   type InputRequest,
   OWNER,
   type Project,
@@ -16,69 +15,9 @@ import {
   when,
 } from "./api.js";
 import { actorLabel, useApp, useRead } from "./app.js";
-import { titleIcon } from "./board.js";
 import { ActorAvatar, Nothing, Picker, Pill, Say, TabBar } from "./local.js";
 
 export const projectTitle = (p: Project, screen: string) => `${p.name} · ${screen}`;
-
-export function FeaturesPage({ project }: { project: Project }) {
-  const { go } = useApp();
-  const [archived, setArchived] = useState(false);
-  const features = useRead<Feature[]>("tickets.feature-find", { project: project.id, archived });
-  return (
-    <WorkPage
-      icon={titleIcon(project)}
-      title={projectTitle(project, "Features")}
-      help="A feature is one part of the project. It groups the tickets for that part."
-      action={<PrimaryLink to={`/p/${project.id}/features/new`}>New feature</PrimaryLink>}
-    >
-      <Panel id="features" title="Features" line="Open one to rename, favourite or archive it.">
-        <TabBar
-          label="Which features"
-          value={archived ? "all" : "active"}
-          options={[
-            { id: "active", name: "Active" },
-            { id: "all", name: "With archived" },
-          ]}
-          onChange={(v) => setArchived(v === "all")}
-        />
-        {features && features.length > 0 ? (
-          <ListCard>
-            {features.map((f) => (
-              <ListRow
-                key={f.id}
-                to={`/p/${project.id}/features/${f.id}`}
-                aside={
-                  <Button
-                    variant="secondary"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      go(`/p/${project.id}/board?feature=${encodeURIComponent(f.id)}`);
-                    }}
-                  >
-                    On the board
-                  </Button>
-                }
-              >
-                <b>
-                  {f.favourite ? "★ " : ""}
-                  {f.name}
-                </b>
-                <span className="tk-muted">
-                  {f.tickets} open{f.archived ? " · archived" : ""}
-                  {f.description ? ` · ${f.description}` : ""}
-                </span>
-              </ListRow>
-            ))}
-          </ListCard>
-        ) : (
-          <Nothing text="No features yet. Add one for each part of the project, such as Voice." />
-        )}
-      </Panel>
-    </WorkPage>
-  );
-}
 
 /** One question an agent asked, with the place to answer it while it waits. */
 export function RequestCard({ request, link }: { request: InputRequest; link?: boolean }) {
