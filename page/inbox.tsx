@@ -1,11 +1,12 @@
 // A project's Intake: its inbox items, and the steps that look at each new one.
-import { ListCard, ListRow, PageBody, PageLink, Panel } from "@jaetask/toolkit/suite";
+import { Link, PageLink, Panel, WorkPage } from "@jaetask/toolkit/suite";
 import { Button } from "@jaetask/toolkit/ui/button";
 import { Card } from "@jaetask/toolkit/ui/card";
 import { useState } from "react";
 import { type Item, type Project, type Run, type Step, when } from "./api.js";
-import { actorName, useApp, useRead } from "./app.js";
+import { useApp, useRead } from "./app.js";
 import { Nothing, Pill, Say, TabBar } from "./local.js";
+import { titleIcon } from "./board.js";
 import { projectTitle } from "./pages.js";
 
 export const CONDITIONS: Record<string, string> = {
@@ -140,14 +141,15 @@ const STATES: { id: Item["state"]; name: string }[] = [
 ];
 
 export function IntakePage({ project }: { project: Project }) {
-  const { catalog, act } = useApp();
+  const { act } = useApp();
   const [state, setState] = useState<Item["state"]>("received");
   const items = useRead<Item[]>("inbox.inbox-read", { project: project.id, state });
   const steps = useRead<Step[]>("inbox.pipeline-read") ?? [];
   return (
-    <PageBody
+    <WorkPage
+      icon={titleIcon(project)}
       title={projectTitle(project, "Intake")}
-      line="New ideas and requests for this project, before they become tickets."
+      help="New ideas and requests for this project, before they become tickets."
     >
       <Panel id="items" title="Inbox" line="Your steps look at each new item before it lands here.">
         <Say
@@ -162,35 +164,14 @@ export function IntakePage({ project }: { project: Project }) {
           <Nothing text={`Nothing is ${state}.`} />
         )}
       </Panel>
-      <Panel
-        id="steps"
-        title="Steps"
-        line="Steps look at each new item, one after another. They are the same for every project; a step can be set to run on one project's items only."
-        action={<PageLink to="/steps/new">Add a step</PageLink>}
-      >
-        {steps.length > 0 ? (
-          <ListCard>
-            {steps.map((s, i) => (
-              <ListRow key={s.id} to={`/steps/${s.id}`} aside={<Pill>{s.on ? "on" : "off"}</Pill>}>
-                <b>{`${i + 1}. ${s.name}`}</b>
-                <span className="tk-muted">
-                  {`${s.kind.replace("-", " ")} · as ${actorName(catalog, s.actor)} · may ${s.actions
-                    .map((a) => a.replace("item-", ""))
-                    .join(", ")} · runs on ${
-                    s.condition
-                      ? Object.entries(s.condition)
-                          .map(([k, v]) => `${CONDITIONS[k]} ${v}`)
-                          .join(", ")
-                      : "every item"
-                  }`}
-                </span>
-              </ListRow>
-            ))}
-          </ListCard>
-        ) : (
-          <Nothing text="No steps yet. New items go straight to the inbox." />
-        )}
-      </Panel>
-    </PageBody>
+      <p className="m-0 text-xs text-muted-foreground">
+        {steps.length === 0
+          ? "No steps look at new items: they go straight to the inbox. "
+          : `${steps.length} ${steps.length === 1 ? "step looks" : "steps look"} at each new item before it lands here. `}
+        <Link href="/settings/steps" className="underline">
+          Intake steps
+        </Link>
+      </p>
+    </WorkPage>
   );
 }

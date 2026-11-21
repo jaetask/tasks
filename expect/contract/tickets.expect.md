@@ -56,6 +56,10 @@
 | tickets.feature-edit | write | feature-changed | Change a feature's name or description, or mark it as a favourite. |
 | tickets.feature-archive | write | feature-changed | Archive a feature. Its tickets keep it; no new ticket can be put in it. |
 | tickets.feature-restore | write | feature-changed | Restore an archived feature. |
+| tickets.feature-delete | write | feature-changed | Delete a feature no ticket was ever put in. Any other feature can only be archived. |
+| tickets.usage-read | read |  | Count the open tickets that use each label, actor and location, and each project's open tickets that are not done. |
+| tickets.label-merge | write | ticket-changed | Merge one label into another: every ticket that had the first has the second, and the first is removed. |
+| tickets.ticket-project-set | write | ticket-changed | Move a ticket to another project. It gets the next id in that project and the first column there that means the same; it keeps its comments, files and history, and leaves its feature. Its earlier id still opens it. It cannot be undone; move it back instead. |
 
 ### Cards
 
@@ -211,6 +215,10 @@ Tools:
 - tickets__feature-edit (changes): Change a feature's name or description, or mark it as a favourite.
 - tickets__feature-archive (changes): Archive a feature. Its tickets keep it; no new ticket can be put in it.
 - tickets__feature-restore (changes): Restore an archived feature.
+- tickets__feature-delete (changes): Delete a feature no ticket was ever put in. Any other feature can only be archived.
+- tickets__usage-read (reads): Count the open tickets that use each label, actor and location, and each project's open tickets that are not done.
+- tickets__label-merge (changes): Merge one label into another: every ticket that had the first has the second, and the first is removed.
+- tickets__ticket-project-set (changes): Move a ticket to another project. It gets the next id in that project and the first column there that means the same; it keeps its comments, files and history, and leaves its feature. Its earlier id still opens it. It cannot be undone; move it back instead.
 A tool that changes something after the person says yes waits for them; tell them what you asked for.
 ```
 
@@ -1321,6 +1329,79 @@ A tool that changes something after the person says yes waits for them; tell the
   },
   "required": [
     "feature"
+  ]
+}
+```
+
+#### tickets.feature-delete
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "feature": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "feature"
+  ]
+}
+```
+
+#### tickets.usage-read
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {}
+}
+```
+
+#### tickets.label-merge
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "label": {
+      "type": "string",
+      "description": "The id of the label that goes away."
+    },
+    "into": {
+      "type": "string",
+      "description": "The id of the label that stays."
+    }
+  },
+  "required": [
+    "label",
+    "into"
+  ]
+}
+```
+
+#### tickets.ticket-project-set
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "ticket": {
+      "type": "string",
+      "description": "A ticket id, like TLK-529."
+    },
+    "project": {
+      "type": "string",
+      "description": "The id of the project it goes to."
+    }
+  },
+  "required": [
+    "ticket",
+    "project"
   ]
 }
 ```

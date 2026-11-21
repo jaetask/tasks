@@ -1,7 +1,7 @@
 // A ticket's page: what it is, where it is, its images, the questions on it
 // and its conversation, all from toolkit parts.
 
-import { PageBody, Thumbs, MarkdownText } from "@jaetask/toolkit/suite";
+import { Thumbs, MarkdownText } from "@jaetask/toolkit/suite";
 import { Button } from "@jaetask/toolkit/ui/button";
 import { Checkbox } from "@jaetask/toolkit/ui/checkbox";
 import {
@@ -104,11 +104,11 @@ const _KIND_DOT: Record<Kind, string> = {
 
 /** A ticket's own page, for its address. From a board it opens in a dialog with the same view. */
 export function TicketPage({ id }: { id: string }) {
-  const ticket = useRead<Ticket>("tickets.ticket-read", { ticket: id });
+  // The ticket's own title is the page's heading: its id and project sit above it, small.
   return (
-    <PageBody title={id} line={ticket ? undefined : "This ticket is not here."}>
+    <div className="max-w-5xl pt-1">
       <TicketView id={id} />
-    </PageBody>
+    </div>
   );
 }
 
@@ -584,7 +584,13 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
               <RailRow
                 data-property="actor"
                 muted={!actor}
-                icon={actor ? <Face name={actor.name} emoji={actor.icon} /> : <NoActor size={20} />}
+                icon={
+                  actor ? (
+                    <Face name={actor.name} emoji={actor.icon} colour={actor.colour} />
+                  ) : (
+                    <NoActor size={20} />
+                  )
+                }
               >
                 {actor ? actor.name : "No actor"}
               </RailRow>

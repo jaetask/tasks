@@ -2,7 +2,7 @@
 // list row, the badges for kinds and labels, and short forms of the parts
 // the pages use most.
 import { IconCircleDashed, IconUser } from "@tabler/icons-react";
-import { Composer, ListRow, PROJECT_ICONS } from "@jaetask/toolkit/suite";
+import { Composer, IconAvatar, ListRow, PROJECT_ICONS } from "@jaetask/toolkit/suite";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,11 +14,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@jaetask/toolkit/ui/alert-dialog";
-import { Avatar, AvatarFallback } from "@jaetask/toolkit/ui/avatar";
 import { Badge } from "@jaetask/toolkit/ui/badge";
 import { Button } from "@jaetask/toolkit/ui/button";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader } from "@jaetask/toolkit/ui/empty";
+import { Checkbox } from "@jaetask/toolkit/ui/checkbox";
 import { Input } from "@jaetask/toolkit/ui/input";
+import { Label } from "@jaetask/toolkit/ui/label";
 import {
   Select,
   SelectContent,
@@ -30,7 +31,7 @@ import { Tabs, TabsList, TabsTrigger } from "@jaetask/toolkit/ui/tabs";
 import { ToggleGroup, ToggleGroupItem } from "@jaetask/toolkit/ui/toggle-group";
 import { type ReactNode, useState } from "react";
 import { type Colour, KINDS, type Kind, type Project, type Ticket } from "./api.js";
-import { actorIcon, useApp } from "./app.js";
+import { useApp } from "./app.js";
 
 type Option = { id: string; name: string };
 
@@ -156,6 +157,23 @@ export function TabBar<T extends string>({
   );
 }
 
+export function Tick({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}) {
+  return (
+    <Label className="flex items-center gap-2 text-xs">
+      <Checkbox checked={checked} onCheckedChange={(v) => onChange(v === true)} />
+      {label}
+    </Label>
+  );
+}
+
 /** What a list shows when it has nothing. */
 export function Nothing({ text, action }: { text: string; action?: ReactNode }) {
   return (
@@ -189,13 +207,20 @@ export function Pill({ children, colour }: { children: ReactNode; colour?: Colou
   );
 }
 
-/** A round picture: an emoji, or the first letter of a name. */
-export function Face({ name, emoji }: { name: string; emoji?: string }) {
-  return (
-    <Avatar className="size-6 text-xs" aria-hidden>
-      <AvatarFallback>{emoji || (name.trim()[0] ?? "?").toUpperCase()}</AvatarFallback>
-    </Avatar>
-  );
+/** A round mark: an icon in its colour, an emoji, or the first letter of a name. */
+export function Face({
+  name,
+  emoji,
+  colour,
+  size = 24,
+}: {
+  name: string;
+  /** An icon name or an emoji. */
+  emoji?: string;
+  colour?: string;
+  size?: number;
+}) {
+  return <IconAvatar name={name} icon={emoji ?? ""} colour={colour ?? ""} size={size} />;
 }
 
 /** Delete for good, confirmed by typing the name. */
@@ -248,10 +273,26 @@ export function ProjectAvatar({ project }: { project: Project }) {
   return <Face name={project.name} emoji={projectEmoji(project)} />;
 }
 
-/** An actor's round picture: its icon, or the first letter of its name. */
-export function ActorAvatar({ id, name }: { id: string | null; name: string }) {
+/** An actor's round mark: its icon in its colour, or the first letter of its name. */
+export function ActorAvatar({
+  id,
+  name,
+  size,
+}: {
+  id: string | null;
+  name: string;
+  size?: number;
+}) {
   const { catalog } = useApp();
-  return <Face name={name || "?"} emoji={actorIcon(catalog, id)} />;
+  const actor = catalog.actors.find((a) => a.id === id);
+  return (
+    <Face
+      name={actor?.name || name || "?"}
+      emoji={actor?.icon ?? ""}
+      colour={actor?.colour ?? ""}
+      {...(size ? { size } : {})}
+    />
+  );
 }
 
 const KIND_COLOUR: Record<Kind, Colour | undefined> = {

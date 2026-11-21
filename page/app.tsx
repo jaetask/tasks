@@ -46,10 +46,5 @@ export function useRead<T>(action: string | null, input: unknown = {}): T | unde
 export const actorName = (catalog: Catalog, id: string) =>
   catalog.actors.find((a) => a.id === id)?.name || id;
 
-/** An actor's icon, or "" when it has none. */
-export const actorIcon = (catalog: Catalog, id: string | null) =>
-  catalog.actors.find((a) => a.id === id)?.icon ?? "";
-
-/** An actor's icon and name, as shown in lists and lines of text. */
-export const actorLabel = (catalog: Catalog, id: string) =>
-  `${actorIcon(catalog, id)} ${actorName(catalog, id)}`.trim();
+/** An actor's name, as shown in lists and lines of text. */
+export const actorLabel = (catalog: Catalog, id: string) => actorName(catalog, id);

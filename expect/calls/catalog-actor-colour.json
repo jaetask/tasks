@@ -1,0 +1,59 @@
+{
+  "steps": [
+    {
+      "call": "catalog.actor-create",
+      "input": {
+        "name": "Coder",
+        "icon": "robot",
+        "colour": "#48B685"
+      }
+    },
+    {
+      "call": "catalog.actor-create",
+      "input": {
+        "name": "Reviewer"
+      }
+    },
+    {
+      "call": "catalog.actor-icon-set",
+      "input": {
+        "actor": "a2",
+        "icon": "bug",
+        "colour": "#6366f1"
+      }
+    },
+    {
+      "call": "catalog.actor-icon-set",
+      "input": {
+        "actor": "a2",
+        "icon": "star"
+      }
+    },
+    {
+      "call": "catalog.actor-icon-set",
+      "input": {
+        "actor": "owner",
+        "icon": "person",
+        "colour": ""
+      }
+    },
+    {
+      "call": "catalog.actor-icon-set",
+      "input": {
+        "actor": "a1",
+        "icon": "nonsense"
+      }
+    },
+    {
+      "call": "catalog.actor-icon-set",
+      "input": {
+        "actor": "a1",
+        "icon": "robot",
+        "colour": "green"
+      }
+    },
+    {
+      "call": "catalog.catalog-read"
+    }
+  ]
+}

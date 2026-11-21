@@ -3,7 +3,13 @@
 
 export type Kind = "todo" | "doing" | "waiting" | "done";
 export type Colour = "blue" | "teal" | "green" | "amber" | "purple" | "pink";
-export type Actor = { id: string; name: string; icon: string; archived: boolean };
+export type Actor = { id: string; name: string; icon: string; colour: string; archived: boolean };
+export type Usage = {
+  labels: Record<string, number>;
+  projects: Record<string, number>;
+  actors: Record<string, number>;
+  locations: Record<string, number>;
+};
 export type Location = { id: string; name: string; archived: boolean };
 export type Column = { id: string; name: string; kind: Kind };
 export type Project = {
@@ -70,6 +76,9 @@ export type Feature = {
   favourite: boolean;
   archived: boolean;
   tickets: number;
+  /** Open tickets not in a done column, and tickets that are done or archived. */
+  left: number;
+  done: number;
 };
 export type Reaction = { emoji: string; actors: string[] };
 export type Reply = {

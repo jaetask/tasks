@@ -1,6 +1,6 @@
 // The Overview: every project's open tickets on one board, grouped by project, actor, location or
 // status, with the same filters as a project's board.
-import { PageBody, PageLink, Panel, ProjectIcon, ViewToggle } from "@jaetask/toolkit/suite";
+import { EmptyLine, ProjectIcon, ViewToggle, WorkPage } from "@jaetask/toolkit/suite";
 import { Button } from "@jaetask/toolkit/ui/button";
 import {
   DropdownMenu,
@@ -15,7 +15,7 @@ import {
   IconMapPin,
   IconUsers,
 } from "@tabler/icons-react";
-import { type ReactNode, useEffect } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { KINDS, type Kind, type Overview, type Ticket } from "./api.js";
 import { useApp, useRead } from "./app.js";
 import {
@@ -31,6 +31,7 @@ import {
 } from "./board.js";
 import { Nothing, projectLook } from "./local.js";
 import { StatusIcon } from "./pickers.js";
+import { NewProjectDialog } from "./settings.js";
 
 const VIEWS: readonly ViewChoice[] = [
   { id: "status", label: "Status", Icon: IconCircleCheck, heading: "Progress" },
@@ -48,6 +49,22 @@ type Group = {
   drop?: (ticket: string) => unknown;
 };
 
+/** The Overview before there is a project: one line and the way to make the first. */
+function FirstProject() {
+  const [adding, setAdding] = useState(false);
+  return (
+    <WorkPage title="Overview" help="Every project's tickets, lined up by what their column means.">
+      <EmptyLine>
+        A project is a body of work, such as an app. Create your first to get a board.
+      </EmptyLine>
+      <div>
+        <Button onClick={() => setAdding(true)}>Create a project</Button>
+      </div>
+      <NewProjectDialog open={adding} onOpenChange={setAdding} />
+    </WorkPage>
+  );
+}
+
 export function OverviewPage() {
   const { catalog, act, query } = useApp();
   const projects = catalog.projects.filter((p) => !p.archived);
@@ -59,21 +76,7 @@ export function OverviewPage() {
   useEffect(() => {
     if (asked && asked !== filters.actor) set({ actor: asked });
   }, [asked]);
-  if (projects.length === 0) {
-    return (
-      <PageBody
-        title="Overview"
-        line="Every project's tickets, lined up by what their column means."
-      >
-        <Panel id="start" title="Projects" line="A project is a body of work, such as an app.">
-          <Nothing
-            text="Create your first project to get a board."
-            action={<PageLink to="/settings/projects/new">Create a project</PageLink>}
-          />
-        </Panel>
-      </PageBody>
-    );
-  }
+  if (projects.length === 0) return <FirstProject />;
   const view = VIEWS.some((v) => v.id === filters.view) ? filters.view : "status";
   const every = (overview?.kinds ?? []).flatMap((k) => k.tickets);
   const chosen = filters.projects.filter((id) => projects.some((p) => p.id === id));
@@ -138,10 +141,10 @@ export function OverviewPage() {
   if (filters.hideEmpty) groups = groups.filter((g) => g.tickets.length > 0);
 
   return (
-    <PageBody
+    <WorkPage
       wide
       title="Overview"
-      line="Every project's open tickets on one board. Drag a ticket to change what the view groups by."
+      help="Every project's open tickets on one board. Drag a ticket to change what the view groups by."
       action={<ViewToggle views={VIEWS} value={view} onChange={(v) => set({ view: v })} />}
     >
       <FilterBar
@@ -214,6 +217,6 @@ export function OverviewPage() {
         <Nothing text="No tickets match. Untick Hide empty columns to show every column." />
       )}
       <TicketDialog />
-    </PageBody>
+    </WorkPage>
   );
 }

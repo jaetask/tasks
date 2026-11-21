@@ -221,7 +221,9 @@ export function ProjectsNav({ collapsed }: { collapsed: boolean }) {
               </div>
             </ContextMenuTrigger>
             <ContextMenuContent>
-              <ContextMenuItem onSelect={() => go(`/p/${p.id}/edit`)}>Edit project</ContextMenuItem>
+              <ContextMenuItem onSelect={() => go("/settings/projects")}>
+                Project settings
+              </ContextMenuItem>
             </ContextMenuContent>
           </ContextMenu>
           {!collapsed && (

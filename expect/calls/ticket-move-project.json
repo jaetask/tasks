@@ -1,0 +1,130 @@
+{
+  "steps": [
+    {
+      "call": "catalog.actor-create",
+      "input": {
+        "name": "Coder"
+      }
+    },
+    {
+      "call": "catalog.project-create",
+      "input": {
+        "name": "Talk",
+        "prefix": "TLK"
+      }
+    },
+    {
+      "call": "catalog.project-create",
+      "input": {
+        "name": "Money",
+        "prefix": "MNY"
+      }
+    },
+    {
+      "call": "catalog.label-create",
+      "input": {
+        "name": "bug",
+        "colour": "pink"
+      }
+    },
+    {
+      "call": "tickets.feature-create",
+      "input": {
+        "project": "TLK",
+        "name": "Voice"
+      }
+    },
+    {
+      "call": "tickets.ticket-create",
+      "input": {
+        "project": "MNY",
+        "title": "Export to a file"
+      }
+    },
+    {
+      "call": "tickets.ticket-create",
+      "input": {
+        "project": "TLK",
+        "title": "Count the cost",
+        "labels": ["l1"],
+        "feature": "f1",
+        "assignee": "a1"
+      }
+    },
+    {
+      "as": "a1",
+      "call": "tickets.ticket-claim",
+      "input": {
+        "ticket": "TLK-1"
+      }
+    },
+    {
+      "as": "a1",
+      "call": "comments.comment-add",
+      "input": {
+        "ticket": "TLK-1",
+        "text": "This is about money."
+      }
+    },
+    {
+      "call": "tickets.ticket-project-set",
+      "input": {
+        "ticket": "TLK-1",
+        "project": "TLK"
+      }
+    },
+    {
+      "call": "tickets.ticket-project-set",
+      "input": {
+        "ticket": "TLK-1",
+        "project": "NOPE"
+      }
+    },
+    {
+      "as": "a1",
+      "call": "tickets.ticket-project-set",
+      "input": {
+        "ticket": "TLK-1",
+        "project": "MNY"
+      }
+    },
+    {
+      "call": "tickets.ticket-read",
+      "input": {
+        "ticket": "TLK-1"
+      }
+    },
+    {
+      "call": "comments.conversation-read",
+      "input": {
+        "ticket": "MNY-2"
+      }
+    },
+    {
+      "call": "tickets.ticket-create",
+      "input": {
+        "project": "TLK",
+        "title": "Next in Talk"
+      }
+    },
+    {
+      "call": "history.change-undo",
+      "input": {
+        "change": "h8"
+      }
+    },
+    {
+      "call": "tickets.ticket-project-set",
+      "input": {
+        "ticket": "MNY-2",
+        "project": "TLK"
+      }
+    },
+    {
+      "call": "tickets.ticket-read",
+      "input": {
+        "ticket": "TLK-1"
+      }
+    }
+  ]
+}

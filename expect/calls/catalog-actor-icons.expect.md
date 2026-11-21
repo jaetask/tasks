@@ -25,18 +25,21 @@
       "id": "owner",
       "name": "Sam",
       "icon": "🧑",
+      "colour": "",
       "archived": false
     },
     {
       "id": "a1",
       "name": "Coder",
       "icon": "",
+      "colour": "",
       "archived": false
     },
     {
       "id": "a2",
       "name": "Reviewer",
       "icon": "🔎",
+      "colour": "",
       "archived": false
     }
   ],

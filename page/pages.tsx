@@ -1,14 +1,6 @@
 // The screens that show things. Each is a page of panels from the toolkit;
 // anything that is edited opens its own edit page (see edits.tsx).
-import {
-  EditLink,
-  ListCard,
-  ListRow,
-  PageBody,
-  PageLink,
-  Panel,
-  PrimaryLink,
-} from "@jaetask/toolkit/suite";
+import { ListCard, ListRow, WorkPage, PageLink, Panel, PrimaryLink } from "@jaetask/toolkit/suite";
 import { Button } from "@jaetask/toolkit/ui/button";
 import { Card } from "@jaetask/toolkit/ui/card";
 import { useState } from "react";
@@ -24,28 +16,20 @@ import {
   when,
 } from "./api.js";
 import { actorLabel, useApp, useRead } from "./app.js";
-import {
-  ActorAvatar,
-  LabelChip,
-  Nothing,
-  Picker,
-  Pill,
-  projectEmoji,
-  Say,
-  TabBar,
-} from "./local.js";
+import { titleIcon } from "./board.js";
+import { ActorAvatar, Nothing, Picker, Pill, Say, TabBar } from "./local.js";
 
-export const projectTitle = (p: Project, screen: string) =>
-  `${projectEmoji(p)} ${p.name} · ${screen}`.trim();
+export const projectTitle = (p: Project, screen: string) => `${p.name} · ${screen}`;
 
 export function FeaturesPage({ project }: { project: Project }) {
   const { go } = useApp();
   const [archived, setArchived] = useState(false);
   const features = useRead<Feature[]>("tickets.feature-find", { project: project.id, archived });
   return (
-    <PageBody
+    <WorkPage
+      icon={titleIcon(project)}
       title={projectTitle(project, "Features")}
-      line="A feature is one part of the project. It groups the tickets for that part."
+      help="A feature is one part of the project. It groups the tickets for that part."
       action={<PrimaryLink to={`/p/${project.id}/features/new`}>New feature</PrimaryLink>}
     >
       <Panel id="features" title="Features" line="Open one to rename, favourite or archive it.">
@@ -92,7 +76,7 @@ export function FeaturesPage({ project }: { project: Project }) {
           <Nothing text="No features yet. Add one for each part of the project, such as Voice." />
         )}
       </Panel>
-    </PageBody>
+    </WorkPage>
   );
 }
 
@@ -138,9 +122,9 @@ export function InputPage() {
     ...(project ? { project } : {}),
   });
   return (
-    <PageBody
+    <WorkPage
       title="Human input"
-      line="Questions your agents asked you on a ticket. An agent waits for your answer before it goes on."
+      help="Questions your agents asked you on a ticket. An agent waits for your answer before it goes on."
     >
       <Panel id="input" title="Questions" line="Answer here, or on the ticket.">
         <div className="flex flex-wrap items-center gap-2">
@@ -171,7 +155,7 @@ export function InputPage() {
           />
         )}
       </Panel>
-    </PageBody>
+    </WorkPage>
   );
 }
 
@@ -186,9 +170,9 @@ export function RepliesPage() {
     ...(actor ? { actor } : {}),
   });
   return (
-    <PageBody
+    <WorkPage
       title="Agent inbox"
-      line="What was said to your agents: replies to their comments, comments on their tickets, and your answers."
+      help="What was said to your agents: replies to their comments, comments on their tickets, and your answers."
     >
       <Panel
         id="replies"
@@ -251,7 +235,7 @@ export function RepliesPage() {
           <Nothing text="Nothing here." />
         )}
       </Panel>
-    </PageBody>
+    </WorkPage>
   );
 }
 
@@ -264,9 +248,9 @@ export function ArchivePage() {
     (t) => state === "all" || t.state === state,
   );
   return (
-    <PageBody
+    <WorkPage
       title="Archive"
-      line="Archived and canceled tickets are kept here until you restore them."
+      help="Archived and canceled tickets are kept here until you restore them."
     >
       <Panel
         id="archive"
@@ -311,7 +295,7 @@ export function ArchivePage() {
           <Nothing text="Nothing here." />
         )}
       </Panel>
-    </PageBody>
+    </WorkPage>
   );
 }
 
@@ -319,7 +303,7 @@ export function ChangesPage() {
   const { catalog, act } = useApp();
   const changes = useRead<Change[]>("history.change-list", { limit: 200 });
   return (
-    <PageBody title="Changes" line="Every change, newest first, with who made it.">
+    <WorkPage title="Changes" help="Every change, newest first, with who made it.">
       <Panel id="changes" title="Changes" line="Undo puts back what a change changed.">
         <ListCard>
           {[...(changes ?? [])].reverse().map((c) => (
@@ -344,7 +328,7 @@ export function ChangesPage() {
           ))}
         </ListCard>
       </Panel>
-    </PageBody>
+    </WorkPage>
   );
 }
 
@@ -354,9 +338,9 @@ export function ConnectionsPage() {
   const waiting = connections.filter((c) => c.state === "pairing");
   const rest = connections.filter((c) => c.state !== "pairing");
   return (
-    <PageBody
+    <WorkPage
       title="Connections"
-      line="An agent connects once, with your OK. You choose what it may do and which actor it is."
+      help="An agent connects once, with your OK. You choose what it may do and which actor it is."
     >
       <Panel
         id="waiting"
@@ -410,110 +394,6 @@ export function ConnectionsPage() {
           <Nothing text="Nothing is connected yet." />
         )}
       </Panel>
-    </PageBody>
-  );
-}
-
-export function SettingsPage({ onSignOut }: { onSignOut: () => void }) {
-  const { catalog } = useApp();
-  const owner = catalog.actors.find((a) => a.id === OWNER);
-  return (
-    <PageBody
-      title="Settings"
-      line="You, your agents' actors, your projects, your labels and your locations."
-    >
-      <Panel
-        id="you"
-        title="You"
-        line="Your changes show under this name."
-        action={<EditLink to="/settings/owner" />}
-      >
-        <Card className="p-4">
-          <b>{`${owner?.icon ?? ""} ${owner?.name ?? ""}`.trim()}</b>
-        </Card>
-      </Panel>
-      <Panel
-        id="actors"
-        title="Actors"
-        line="One for each of your agents. Every change shows its actor."
-        action={<PageLink to="/settings/actors/new">Add actor</PageLink>}
-      >
-        {catalog.actors.length > 1 ? (
-          <ListCard>
-            {catalog.actors
-              .filter((a) => a.id !== OWNER)
-              .map((a) => (
-                <ListRow key={a.id} to={`/settings/actors/${a.id}`}>
-                  <b>{`${a.icon} ${a.name}`.trim()}</b>
-                  {a.archived && <span className="tk-muted">archived</span>}
-                </ListRow>
-              ))}
-          </ListCard>
-        ) : (
-          <Nothing text="No actors yet. Add one for each agent, such as Coder." />
-        )}
-      </Panel>
-      <Panel
-        id="projects"
-        title="Projects"
-        line="Each has its own board, backlog, features and inbox."
-        action={<PageLink to="/settings/projects/new">New project</PageLink>}
-      >
-        {catalog.projects.length > 0 ? (
-          <ListCard>
-            {catalog.projects.map((p) => (
-              <ListRow key={p.id} to={`/p/${p.id}/edit`}>
-                <b>{`${projectEmoji(p)} ${p.name}`.trim()}</b>
-                <span className="tk-muted">{`${p.id}${p.archived ? " · archived" : ""}`}</span>
-              </ListRow>
-            ))}
-          </ListCard>
-        ) : (
-          <Nothing text="No projects yet." />
-        )}
-      </Panel>
-      <Panel
-        id="labels"
-        title="Labels"
-        line="Coloured tags for tickets."
-        action={<PageLink to="/settings/labels/new">New label</PageLink>}
-      >
-        {catalog.labels.length > 0 ? (
-          <ListCard>
-            {catalog.labels.map((l) => (
-              <ListRow key={l.id} to={`/settings/labels/${l.id}`}>
-                <LabelChip label={l} />
-              </ListRow>
-            ))}
-          </ListCard>
-        ) : (
-          <Nothing text="No labels yet. Add one, such as bug." />
-        )}
-      </Panel>
-      <Panel
-        id="locations"
-        title="Locations"
-        line="Where a ticket's work is done, such as a machine."
-        action={<PageLink to="/settings/locations/new">New location</PageLink>}
-      >
-        {catalog.locations.length > 0 ? (
-          <ListCard>
-            {catalog.locations.map((l) => (
-              <ListRow key={l.id} to={`/settings/locations/${l.id}`}>
-                <b>{l.name}</b>
-                {l.archived && <span className="tk-muted">archived</span>}
-              </ListRow>
-            ))}
-          </ListCard>
-        ) : (
-          <Nothing text="No locations yet. Add one for each place your agents work." />
-        )}
-      </Panel>
-      <Panel id="session" title="This browser" line="Signing out ends this session only.">
-        <Button variant="secondary" onClick={onSignOut}>
-          Sign out
-        </Button>
-      </Panel>
-    </PageBody>
+    </WorkPage>
   );
 }

@@ -19,16 +19,19 @@
 | catalog.catalog-read | read |  | List the actors, the projects with their columns, the labels and the locations. |
 | catalog.actor-create | write | catalog-changed | Add an actor for an agent. A Connection acts as an actor. |
 | catalog.actor-rename | write | catalog-changed | Rename an actor. The owner's actor id is owner. |
-| catalog.actor-icon-set | write | catalog-changed | Set the icon shown beside an actor's name: an emoji, or empty for none. |
+| catalog.actor-icon-set | write | catalog-changed | Set an actor's mark: an icon name or an emoji, or empty for none, and the colour of the icon. |
 | catalog.actor-archive | write | catalog-changed | Archive an actor. It can no longer act; what it did stays visible. |
 | catalog.actor-restore | write | catalog-changed | Restore an archived actor. |
+| catalog.actor-delete | write | catalog-changed | Delete an actor that was never used: no ticket, no change and no Connection is its. Any other actor can only be archived. |
 | catalog.project-create | write | catalog-changed | Create a project. Its board starts with the columns To do, Doing, Review and Done. |
-| catalog.project-edit | write | catalog-changed | Change a project's name, its icon or its colour. Its prefix and ticket ids stay the same. |
+| catalog.project-edit | write | catalog-changed | Change a project's name, its icon or its colour. Its prefix is changed with project-prefix-set. |
 | catalog.project-card-set | write | catalog-changed | Choose what a ticket's card shows on a project's board and backlog, besides its title. With null, the usual set. |
 | catalog.project-ordering-set | write | catalog-changed | Choose how the cards of a project's columns are ordered: created (oldest first), priority (most urgent first), due (soonest first) or updated (latest first). |
 | catalog.project-move | write | catalog-changed | Move a project to another place in the list of projects. |
 | catalog.project-archive | write | catalog-changed | Archive a project. Its tickets are kept and it can be restored. |
 | catalog.project-restore | write | catalog-changed | Restore an archived project. |
+| catalog.project-delete | write | catalog-changed | Delete a project that holds nothing: no ticket, feature or inbox item. Any other project can only be archived. |
+| catalog.project-prefix-set | write | catalog-changed | Give a project another prefix. The prefix is the project's id and starts every one of its ticket ids, so each ticket gets a new id with the same number: TLK-12 becomes TALK-12. A ticket's earlier id still opens it. It cannot be undone, and changes made to the project before it can no longer be undone. |
 | catalog.column-add | write | catalog-changed | Add a column to a project's board. |
 | catalog.column-rename | write | catalog-changed | Rename a column. |
 | catalog.column-kind-set | write | catalog-changed | Set what a column means: todo, doing, waiting or done. |
@@ -42,6 +45,7 @@
 | catalog.location-rename | write | catalog-changed | Rename a location. |
 | catalog.location-archive | write | catalog-changed | Archive a location. No more tickets can be given it; tickets that have it keep showing it. |
 | catalog.location-restore | write | catalog-changed | Restore an archived location. |
+| catalog.location-delete | write | catalog-changed | Delete a location no ticket has. Any other location can only be archived. |
 
 ### Cards
 
@@ -66,16 +70,19 @@ Tools:
 - catalog__catalog-read (reads): List the actors, the projects with their columns, the labels and the locations.
 - catalog__actor-create (changes): Add an actor for an agent. A Connection acts as an actor.
 - catalog__actor-rename (changes): Rename an actor. The owner's actor id is owner.
-- catalog__actor-icon-set (changes): Set the icon shown beside an actor's name: an emoji, or empty for none.
+- catalog__actor-icon-set (changes): Set an actor's mark: an icon name or an emoji, or empty for none, and the colour of the icon.
 - catalog__actor-archive (changes): Archive an actor. It can no longer act; what it did stays visible.
 - catalog__actor-restore (changes): Restore an archived actor.
+- catalog__actor-delete (changes): Delete an actor that was never used: no ticket, no change and no Connection is its. Any other actor can only be archived.
 - catalog__project-create (changes): Create a project. Its board starts with the columns To do, Doing, Review and Done.
-- catalog__project-edit (changes): Change a project's name, its icon or its colour. Its prefix and ticket ids stay the same.
+- catalog__project-edit (changes): Change a project's name, its icon or its colour. Its prefix is changed with project-prefix-set.
 - catalog__project-card-set (changes): Choose what a ticket's card shows on a project's board and backlog, besides its title. With null, the usual set.
 - catalog__project-ordering-set (changes): Choose how the cards of a project's columns are ordered: created (oldest first), priority (most urgent first), due (soonest first) or updated (latest first).
 - catalog__project-move (changes): Move a project to another place in the list of projects.
 - catalog__project-archive (changes): Archive a project. Its tickets are kept and it can be restored.
 - catalog__project-restore (changes): Restore an archived project.
+- catalog__project-delete (changes): Delete a project that holds nothing: no ticket, feature or inbox item. Any other project can only be archived.
+- catalog__project-prefix-set (changes): Give a project another prefix. The prefix is the project's id and starts every one of its ticket ids, so each ticket gets a new id with the same number: TLK-12 becomes TALK-12. A ticket's earlier id still opens it. It cannot be undone, and changes made to the project before it can no longer be undone.
 - catalog__column-add (changes): Add a column to a project's board.
 - catalog__column-rename (changes): Rename a column.
 - catalog__column-kind-set (changes): Set what a column means: todo, doing, waiting or done.
@@ -89,6 +96,7 @@ Tools:
 - catalog__location-rename (changes): Rename a location.
 - catalog__location-archive (changes): Archive a location. No more tickets can be given it; tickets that have it keep showing it.
 - catalog__location-restore (changes): Restore an archived location.
+- catalog__location-delete (changes): Delete a location no ticket has. Any other location can only be archived.
 A tool that changes something after the person says yes waits for them; tell them what you asked for.
 ```
 
@@ -120,7 +128,12 @@ A tool that changes something after the person says yes waits for them; tell the
       "default": "",
       "type": "string",
       "maxLength": 16,
-      "description": "An emoji, or empty for none."
+      "description": "An icon name (folder, robot, code, checklist, layout, rocket, bolt, flame, star, heart, bulb, target, flag, chart, wallet, dollar, person, table, brand-x, globe, cloud, database, terminal, tool, bug, palette, book, coffee), an emoji, or empty for none."
+    },
+    "colour": {
+      "description": "The colour of the icon, as six-digit hex. Empty for the usual one.",
+      "type": "string",
+      "pattern": "^(#[0-9a-fA-F]{6})?$"
     }
   },
   "required": [
@@ -165,7 +178,12 @@ A tool that changes something after the person says yes waits for them; tell the
     "icon": {
       "type": "string",
       "maxLength": 16,
-      "description": "An emoji, or empty for none."
+      "description": "An icon name (folder, robot, code, checklist, layout, rocket, bolt, flame, star, heart, bulb, target, flag, chart, wallet, dollar, person, table, brand-x, globe, cloud, database, terminal, tool, bug, palette, book, coffee), an emoji, or empty for none."
+    },
+    "colour": {
+      "description": "The colour of the icon, as six-digit hex. Empty for the usual one.",
+      "type": "string",
+      "pattern": "^(#[0-9a-fA-F]{6})?$"
     }
   },
   "required": [
@@ -193,6 +211,23 @@ A tool that changes something after the person says yes waits for them; tell the
 ```
 
 #### catalog.actor-restore
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "actor": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "actor"
+  ]
+}
+```
+
+#### catalog.actor-delete
 
 ```json
 {
@@ -389,6 +424,46 @@ A tool that changes something after the person says yes waits for them; tell the
   },
   "required": [
     "project"
+  ]
+}
+```
+
+#### catalog.project-delete
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "project"
+  ]
+}
+```
+
+#### catalog.project-prefix-set
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string"
+    },
+    "prefix": {
+      "type": "string",
+      "pattern": "^[A-Z]{1,6}$",
+      "description": "The project's id and the start of its ticket ids, like TLK."
+    }
+  },
+  "required": [
+    "project",
+    "prefix"
   ]
 }
 ```
@@ -680,6 +755,23 @@ A tool that changes something after the person says yes waits for them; tell the
 ```
 
 #### catalog.location-restore
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "location": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "location"
+  ]
+}
+```
+
+#### catalog.location-delete
 
 ```json
 {

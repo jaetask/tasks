@@ -99,7 +99,10 @@ export type Ordering = z.infer<typeof Ordering>;
 export const Actor = z.object({
   id: z.string(),
   name: z.string(),
-  icon: z.string().describe("An emoji shown beside the actor's name. Empty for none."),
+  icon: z
+    .string()
+    .describe("The actor's mark: an icon name such as robot, or an emoji. Empty for none."),
+  colour: z.string().describe("The colour of its icon, as six-digit hex. Empty for the usual one."),
   archived: z.boolean(),
 });
 export type Actor = z.infer<typeof Actor>;
@@ -159,12 +162,16 @@ export type Catalog = {
   location(id: string): Location;
   /** The first column of this kind on a project's board, or undefined. */
   firstColumn(project: string, kind: Kind): Column | undefined;
-  createActor(name: string, icon: string): Actor;
+  createActor(name: string, icon: string, colour?: string): Actor;
   renameActor(id: string, name: string): Actor;
-  setActorIcon(id: string, icon: string): Actor;
+  setActorIcon(id: string, icon: string, colour?: string): Actor;
   archiveActor(id: string, archived: boolean): Actor;
+  /** Deletes an actor. The caller checks first that nothing was ever done as it. */
+  deleteActor(id: string): Actor;
   createProject(name: string, prefix: string): Project;
   archiveProject(id: string, archived: boolean): Project;
+  /** Deletes a project and its columns. The caller checks first that it holds nothing. */
+  deleteProject(id: string): Project;
   editProject(
     id: string,
     patch: {
@@ -200,6 +207,8 @@ export type Catalog = {
   createLocation(name: string): Location;
   renameLocation(id: string, name: string): Location;
   archiveLocation(id: string, archived: boolean): Location;
+  /** Deletes a location. The caller checks first that no ticket has it. */
+  deleteLocation(id: string): Location;
 };
 
 export function migrateCatalog(db: DatabaseSync): void {
@@ -210,6 +219,9 @@ export function migrateCatalog(db: DatabaseSync): void {
   const actorColumns = db.prepare("PRAGMA table_info(actors)").all() as { name: string }[];
   if (!actorColumns.some((c) => c.name === "icon")) {
     db.exec("ALTER TABLE actors ADD COLUMN icon TEXT NOT NULL DEFAULT ''");
+  }
+  if (!actorColumns.some((c) => c.name === "colour")) {
+    db.exec("ALTER TABLE actors ADD COLUMN colour TEXT NOT NULL DEFAULT ''");
   }
   db.exec(
     "CREATE TABLE IF NOT EXISTS locations (id TEXT PRIMARY KEY, name TEXT NOT NULL, archived INTEGER NOT NULL DEFAULT 0)",
@@ -250,7 +262,7 @@ export function migrateCatalog(db: DatabaseSync): void {
   db.prepare("INSERT OR IGNORE INTO actors (id, name) VALUES (?, '')").run(OWNER);
 }
 
-type ActorRow = { id: string; name: string; icon: string; archived: number };
+type ActorRow = { id: string; name: string; icon: string; colour: string; archived: number };
 type LocationRow = { id: string; name: string; archived: number };
 type ProjectRow = {
   id: string;
@@ -285,6 +297,7 @@ export function sqliteCatalog(db: DatabaseSync, rows: Rows): Catalog {
     id: r.id,
     name: r.name,
     icon: r.icon,
+    colour: r.colour,
     archived: r.archived === 1,
   });
   const toLocation = (r: LocationRow): Location => ({
@@ -387,10 +400,10 @@ export function sqliteCatalog(db: DatabaseSync, rows: Rows): Catalog {
     location,
     firstColumn: (projectId, kind) => project(projectId).columns.find((c) => c.kind === kind),
 
-    createActor: (name, icon) => {
+    createActor: (name, icon, colour = "") => {
       freeActorName(name);
       const id = nextId(db, "a");
-      rows.insert("actors", { id, name, icon, archived: 0 });
+      rows.insert("actors", { id, name, icon, colour, archived: 0 });
       return actor(id);
     },
     renameActor: (id, name) => {
@@ -399,10 +412,16 @@ export function sqliteCatalog(db: DatabaseSync, rows: Rows): Catalog {
       rows.update("actors", id, { name });
       return actor(id);
     },
-    setActorIcon: (id, icon) => {
+    setActorIcon: (id, icon, colour) => {
       actor(id);
-      rows.update("actors", id, { icon });
+      rows.update("actors", id, { icon, ...(colour === undefined ? {} : { colour }) });
       return actor(id);
+    },
+    deleteActor: (id) => {
+      const found = actor(id);
+      if (id === OWNER) throw new Refusal("owner", "The owner cannot be deleted.");
+      rows.remove("actors", id);
+      return found;
     },
     archiveActor: (id, archived) => {
       actor(id);
@@ -467,6 +486,15 @@ export function sqliteCatalog(db: DatabaseSync, rows: Rows): Catalog {
       project(id);
       rows.update("projects", id, { archived: archived ? 1 : 0 });
       return project(id);
+    },
+
+    deleteProject: (id) => {
+      const found = project(id);
+      for (const column of found.columns) rows.remove("columns", column.id);
+      rows.remove("projects", id);
+      for (const [i, p] of projectRows().entries())
+        rows.update("projects", p.id, { position: i + 1 });
+      return found;
     },
 
     addColumn: (projectId, name, kind, before) => {
@@ -552,6 +580,11 @@ export function sqliteCatalog(db: DatabaseSync, rows: Rows): Catalog {
       location(id);
       rows.update("locations", id, { archived: archived ? 1 : 0 });
       return location(id);
+    },
+    deleteLocation: (id) => {
+      const found = location(id);
+      rows.remove("locations", id);
+      return found;
     },
   };
 }

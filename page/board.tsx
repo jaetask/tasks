@@ -4,7 +4,7 @@
 import {
   EditLink,
   Link,
-  PageBody,
+  WorkPage,
   PrimaryLink,
   ProjectIcon,
   PropertyPills,
@@ -12,7 +12,6 @@ import {
   ViewToggle,
 } from "@jaetask/toolkit/suite";
 import { Button } from "@jaetask/toolkit/ui/button";
-import { Checkbox } from "@jaetask/toolkit/ui/checkbox";
 import {
   Collapsible,
   CollapsibleContent,
@@ -27,7 +26,6 @@ import {
   DropdownMenuTrigger,
 } from "@jaetask/toolkit/ui/dropdown-menu";
 import { Input } from "@jaetask/toolkit/ui/input";
-import { Label } from "@jaetask/toolkit/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@jaetask/toolkit/ui/popover";
 import {
   IconAdjustmentsHorizontal,
@@ -53,7 +51,8 @@ import {
 } from "./api.js";
 import { useApp, useRead } from "./app.js";
 import { ServiceIcon, service } from "@jaetask/toolkit/suite";
-import { Nothing, Picker, projectEmoji, projectLook, NoActor } from "./local.js";
+import { ActorAvatar, Nothing, Picker, projectLook, NoActor, Tick } from "./local.js";
+export { Tick };
 import { LabelDot, PriorityIcon, StatusIcon } from "./pickers.js";
 import {
   ActorPicker,
@@ -208,9 +207,7 @@ export function FilterBar({
           options={[
             { id: "", name: "All actors" },
             { id: "none", name: "Unassigned" },
-            ...catalog.actors
-              .filter((a) => !a.archived)
-              .map((a) => ({ id: a.id, name: `${a.icon} ${a.name}`.trim() })),
+            ...catalog.actors.filter((a) => !a.archived).map((a) => ({ id: a.id, name: a.name })),
           ]}
         />
         {lead}
@@ -289,23 +286,6 @@ export function FilterBar({
   );
 }
 
-export function Tick({
-  label,
-  checked,
-  onChange,
-}: {
-  label: string;
-  checked: boolean;
-  onChange: (checked: boolean) => void;
-}) {
-  return (
-    <Label className="flex items-center gap-2 text-xs">
-      <Checkbox checked={checked} onCheckedChange={(v) => onChange(v === true)} />
-      {label}
-    </Label>
-  );
-}
-
 export const titleCase = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 const DRAG = "application/x-tasks-ticket";
@@ -372,14 +352,7 @@ export function TicketCard({
   const shown = new Set(show ?? project?.card ?? []);
   const has = (property: string) => shown.has(property);
   const open = () => go(`${path}?ticket=${ticket.id}`);
-  const avatar = actor && (
-    <span
-      aria-hidden
-      className="inline-flex size-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold"
-    >
-      {actor.icon || actor.name.slice(0, 1)}
-    </span>
-  );
+  const avatar = actor && <ActorAvatar id={actor.id} name={actor.name} />;
   const status = <StatusIcon kind={ticket.column.kind} backlog={ticket.backlog} />;
   // Status and actor share a line when both are shown; alone, each takes less room.
   const together = has("status") && has("actor");
@@ -824,7 +797,9 @@ export type Group = {
 };
 
 const title = (project: Project, screen?: string) =>
-  `${projectEmoji(project)} ${project.name}${screen ? ` · ${screen}` : ""}`.trim();
+  `${project.name}${screen ? ` · ${screen}` : ""}`;
+/** A project's icon, for the start of a page's title. */
+export const titleIcon = (project: Project) => <ProjectIcon {...projectLook(project)} size={18} />;
 
 export function BoardPage({ project }: { project: Project }) {
   const { catalog, act } = useApp();
@@ -920,8 +895,9 @@ export function BoardPage({ project }: { project: Project }) {
     done: "no done column, so nothing counts as finished",
   };
   return (
-    <PageBody
+    <WorkPage
       wide
+      icon={titleIcon(project)}
       title={title(project)}
       action={
         <div className="flex flex-wrap items-center gap-2">
@@ -991,7 +967,7 @@ export function BoardPage({ project }: { project: Project }) {
         <Nothing text="No tickets match. Untick Hide empty columns to show every column." />
       )}
       <TicketDialog />
-    </PageBody>
+    </WorkPage>
   );
 }
 
@@ -1004,10 +980,11 @@ export function BacklogPage({ project }: { project: Project }) {
   const backlog = useRead<Ticket[]>("tickets.backlog-read", { project: project.id });
   const tickets = ordered(narrowed(backlog ?? [], filters), project.ordering);
   return (
-    <PageBody
+    <WorkPage
       wide
+      icon={titleIcon(project)}
       title={title(project, "Backlog")}
-      line="Tickets wait here until you put them on the board. Agents looking for work do not see them."
+      help="Tickets wait here until you put them on the board. Agents looking for work do not see them."
       action={
         <div className="flex flex-wrap items-center gap-2">
           <Display project={project} />
@@ -1047,6 +1024,6 @@ export function BacklogPage({ project }: { project: Project }) {
         />
       )}
       <TicketDialog />
-    </PageBody>
+    </WorkPage>
   );
 }

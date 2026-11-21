@@ -101,7 +101,7 @@ export function ActorPicker({
           .map((a) => ({
             id: a.id,
             name: a.name,
-            icon: <Face name={a.name} emoji={a.icon} />,
+            icon: <Face name={a.name} emoji={a.icon} colour={a.colour} />,
             ...(a.id === OWNER ? {} : { group: "Agents" }),
           })),
       ]}

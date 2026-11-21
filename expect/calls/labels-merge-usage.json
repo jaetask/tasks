@@ -1,0 +1,127 @@
+{
+  "steps": [
+    {
+      "call": "catalog.actor-create",
+      "input": {
+        "name": "Coder"
+      }
+    },
+    {
+      "call": "catalog.location-create",
+      "input": {
+        "name": "Laptop"
+      }
+    },
+    {
+      "call": "catalog.project-create",
+      "input": {
+        "name": "Talk",
+        "prefix": "TLK"
+      }
+    },
+    {
+      "call": "catalog.label-create",
+      "input": {
+        "name": "migration",
+        "colour": "blue"
+      }
+    },
+    {
+      "call": "catalog.label-create",
+      "input": {
+        "name": "migration-fidelity",
+        "colour": "teal"
+      }
+    },
+    {
+      "call": "catalog.label-create",
+      "input": {
+        "name": "bug",
+        "colour": "pink"
+      }
+    },
+    {
+      "call": "tickets.ticket-create",
+      "input": {
+        "project": "TLK",
+        "title": "Bring the notes over",
+        "labels": ["l1", "l2"],
+        "assignee": "a1",
+        "location": "p1"
+      }
+    },
+    {
+      "call": "tickets.ticket-create",
+      "input": {
+        "project": "TLK",
+        "title": "Check the notes",
+        "labels": ["l2"]
+      }
+    },
+    {
+      "call": "tickets.ticket-create",
+      "input": {
+        "project": "TLK",
+        "title": "Fix the crash",
+        "labels": ["l3"]
+      }
+    },
+    {
+      "as": "a1",
+      "call": "tickets.ticket-finish",
+      "input": {
+        "ticket": "TLK-3"
+      }
+    },
+    {
+      "call": "tickets.usage-read"
+    },
+    {
+      "call": "tickets.label-merge",
+      "input": {
+        "label": "l2",
+        "into": "l2"
+      }
+    },
+    {
+      "call": "tickets.label-merge",
+      "input": {
+        "label": "l2",
+        "into": "l9"
+      }
+    },
+    {
+      "as": "a1",
+      "call": "tickets.label-merge",
+      "input": {
+        "label": "l2",
+        "into": "l1"
+      }
+    },
+    {
+      "call": "tickets.label-merge",
+      "input": {
+        "label": "l2",
+        "into": "l1"
+      }
+    },
+    {
+      "call": "tickets.usage-read"
+    },
+    {
+      "call": "history.change-list",
+      "input": {
+        "limit": 1
+      }
+    },
+    {
+      "call": "history.change-undo",
+      "input": {
+        "change": "h11"
+      }
+    },
+    {
+      "call": "tickets.usage-read"
+    }
+  ]
+}

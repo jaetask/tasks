@@ -72,6 +72,8 @@
 | tickets__feature-edit |  | Change a feature's name or description, or mark it as a favourite. |
 | tickets__feature-archive |  | Archive a feature. Its tickets keep it; no new ticket can be put in it. |
 | tickets__feature-restore |  | Restore an archived feature. |
+| tickets__usage-read | yes | Count the open tickets that use each label, actor and location, and each project's open tickets that are not done. |
+| tickets__ticket-project-set |  | Move a ticket to another project. It gets the next id in that project and the first column there that means the same; it keeps its comments, files and history, and leaves its feature. Its earlier id still opens it. It cannot be undone; move it back instead. |
 | comments__conversation-read | yes | Read a ticket's conversation: its comments with replies and reactions, and a line for each change to the ticket, oldest first. |
 | comments__comment-add |  | Comment on a ticket: say what you did or found, or ask. With reply_to, it is a reply to that comment. |
 | comments__comment-edit |  | Change the text of a comment you wrote. |

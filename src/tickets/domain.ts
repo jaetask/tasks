@@ -17,6 +17,7 @@ import {
   Ticket,
   type Tickets,
   Type,
+  Usage,
 } from "./tickets.js";
 
 export type TicketsDeps = Base & {
@@ -452,6 +453,71 @@ const ticketFeatureSet = write({
   },
 });
 
+const usageRead = read({
+  name: "usage-read",
+  description:
+    "Count the open tickets that use each label, actor and location, and each project's open tickets that are not done.",
+  input: z.object({}),
+  output: Usage,
+  run: (_input, { tickets }) => tickets.usage(),
+});
+
+const labelMerge = writeAction<
+  z.ZodObject<{ label: z.ZodString; into: z.ZodString }>,
+  z.ZodObject<{ label: z.ZodString; into: z.ZodString; tickets: z.ZodNumber }>,
+  TicketsDeps
+>("tickets", {
+  name: "label-merge",
+  description:
+    "Merge one label into another: every ticket that had the first has the second, and the first is removed.",
+  input: z.object({
+    label: z.string().describe("The id of the label that goes away."),
+    into: z.string().describe("The id of the label that stays."),
+  }),
+  output: z.object({ label: z.string(), into: z.string(), tickets: z.number() }),
+  card: ticketChanged,
+  run: ({ label, into }, { tickets, catalog, log }) => {
+    const [from, to] = [catalog.label(label), catalog.label(into)];
+    const moved = tickets.mergeLabel(label, into);
+    catalog.removeLabel(label);
+    log(`merged label ${from.name} into ${to.name}`, {
+      kind: "deleted",
+      subject: "label",
+      id: label,
+    });
+    return { label, into, tickets: moved };
+  },
+});
+
+const ticketProjectSet = writeAction<
+  z.ZodObject<{ ticket: z.ZodString; project: z.ZodString }>,
+  typeof Ticket,
+  TicketsDeps
+>("tickets", {
+  name: "ticket-project-set",
+  description:
+    "Move a ticket to another project. It gets the next id in that project and the first column there that means the same; it keeps its comments, files and history, and leaves its feature. Its earlier id still opens it. It cannot be undone; move it back instead.",
+  input: z.object({
+    ticket: id,
+    project: z.string().describe("The id of the project it goes to."),
+  }),
+  output: Ticket,
+  card: ticketChanged,
+  run: ({ ticket, project }, { tickets, journal, principal, change }) => {
+    const was = tickets.get(ticket).id;
+    const moved = tickets.toProject(ticket, project);
+    journal.record({
+      actor: principal.id,
+      action: "tickets.ticket-project-set",
+      summary: `moved ${was} to project ${project}: it is now ${moved.id}`,
+      ticket: moved.id,
+      final: true,
+    });
+    change({ kind: "updated", subject: "ticket", id: moved.id });
+    return moved;
+  },
+});
+
 // ---- features ----
 
 export const featureList = defineCard({
@@ -546,6 +612,22 @@ const featureArchive = featureWrite({
     const feature = tickets.archiveFeature(featureId, true);
     log(`archived the feature ${feature.name}`, {
       kind: "updated",
+      subject: "feature",
+      id: featureId,
+    });
+    return feature;
+  },
+});
+
+const featureDelete = featureWrite({
+  name: "feature-delete",
+  description:
+    "Delete a feature no ticket was ever put in. Any other feature can only be archived.",
+  input: z.object({ feature: z.string() }),
+  run: ({ feature: featureId }, { tickets, log }) => {
+    const feature = tickets.deleteFeature(featureId);
+    log(`deleted the feature ${feature.name}`, {
+      kind: "deleted",
       subject: "feature",
       id: featureId,
     });
@@ -697,7 +779,12 @@ const ticketDelete = writeAction<typeof one, z.ZodObject<{ deleted: z.ZodString 
   },
 );
 
-const OWNER_ONLY: readonly string[] = [ticketRestore.name, ticketDelete.name];
+const OWNER_ONLY: readonly string[] = [
+  ticketRestore.name,
+  ticketDelete.name,
+  featureDelete.name,
+  labelMerge.name,
+];
 
 export const ticketsDomain = defineDomain<TicketsDeps>({
   name: "tickets",
@@ -745,6 +832,10 @@ export const ticketsDomain = defineDomain<TicketsDeps>({
     featureEdit,
     featureArchive,
     featureRestore,
+    featureDelete,
+    usageRead,
+    labelMerge,
+    ticketProjectSet,
   ],
   cards: [ticketList, ticketCard, ticketChanged, featureList, featureChanged],
   // Only the owner restores a ticket. Deleting one for good is for the owner
