@@ -1,0 +1,4 @@
+{
+  "skip": [".claude/", ".github/"],
+  "files": {}
+}

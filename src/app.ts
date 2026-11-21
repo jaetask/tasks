@@ -1,5 +1,3 @@
-// Tasks as an App on the Kit: its Domains on one SQLite file, served to the
-// page, to agents and to other Apps through the same Call pipeline.
 import { mkdtempSync } from "node:fs";
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
@@ -16,37 +14,23 @@ import type { ReadTitle } from "./tickets/page-title.js";
 import { VERSION } from "./version.js";
 
 export type TasksOptions = {
-  /** The App database: a file path, or ":memory:". */
   file: string;
-  /** The setup secret. Without one, Tasks makes a secret at first start and logs it once. */
   setupSecret?: string | undefined;
-  /** Other Apps' MCP endpoints to connect to at start. */
   connect?: string[];
-  /** Domains of other Apps to use as Plugins, such as one an inbox step asks. */
   plugins?: RemoteOptions[];
-  /** A folder of static files for the page. */
   page?: string;
-  /** The folder the owner's script steps for the inbox are in. */
   stepsDir: string;
-  /** The folder files attached to tickets are kept in. Beside the database if left out. */
   filesDir?: string;
-  /**
-   * Reads the title of the page a new link points to. Without one, links keep their address as
-   * their name and Tasks asks no other site anything.
-   */
   readTitle?: ReadTitle;
-  /** Where steps find their keys. Defaults to the process environment. */
   env?: Record<string, string | undefined>;
   log?: (line: string) => void;
   now?: () => number;
-  /** How often the App sweeps and syncs, in milliseconds; 0 turns each off. */
   sweepEvery?: number;
   syncEvery?: number;
 };
 
 const APPROVE = /^\/api\/connections\/[^/]+\/approve$/;
 
-/** Tasks: the App, and the pipeline that runs the inbox steps. */
 export type Tasks = App & { pipeline: Pipeline };
 
 export async function createTasks(options: TasksOptions): Promise<Tasks> {
@@ -73,8 +57,6 @@ export async function createTasks(options: TasksOptions): Promise<Tasks> {
   });
   migrate(app.db);
 
-  // A Connection is approved only through connections.connection-approve,
-  // where the owner picks its actor and what it may do.
   const files = filesRoutes({
     app,
     db: app.db,
@@ -91,7 +73,6 @@ export async function createTasks(options: TasksOptions): Promise<Tasks> {
     return (await files(request)) ?? app.fetch(request);
   };
 
-  // The steps look at each new inbox item as it arrives, and again when asked.
   const pipeline = createPipeline({
     db: app.db,
     calls: app.calls,

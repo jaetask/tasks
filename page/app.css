@@ -1,5 +1,3 @@
-/* The page's styles: Tailwind, the toolkit's parts and theme, then the few
-   classes Tasks adds for how text wraps. */
 @import "tailwindcss";
 @import "@jaetask/toolkit/styles.css";
 @import "@jaetask/toolkit/editor.css";

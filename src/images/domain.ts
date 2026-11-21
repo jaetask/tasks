@@ -1,4 +1,3 @@
-// The images Domain: pictures attached to a ticket.
 import { defineCard, defineDomain } from "@jaetask/open-agent-kit";
 import { z } from "zod";
 import { type Base, readAction, writeAction } from "../actions.js";
@@ -35,7 +34,6 @@ export const imageChanged = defineCard({
   view: { kind: "change", title: "Images changed" },
 });
 
-// Base64 is four characters for every three bytes.
 const data = z
   .string()
   .min(1)

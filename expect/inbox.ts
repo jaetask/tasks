@@ -1,6 +1,3 @@
-// Runs a Call script against Tasks with its inbox pipeline. Script steps are
-// the modules in expect/inbox/steps; model steps reach a scripted model
-// server; an app step reaches a second App over MCP.
 import { createServer } from "node:http";
 import type { AddressInfo } from "node:net";
 import { fileURLToPath } from "node:url";
@@ -24,9 +21,6 @@ type Step = { as?: string; call: string; input?: unknown; id?: string };
 
 const START = Date.parse("2026-01-01T09:00:00Z");
 
-// A scripted model on an OpenAI-compatible endpoint. With tools, it tags
-// crash reports as bugs; without, it classifies as spam or ok. It says
-// whether a key came with the request.
 function modelServer() {
   const server = createServer((req, res) => {
     let body = "";
@@ -63,7 +57,6 @@ function modelServer() {
   });
 }
 
-// A second App with one Action that answers an inbox step: it sorts by length.
 async function sorterApp() {
   const sort = defineAction({
     name: "sort",
@@ -207,7 +200,6 @@ export async function runInbox(input: string): Promise<string> {
         )
         .join("\n\n") || "None.",
       ...renderData(tasks.db).filter((_, i, all) => {
-        // Keep the tickets and the changes; the rest is not about the inbox.
         const heading = i % 2 === 0 ? all[i] : all[i - 1];
         return heading === "### Tickets" || heading === "### Changes";
       }),

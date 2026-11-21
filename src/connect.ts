@@ -1,6 +1,3 @@
-// Asks a running Tasks to connect, waits for the owner to approve it on the
-// Connections screen, then prints the key, once.
-//   npm run connect -- "Coding agent" [http://127.0.0.1:8081] [read]
 const [name, base = "http://127.0.0.1:8081", may] = process.argv.slice(2);
 if (!name) {
   console.error('Usage: npm run connect -- "<name>" [url] [read]');

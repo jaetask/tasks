@@ -1,4 +1,3 @@
-// Rejects what looks like spam; tags the rest as a request or a bug.
 export default function spamCheck({ item }) {
   if (/cheap|click here/i.test(item.text)) {
     return {

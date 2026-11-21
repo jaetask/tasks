@@ -1,5 +1,3 @@
-// The images repository: pictures attached to a ticket, such as
-// screenshots. The bytes are kept beside the image's row.
 import type { DatabaseSync } from "node:sqlite";
 import { z } from "zod";
 import { nextId } from "../ids.js";
@@ -10,7 +8,6 @@ export const TYPES = ["image/png", "image/jpeg", "image/gif", "image/webp"] as c
 export const Type = z.enum(TYPES);
 export type Type = z.infer<typeof Type>;
 
-/** The largest image, in bytes. */
 export const MAX_BYTES = 2 * 1024 * 1024;
 
 export const Image = z.object({
@@ -25,7 +22,6 @@ export const Image = z.object({
 export type Image = z.infer<typeof Image>;
 
 export type Images = {
-  /** A ticket's images, oldest first. */
   list(ticket: string): Image[];
   get(id: string): Image;
   bytes(id: string): Uint8Array;
@@ -35,7 +31,6 @@ export type Images = {
     image: { ticket: string; name: string; type: Type; bytes: Uint8Array },
   ): Image;
   remove(id: string): Image;
-  /** Deletes every image of a ticket. They cannot be brought back. */
   purge(ticket: string): void;
 };
 

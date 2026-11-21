@@ -1,4 +1,3 @@
-// The history Domain: the record of changes, and undo.
 import { defineCard, defineDomain } from "@jaetask/open-agent-kit";
 import { z } from "zod";
 import { type Base, readAction, writeAction } from "../actions.js";

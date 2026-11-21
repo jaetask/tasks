@@ -1,4 +1,3 @@
-// A ticket's files: a video plays in place; any other file is a chip that downloads it.
 import { Button } from "@jaetask/toolkit/ui/button";
 import { FileChip, VideoFigure } from "@jaetask/toolkit/suite";
 import { IconX } from "@tabler/icons-react";
@@ -14,7 +13,6 @@ export function FilesSection({
 }: {
   ticket: string;
   open: boolean;
-  /** What is written on the ticket. A file shown inside that text is not listed here too. */
   inText?: string;
 }) {
   const { act } = useApp();

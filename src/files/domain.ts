@@ -1,5 +1,3 @@
-// The files Domain: any file attached to a ticket. The bytes never travel inside a Call: the
-// page uploads them first, and an agent names a path on this machine.
 import { realpathSync } from "node:fs";
 import { basename, join } from "node:path";
 import { defineCard, defineDomain } from "@jaetask/open-agent-kit";
@@ -13,7 +11,6 @@ import { File, type Files, MAX_BYTES, MAX_VIDEO_BYTES, mediaType, typeOfName } f
 export type FilesDeps = Base & {
   tickets: Pick<Tickets, "get">;
   files: Files;
-  /** Where uploads wait until a Call attaches them. */
   stagedDir: string;
   now(): number;
 };

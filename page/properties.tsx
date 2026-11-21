@@ -7,15 +7,12 @@ import { LabelDot, PRIORITY_NAME, PriorityIcon, PropertyPicker, StatusIcon } fro
 
 type Shared = {
   ticket: Ticket;
-  /** The row or chip that opens the picker. */
   children: ReactNode;
-  /** False while its key should not open it, as on a card that is not hovered. */
   armed?: boolean;
 };
 
 const titleCase = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 const open = (ticket: Ticket) => ticket.state === "open";
-// The backlog is the first choice of status: off the board, before any column.
 const BACKLOG = "backlog";
 
 export function StatusPicker({ ticket, children, armed }: Shared) {
@@ -43,7 +40,6 @@ export function StatusPicker({ ticket, children, armed }: Shared) {
             if (!ticket.backlog) await act("tickets.ticket-backlog-send", { ticket: ticket.id });
             return;
           }
-          // A backlog ticket goes on the board first, then to the column picked.
           if (ticket.backlog) await act("tickets.ticket-board-send", { ticket: ticket.id });
           await act("tickets.ticket-move", { ticket: ticket.id, column });
         })()
@@ -84,7 +80,6 @@ export function ActorPicker({
   armed,
   onPick,
 }: Shared & {
-  /** Given where picking an actor asks for a handoff note before it assigns. */
   onPick?: (actor: string) => void;
 }) {
   const { catalog, act } = useApp();
@@ -187,7 +182,6 @@ export function LabelsPicker({
   armed,
   anchor,
 }: Shared & {
-  /** A part that stays put, such as the Labels heading: the list opens beside it. */
   anchor?: RefObject<HTMLElement | null>;
 }) {
   const { catalog, act } = useApp();
@@ -225,7 +219,6 @@ export function LabelsPicker({
   );
 }
 
-/** The due date picker of a ticket: the toolkit's, saving through the ticket's Action. */
 export function DuePicker({ ticket, children, armed = true }: Shared) {
   const { act } = useApp();
   return (

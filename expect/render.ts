@@ -1,4 +1,3 @@
-// Renders a Contract as Markdown for expect files.
 import { agentContext, type Contract } from "@jaetask/open-agent-kit";
 import { table } from "@jaetask/snap";
 

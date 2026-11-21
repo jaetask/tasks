@@ -94,7 +94,6 @@ test("a server on this machine is not read, whatever name reaches it", async () 
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
   const { port } = server.address() as AddressInfo;
   try {
-    // localtest.me and nip.io names resolve to 127.0.0.1: the lookup guard must refuse them.
     assert.equal(await readTitle(`http://127.0.0.1.nip.io:${port}/`), null);
     assert.equal(await readTitle(`http://localtest.me:${port}/`), null);
     assert.equal(asked, 0);

@@ -1,5 +1,3 @@
-// The inbox repository: items that arrive before they become tickets, and
-// the steps the owner adds to look at each new item.
 import type { DatabaseSync } from "node:sqlite";
 import { z } from "zod";
 import { nextId } from "../ids.js";
@@ -17,7 +15,6 @@ export const ITEM_STATES = [
 export const ItemState = z.enum(ITEM_STATES);
 export type ItemState = z.infer<typeof ItemState>;
 
-/** The states that end an item's time in the inbox. */
 const ENDED: readonly ItemState[] = ["rejected", "dismissed", "promoted", "linked"];
 
 export const Item = z.object({
@@ -40,7 +37,6 @@ export const Item = z.object({
 });
 export type Item = z.infer<typeof Item>;
 
-/** The Actions a step can be given. A step may ask for these and no others. */
 export const INTAKE = [
   "item-tag",
   "item-untag",
@@ -61,7 +57,6 @@ export const STEP_KINDS = ["classifier", "local-model", "hosted-model", "script"
 export const StepKind = z.enum(STEP_KINDS);
 export type StepKind = z.infer<typeof StepKind>;
 
-/** Which items a step runs on. Every part that is given must match. */
 export const Condition = z
   .object({
     project: z.string().optional().describe("The item was sent to this project."),
@@ -86,7 +81,6 @@ export const Step = z.object({
 export type Step = z.infer<typeof Step>;
 
 export type Inbox = {
-  /** Items, oldest first: of one state, of one project, or both. */
   items(filter?: { state?: ItemState | undefined; project?: string | undefined }): Item[];
   item(id: string): Item;
   capture(
@@ -94,12 +88,10 @@ export type Inbox = {
     at: string,
     item: { project: string; title: string; text: string; source: string },
   ): Item;
-  /** Changes an item still in the inbox. Refused once it was rejected, dismissed, promoted or linked. */
   change(
     id: string,
     patch: Partial<Pick<Item, "title" | "text" | "tags" | "category" | "fields">>,
   ): Item;
-  /** Moves an item to another state, with why, and the ticket for promoted or linked. */
   settle(id: string, state: ItemState, reason: string | null, ticket?: string): Item;
   steps(): Step[];
   step(id: string): Step;
@@ -113,8 +105,6 @@ export function migrateInbox(db: DatabaseSync): void {
   db.exec(
     "CREATE TABLE IF NOT EXISTS inbox_items (id TEXT PRIMARY KEY, title TEXT NOT NULL, text TEXT NOT NULL, original_title TEXT NOT NULL, original_text TEXT NOT NULL, source TEXT NOT NULL, state TEXT NOT NULL, tags TEXT NOT NULL, category TEXT, fields TEXT NOT NULL, reason TEXT, ticket TEXT, at TEXT NOT NULL, by TEXT NOT NULL)",
   );
-  // Added after the first version: a database made before it gets the column
-  // here, and its items go to the first project.
   const columns = db.prepare("PRAGMA table_info(inbox_items)").all() as { name: string }[];
   if (!columns.some((c) => c.name === "project")) {
     db.exec("ALTER TABLE inbox_items ADD COLUMN project TEXT");

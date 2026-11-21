@@ -1,5 +1,3 @@
-// The files repository: any file attached to a ticket, such as a log, a PDF or a video. A row
-// in the database says what it is; its bytes are a file in the files folder, named by its id.
 import { createHash } from "node:crypto";
 import {
   closeSync,
@@ -19,17 +17,13 @@ import { nextId } from "../ids.js";
 import type { Rows } from "../journal.js";
 import { Refusal } from "../refusal.js";
 
-/** Video types a browser plays. They may be larger than other files. */
 export const VIDEO_TYPES = ["video/mp4", "video/webm", "video/quicktime"] as const;
-/** The largest file, in bytes, and the largest video. */
 export const MAX_BYTES = 25 * 1024 * 1024;
 export const MAX_VIDEO_BYTES = 200 * 1024 * 1024;
-/** The most bytes a file of a type may have. */
 export const limitFor = (type: string) =>
   (VIDEO_TYPES as readonly string[]).includes(type) ? MAX_VIDEO_BYTES : MAX_BYTES;
 
 const TYPE = /^[a-z0-9][a-z0-9!#$&^_.+-]{0,60}\/[a-z0-9][a-z0-9!#$&^_.+-]{0,60}$/;
-/** A media type such as application/pdf; anything else becomes application/octet-stream. */
 export const mediaType = (type: string | null | undefined) => {
   const bare = (type ?? "").split(";")[0]?.trim().toLowerCase() ?? "";
   return TYPE.test(bare) ? bare : "application/octet-stream";
@@ -52,7 +46,6 @@ const BY_EXTENSION: Record<string, string> = {
   csv: "text/csv",
   zip: "application/zip",
 };
-/** The media type a file's name suggests. */
 export const typeOfName = (name: string) =>
   BY_EXTENSION[name.split(".").pop()?.toLowerCase() ?? ""] ?? "application/octet-stream";
 
@@ -69,22 +62,15 @@ export const File = z.object({
 export type File = z.infer<typeof File>;
 
 export type Files = {
-  /** A ticket's files, oldest first. */
   list(ticket: string): File[];
   get(id: string): File;
-  /** Where a file's bytes are on disk. */
   path(id: string): string;
-  /**
-   * Takes the file at `from` as a ticket's file. With `move` the file at `from` becomes the
-   * stored one; otherwise it is copied and left where it was.
-   */
   add(
     by: string,
     at: string,
     file: { ticket: string; name: string; type: string; from: string; move: boolean },
   ): File;
   remove(id: string): File;
-  /** Deletes every file of a ticket, bytes included. They cannot be brought back. */
   purge(ticket: string): void;
 };
 
@@ -94,7 +80,6 @@ export function migrateFiles(db: DatabaseSync): void {
   );
 }
 
-/** The SHA-256 of a file on disk, read a piece at a time. */
 function hashOf(path: string): string {
   const hash = createHash("sha256");
   const piece = Buffer.alloc(1024 * 1024);

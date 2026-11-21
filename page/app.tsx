@@ -1,18 +1,12 @@
-// What every screen shares: the catalog, a way to make a change, and a way
-// to read that follows changes made by anyone.
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { type TicketFile, type Catalog, call, type Outcome, refusal } from "./api.js";
 
 export type App = {
   catalog: Catalog;
-  /** Goes up whenever anything changed, here or elsewhere. */
   version: number;
-  /** Makes a change, shows its Card or why it was refused, and returns its output or null. */
   act<T = unknown>(action: string, input: unknown): Promise<T | null>;
   go(path: string): void;
-  /** Attaches a file to a ticket: its bytes are uploaded, then a Call records it. */
   upload(ticket: string, file: File): Promise<TicketFile | null>;
-  /** The page's path, and what follows its question mark. */
   path: string;
   query: URLSearchParams;
 };
@@ -24,7 +18,6 @@ export function useApp(): App {
   return app;
 }
 
-/** The output of a read Action, read again whenever something changes. Undefined until it arrives. */
 export function useRead<T>(action: string | null, input: unknown = {}): T | undefined {
   const { version } = useApp();
   const [data, setData] = useState<T | undefined>(undefined);
@@ -36,7 +29,6 @@ export function useRead<T>(action: string | null, input: unknown = {}): T | unde
     latest.current += 1;
     const mine = latest.current;
     void call(action, input).then((outcome: Outcome) => {
-      // Reads can overlap; only the one asked for last is shown.
       if (mine === latest.current && refusal(outcome) === null) setData(outcome.output as T);
     });
   }, [key, version]);
@@ -46,5 +38,4 @@ export function useRead<T>(action: string | null, input: unknown = {}): T | unde
 export const actorName = (catalog: Catalog, id: string) =>
   catalog.actors.find((a) => a.id === id)?.name || id;
 
-/** An actor's name, as shown in lists and lines of text. */
 export const actorLabel = (catalog: Catalog, id: string) => actorName(catalog, id);

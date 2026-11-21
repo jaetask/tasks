@@ -1,6 +1,3 @@
-// The inbox Domain: capture items, sort them, and turn them into tickets.
-// The owner also sets up the steps that look at each new item; a step asks
-// for the same Actions an agent or the owner would use.
 import { defineCard, defineDomain } from "@jaetask/open-agent-kit";
 import { z } from "zod";
 import { type Base, readAction, writeAction } from "../actions.js";
@@ -14,7 +11,6 @@ export type InboxDeps = Base & {
   catalog: Catalog;
   tickets: Pick<Tickets, "get" | "create">;
   inbox: Inbox;
-  /** The recorded runs of the steps on an item, oldest first. */
   runs(item: string): Run[];
   now(): number;
 };
@@ -50,7 +46,6 @@ const read = <Input extends z.ZodType, Output extends z.ZodType>(
   definition: Parameters<typeof readAction<Input, Output, InboxDeps>>[0],
 ) => readAction<Input, Output, InboxDeps>(definition);
 
-/** A write to one item. */
 function write<Input extends z.ZodType>(definition: {
   name: string;
   description: string;
@@ -280,13 +275,10 @@ const itemRun = writeAction<z.ZodObject<{ item: typeof item }>, typeof Item, Inb
   output: Item,
   run: ({ item: id }, { inbox, change }) => {
     const found = inbox.item(id);
-    // Tasks runs the steps when it sees this change.
     change({ kind: "updated", subject: "item-run", id });
     return found;
   },
 });
-
-// ---- the steps ----
 
 const stepFields = {
   name: z.string().trim().min(1).max(60),

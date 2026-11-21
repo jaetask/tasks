@@ -1,5 +1,3 @@
-// A project's Intake: what was sent to it, before it becomes tickets. An item opens in a dialog,
-// where its text and tags can be changed and it is accepted, rejected or turned into a ticket.
 import { EmptyLine, Link, ListCard, TimeAgo, WorkPage } from "@jaetask/toolkit/suite";
 import { Button } from "@jaetask/toolkit/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@jaetask/toolkit/ui/dialog";
@@ -63,7 +61,6 @@ const STATES: { id: Item["state"]; name: string }[] = [
   { id: "dismissed", name: "Dismissed" },
 ];
 
-/** One item, opened: its text and tags can be changed, and what happens to it decided. */
 function ItemDialog({ item, onClose }: { item: Item; onClose: () => void }) {
   const { act, go } = useApp();
   const [reason, setReason] = useState("");
@@ -74,7 +71,6 @@ function ItemDialog({ item, onClose }: { item: Item; onClose: () => void }) {
   const then = (done: unknown) => {
     if (done) onClose();
   };
-  // Rejecting and dismissing say why: the reason is kept with the item.
   const refuse = (action: string) => {
     if (!reason.trim()) {
       why.current?.focus();
@@ -271,7 +267,6 @@ export function IntakePage({ project }: { project: Project }) {
   const steps = useRead<Step[]>("inbox.pipeline-read") ?? [];
   const items = (all ?? []).filter((i) => i.state === state);
   const shown = (all ?? []).find((i) => i.id === open);
-  // A state with nothing in it is left out, but for the one being looked at.
   const tabs = STATES.map((s) => ({
     ...s,
     count: (all ?? []).filter((i) => i.state === s.id).length,

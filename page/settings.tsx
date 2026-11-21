@@ -1,5 +1,3 @@
-// Settings: one section at a time, chosen in the sidebar. Each section is a list on the page;
-// a name is changed where it is shown, and the rest of what can be done to a row is in its "...".
 import {
   ColourSwatches,
   DEFAULT_PROJECT_COLOUR,
@@ -52,7 +50,6 @@ export type Section = (typeof SECTIONS)[number][0];
 const count = (n: number | undefined, one: string, many: string) =>
   n ? `${n} ${n === 1 ? one : many}` : "";
 
-/** One row of a settings list: a mark, a name, a quiet line, and its menu at the right. */
 function SettingRow({
   mark,
   children,
@@ -80,7 +77,6 @@ function SettingRow({
   );
 }
 
-/** The mark of an actor, which opens the icon and colour picker. */
 function ActorMark({ actor }: { actor: Actor }) {
   const { act } = useApp();
   const set = (icon: string, colour: string) =>
@@ -256,7 +252,6 @@ function PrefixDialog({ project, onClose }: { project: Project; onClose: () => v
   );
 }
 
-/** The New project dialog. It is opened from Settings and from the first start. */
 export function NewProjectDialog({
   open,
   onOpenChange,

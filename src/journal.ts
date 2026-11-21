@@ -1,16 +1,11 @@
-// The record of changes. Every write goes through `rows`, which remembers
-// what each row was before and after; `record` stores those with who made
-// the change. Undo puts the rows back, and is itself a recorded change.
 import type { DatabaseSync } from "node:sqlite";
 import { Refusal } from "./refusal.js";
 
 export type Value = string | number | null;
 export type Row = Record<string, Value>;
 
-/** One row a change touched. `before` is null for a new row, `after` for a removed one. */
 type Touched = { table: string; id: string; before: Row | null; after: Row | null };
 
-/** One recorded change, as the page and agents see it. */
 export type ChangeEntry = {
   id: string;
   at: string;
@@ -18,17 +13,12 @@ export type ChangeEntry = {
   action: string;
   summary: string;
   ticket: string | null;
-  /** The change this one undid, or null. */
   undoes: string | null;
-  /** The change that undid this one, or null. */
   undoneBy: string | null;
-  /** False for a change that cannot be undone, such as deleting forever. */
   undoable: boolean;
-  /** True for a change made by bringing data in from another app. */
   imported: boolean;
 };
 
-/** Reads and writes rows by id, remembering each write for the change being made. */
 export type Rows = {
   get(table: string, id: string): Row | undefined;
   insert(table: string, row: Row & { id: string }): void;
@@ -38,30 +28,22 @@ export type Rows = {
 
 export type Journal = {
   rows: Rows;
-  /** How many row writes are waiting to be recorded. */
   pending(): number;
-  /** Stores everything written through `rows` since the last record as one change. */
   record(change: {
     actor: string;
     action: string;
     summary: string;
     ticket?: string | undefined;
-    /** True for a change that cannot be undone. */
     final?: boolean;
   }): string;
   list(filter?: {
     ticket?: string | undefined;
     limit?: number | undefined;
-    /** Only changes made by this actor. */
     actor?: string | undefined;
-    /** Only changes to tickets of this project. */
     project?: string | undefined;
-    /** False leaves out changes made by bringing data in. All if left out. */
     imported?: boolean | undefined;
   }): ChangeEntry[];
-  /** Puts back what a change changed. Refused if those rows have changed since. */
   undo(id: string, actor: string): ChangeEntry;
-  /** Forgets the rows of every change about a ticket: they can no longer be undone. */
   seal(ticket: string): void;
 };
 
@@ -76,8 +58,6 @@ export function migrateJournal(db: DatabaseSync): void {
     "CREATE TABLE IF NOT EXISTS changes (seq INTEGER PRIMARY KEY AUTOINCREMENT, at TEXT NOT NULL, actor TEXT NOT NULL, action TEXT NOT NULL, summary TEXT NOT NULL, ticket TEXT, touched TEXT NOT NULL, final INTEGER NOT NULL DEFAULT 0, undoes INTEGER, undone_by INTEGER)",
   );
   db.exec("CREATE INDEX IF NOT EXISTS changes_ticket ON changes (ticket)");
-  // A change made by bringing data in from another app is marked, so it does not count as the
-  // last time someone changed the ticket.
   const columns = db.prepare("PRAGMA table_info(changes)").all() as { name: string }[];
   if (!columns.some((c) => c.name === "imported")) {
     db.exec("ALTER TABLE changes ADD COLUMN imported INTEGER NOT NULL DEFAULT 0");
@@ -251,7 +231,6 @@ export function openJournal(db: DatabaseSync, now: () => number): Journal {
       const seq = Number(undo.slice(1));
       db.prepare("UPDATE changes SET undoes = ? WHERE seq = ?").run(change.seq, seq);
       db.prepare("UPDATE changes SET undone_by = ? WHERE seq = ?").run(seq, change.seq);
-      // Undoing an undo makes the first change undoable again.
       if (change.undoes !== null) {
         db.prepare("UPDATE changes SET undone_by = NULL WHERE seq = ?").run(change.undoes);
       }

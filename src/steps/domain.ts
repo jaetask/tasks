@@ -1,5 +1,3 @@
-// The steps Domain: a ticket's checklist. Anyone who may change tickets
-// adds steps, ticks them off and leaves a note on what was checked.
 import { defineCard, defineDomain } from "@jaetask/open-agent-kit";
 import { z } from "zod";
 import { type Base, readAction, writeAction } from "../actions.js";
@@ -23,7 +21,6 @@ export const stepChanged = defineCard({
 const title = z.string().trim().min(1).max(200);
 const one = z.object({ step: z.string().describe("A ticket step id, like t4.") });
 
-/** A write to one ticket's steps: its change is recorded on that ticket. */
 function write<Input extends z.ZodType>(definition: {
   name: string;
   description: string;
@@ -54,7 +51,6 @@ function write<Input extends z.ZodType>(definition: {
   });
 }
 
-/** An open ticket's id, or a refusal. */
 const open = (tickets: Pick<Tickets, "get">, id: string) => {
   const ticket = tickets.get(id);
   if (ticket.state !== "open") {

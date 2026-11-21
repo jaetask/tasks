@@ -1,4 +1,3 @@
-// Asks for more than it was given.
 export default function greedy({ actions }) {
   return {
     calls: [

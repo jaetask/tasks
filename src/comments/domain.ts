@@ -1,5 +1,3 @@
-// The comments Domain: the conversation on a ticket. Comments with replies
-// and reactions, and between them a line for each change to the ticket.
 import { defineCard, defineDomain } from "@jaetask/open-agent-kit";
 import { z } from "zod";
 import { type Base, readAction, writeAction } from "../actions.js";
@@ -11,9 +9,7 @@ import { Comment, type Comments, Reply } from "./comments.js";
 export type CommentsDeps = Base & {
   tickets: Pick<Tickets, "get" | "create">;
   comments: Comments;
-  /** Tells the agents a new comment concerns: see the replies Domain. */
   said(comment: Reply, assignee: string | null, repliedTo: string | undefined): void;
-  /** An actor's name, or its id when it has none. */
   nameOf(actor: string): string;
   now(): number;
 };
@@ -50,7 +46,6 @@ export const commentChanged = defineCard({
 const text = z.string().trim().min(1).max(10_000);
 const emoji = z.string().min(1).max(16).describe("One emoji, such as 👍.");
 
-/** A write to one comment: its change is recorded on the comment's ticket. */
 function write<Input extends z.ZodType>(definition: {
   name: string;
   description: string;
@@ -94,7 +89,6 @@ const conversationRead = readAction({
       .map((comment) => ({ type: "comment" as const, at: comment.at, comment }));
     const done = journal
       .list({ ticket, limit: 500 })
-      // Comments are shown as themselves, and a reaction is not an event.
       .filter((c) => !c.action.startsWith("comments.") && !c.action.includes("reaction"))
       .map(({ id, at, actor, summary, undoable, undoneBy }) => ({
         type: "change" as const,

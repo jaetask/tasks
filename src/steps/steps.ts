@@ -1,5 +1,3 @@
-// The ticket steps repository. A ticket step is one line of a ticket's
-// checklist: a title, whether it is done, and the notes left on it.
 import type { DatabaseSync } from "node:sqlite";
 import { z } from "zod";
 import { nextId } from "../ids.js";
@@ -26,18 +24,14 @@ export type TicketStep = z.infer<typeof TicketStep>;
 
 export type TicketSteps = {
   get(id: string): TicketStep;
-  /** A ticket's steps, in order. */
   list(ticket: string): TicketStep[];
-  /** How many of a ticket's steps are done, and how many there are. */
   count(ticket: string): { done: number; total: number };
   add(ticket: string, title: string): TicketStep;
   rename(id: string, title: string): TicketStep;
   setDone(id: string, done: boolean): TicketStep;
   note(id: string, by: string, at: string, text: string): TicketStep;
-  /** Moves a step to sit before `before` in its ticket's list, or to the end. */
   move(id: string, before?: string): TicketStep[];
   remove(id: string): TicketStep;
-  /** Deletes a ticket's steps and their notes. They cannot be brought back. */
   purge(ticket: string): void;
 };
 

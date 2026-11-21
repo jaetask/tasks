@@ -1,7 +1,3 @@
-// Tasks' page, built from @jaetask/toolkit: the app shell, panels, lists and
-// edit pages. Pages are routed on the hash. Everything the page reads or
-// changes goes through POST /api/calls, the same Call pipeline agents use.
-
 import { toast } from "@jaetask/toolkit/hooks";
 import { AppShell, CenteredPage, type LinkComponent, LinkProvider } from "@jaetask/toolkit/suite";
 import { Button } from "@jaetask/toolkit/ui/button";
@@ -52,8 +48,6 @@ import { ProjectsNav } from "./projects-nav.js";
 import { SearchDialog, useSearchKey } from "./search.js";
 import { TicketPage } from "./ticket.js";
 
-// ---------- Routing on the hash ----------
-
 const hashPath = () => window.location.hash.replace(/^#/, "") || "/overview";
 function useHashPath() {
   const [path, setPath] = useState(hashPath);
@@ -91,8 +85,6 @@ const SETTINGS_ICONS: Record<Section, React.ReactNode> = {
   steps: <IconFilter size={16} aria-hidden />,
   browser: <IconDeviceLaptop size={16} aria-hidden />,
 };
-
-// ---------- Signing in, and the first start ----------
 
 function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
   const [secret, setSecret] = useState("");
@@ -160,8 +152,6 @@ function Setup({ onNamed }: { onNamed: (name: string) => void }) {
     </CenteredPage>
   );
 }
-
-// ---------- The pages ----------
 
 function Page({ path, onSignOut }: { path: string; onSignOut: () => void }) {
   const { catalog } = useApp();
@@ -274,11 +264,9 @@ function Signed({ path, onSignOut }: { path: string; onSignOut: () => void }) {
     });
   }, [version]);
 
-  // Going to another page reads again too: a request to connect is not a change.
   // biome-ignore lint/correctness/useExhaustiveDependencies: `path` is what is watched
   useEffect(() => bump(), [path, bump]);
 
-  // A change from anyone, such as an agent, shows as it happens.
   useEffect(() => {
     const events = new EventSource("/events");
     events.addEventListener("change", bump);
@@ -291,9 +279,6 @@ function Signed({ path, onSignOut }: { path: string; onSignOut: () => void }) {
       const refused = refusal(outcome);
       if (refused !== null) toast({ variant: "destructive", description: refused, duration: 6000 });
       else if (outcome.changes?.some((c) => c.kind === "deleted")) {
-        // Only a deletion is announced, in the words of its change, with the way to undo it.
-        // Any other change shows where it was made, and a notification for each would bury
-        // the ones that matter.
         void call("history.change-list", { limit: 1 }).then((listed) => {
           const last = (listed.output as Change[] | undefined)?.[0];
           if (!last) return;

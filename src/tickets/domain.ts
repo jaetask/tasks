@@ -1,6 +1,3 @@
-// The tickets Domain: what agents and the owner do with tickets. A ticket
-// can move from any column to any other. Agents archive and cancel; only
-// the owner restores a ticket or deletes it for good.
 import { defineCard, defineDomain } from "@jaetask/open-agent-kit";
 import { z } from "zod";
 import { type Base, readAction, writeAction } from "../actions.js";
@@ -24,9 +21,7 @@ export type TicketsDeps = Base & {
   catalog: Catalog;
   tickets: Tickets;
   now(): number;
-  /** Deletes what other Domains keep about a ticket, before it is deleted for good. */
   purge(ticket: string): void;
-  /** Leaves the note of a handoff on the ticket as a comment, for whoever it was handed to. */
   handoff(ticket: string, from: string, to: string, note: string): void;
 };
 
@@ -87,7 +82,6 @@ const read = <Input extends z.ZodType, Output extends z.ZodType>(
   definition: Parameters<typeof readAction<Input, Output, TicketsDeps>>[0],
 ) => readAction<Input, Output, TicketsDeps>(definition);
 
-/** A write to one ticket: its change is recorded on that ticket. */
 function write<Input extends z.ZodType>(definition: {
   name: string;
   description: string;
@@ -521,8 +515,6 @@ const ticketProjectSet = writeAction<
   },
 });
 
-// ---- features ----
-
 export const featureList = defineCard({
   name: "features",
   version: 1,
@@ -841,8 +833,6 @@ export const ticketsDomain = defineDomain<TicketsDeps>({
     ticketProjectSet,
   ],
   cards: [ticketList, ticketCard, ticketChanged, featureList, featureChanged],
-  // Only the owner restores a ticket. Deleting one for good is for the owner
-  // on the page: no Connection or step can do it, whoever it acts as.
   authorise: (principal, action, from) => {
     if (action.name === ticketDelete.name) return principal.id === OWNER && from?.caller === "ui";
     return principal.id === OWNER || !OWNER_ONLY.includes(action.name);

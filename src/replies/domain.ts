@@ -1,5 +1,3 @@
-// The replies Domain: the agent inbox. An agent reads what was said to it
-// and acknowledges each one; the owner sees every agent's inbox.
 import { defineCard, defineDomain, type RunContext } from "@jaetask/open-agent-kit";
 import { z } from "zod";
 import { type Base, readAction, writeAction } from "../actions.js";

@@ -20,7 +20,7 @@
     "typecheck": "tsc --noEmit && tsc -p page",
     "test": "tsx --test src/*.test.ts src/*/*.test.ts",
     "expect": "node scripts/build-page.mjs && tsx expect/snap.ts",
-    "lint": "biome lint . && npm run check:docs && npm run check:toolkit",
+    "lint": "biome lint . && npm run check:docs && npm run check:toolkit && node .agents/guardrails/check-comments.mjs",
     "format": "biome format --write .",
     "format:check": "biome format .",
     "prepare": "git config core.hooksPath .agents/guardrails/hooks || true",

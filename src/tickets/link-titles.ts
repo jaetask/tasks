@@ -1,12 +1,9 @@
-// When a link is added to a ticket, Tasks reads the page's title once and records it with the
-// Action tickets.ticket-link-describe. A link whose page states no title stays as its address.
 import type { App } from "@jaetask/open-agent-kit/app";
 import { OWNER } from "../catalog/catalog.js";
 import type { ReadTitle } from "./page-title.js";
 import type { Ticket } from "./tickets.js";
 
 type LinkTitles = {
-  /** Resolves when every title being read has been recorded. */
   idle(): Promise<void>;
 };
 
