@@ -42,7 +42,7 @@
     "@biomejs/biome": "2.6.5",
     "@fontsource-variable/inter": "^5.3.0",
     "@jaetask/snap": "0.1.0",
-    "@jaetask/toolkit": "git+https://github.com/jaetask/toolkit.git#98310f25f46c9f75fb1636c2fd64d33a9b0a4c91",
+    "@jaetask/toolkit": "0.3.2",
     "@tabler/icons-react": "^3.44.0",
     "@tailwindcss/cli": "^4.3.5",
     "@types/node": "22.18.0",
