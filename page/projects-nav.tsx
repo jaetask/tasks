@@ -25,10 +25,10 @@ import {
   IconList,
   IconStack2,
 } from "@tabler/icons-react";
-import { useEffect, useState } from "react";
+import { type DragEvent, useEffect, useState } from "react";
 import type { Feature, Project } from "./api.js";
 import { useApp, useRead } from "./app.js";
-import { projectLook } from "./local.js";
+import { projectLook, TICKET_DRAG } from "./local.js";
 
 const STORE = "tasks:nav-expanded";
 
@@ -238,6 +238,28 @@ export function ProjectsNav({ collapsed }: { collapsed: boolean }) {
                 <Link
                   key={id}
                   href={`/p/${p.id}/${id}`}
+                  // A ticket dragged from the backlog onto Board goes on the board, and one
+                  // dragged from the board onto Backlog goes back.
+                  {...(id === "intake"
+                    ? {}
+                    : {
+                        onDragOver: (e: DragEvent) => {
+                          if (!e.dataTransfer.types.includes(TICKET_DRAG)) return;
+                          e.preventDefault();
+                          e.dataTransfer.dropEffect = "move";
+                        },
+                        onDrop: (e: DragEvent) => {
+                          const ticket = e.dataTransfer.getData(TICKET_DRAG);
+                          if (!ticket) return;
+                          e.preventDefault();
+                          void act(
+                            id === "board"
+                              ? "tickets.ticket-board-send"
+                              : "tickets.ticket-backlog-send",
+                            { ticket },
+                          );
+                        },
+                      })}
                   aria-current={
                     selected === p.id &&
                     (screen === id || (id === "board" && screen === "columns")) &&

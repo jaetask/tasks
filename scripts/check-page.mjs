@@ -334,6 +334,13 @@ try {
     await page.locator("#files .file", { hasText: "build.log" }).hover();
     await button("Remove the file build.log").click();
     await until(() => !document.querySelector("#files a"));
+    // A removal is announced in plain words, with a button that undoes it.
+    await page.getByText("Removed the file build.log", { exact: false }).first().waitFor();
+    await page.getByRole("button", { name: "Undo", exact: true }).last().click();
+    await page.locator("#files .file", { hasText: "build.log" }).waitFor();
+    await page.locator("#files .file", { hasText: "build.log" }).hover();
+    await button("Remove the file build.log").click();
+    await until(() => !document.querySelector("#files a"));
   });
   await step(
     "a picture pasted into a comment goes into its text, and shows when read",
@@ -595,10 +602,13 @@ try {
     await page.getByRole("option", { name: "Voice", exact: true }).click();
     await page.locator('[data-property="feature"]', { hasText: "Voice" }).waitFor();
     await open("/p/TLK/board");
-    await page.getByRole("button", { name: /More filters/ }).click();
-    await pick('[aria-label="Filter feature"]', "Voice");
+    // One Filter button lists what can be filtered by; a filter in use shows as a chip.
+    await button("Filter").click();
+    await page.getByRole("menuitem", { name: "Feature" }).click();
+    await page.getByRole("menuitemcheckbox", { name: "Voice" }).click();
     await until(() => document.querySelectorAll(".lane .ticket").length === 1);
-    await pick('[aria-label="Filter feature"]', "All features");
+    await page.locator('[data-filter="feature"]', { hasText: "Voice" }).waitFor();
+    await button("Remove the feature filter").click();
     await until(() => document.querySelectorAll(".lane .ticket").length === 3);
   });
   await step("the board groups its tickets by feature, by actor and by location", async () => {
@@ -622,6 +632,8 @@ try {
     const card = page.locator(".ticket", { hasText: "Voice notes on the phone" });
     await card.getByText("voice", { exact: true }).waitFor();
     // Changing the priority on the card does not open the ticket.
+    // A card with no priority shows the chip only while it is pointed at.
+    await card.hover();
     await card.getByRole("button", { name: "Priority" }).click();
     await page.getByRole("option", { name: "High", exact: true }).click();
     await card.getByText("High").waitFor();
@@ -669,16 +681,21 @@ try {
     await page.getByRole("radio", { name: "Projects view" }).click();
     await page.locator(".lane", { hasText: "Talk" }).waitFor();
     const lanes = await page.locator(".lane").count();
-    await button("Filter projects").click();
-    await page.getByRole("menuitemcheckbox", { name: "Talk" }).press("Enter");
+    await button("Filter").click();
+    await page.getByRole("menuitem", { name: "Project" }).click();
+    await page.getByRole("menuitemcheckbox", { name: "Talk" }).click();
+    await page.keyboard.press("Escape");
     await page.keyboard.press("Escape");
     await until(() => document.querySelectorAll(".lane").length === 1);
-    await button("Filter projects").click();
-    await page.getByRole("menuitemcheckbox", { name: "Talk" }).press("Enter");
-    await page.keyboard.press("Escape");
+    await button("Remove the project filter").click();
     await page.waitForFunction((n) => document.querySelectorAll(".lane").length === n, lanes);
     await page.getByRole("radio", { name: "Status view" }).click();
-    await page.locator(".lane", { hasText: "to do" }).waitFor();
+    // The lanes are named as a board's columns are, and done is hidden until asked for.
+    await page.locator(".lane", { hasText: "To do" }).waitFor();
+    await page.locator(".lane", { hasText: "Review" }).waitFor();
+    if ((await page.locator(".lane", { hasText: "Done" }).count()) !== 0) {
+      throw new Error("the done lane shows on the Overview");
+    }
   });
   await step("on the Overview a card names its project, as a pill to its board", async () => {
     await open("/");
@@ -747,11 +764,13 @@ try {
     await page.getByRole("button", { name: "Status", exact: true }).getByText("Backlog").waitFor();
     await page.fill('[aria-label="Title"]', "Trim silence from recordings");
     await button("Create ticket").click();
-    await page.waitForSelector(".ticket");
+    // The backlog is a list, one line a ticket.
+    await page.waitForSelector(".ticket-line");
     await open("/p/TLK/board");
     await until(() => document.querySelectorAll(".lane .ticket").length === 3);
     await open("/p/TLK/backlog");
-    await button("To the board").click();
+    await page.locator(".ticket-line").click({ button: "right" });
+    await page.getByRole("menuitem", { name: "Put on the board" }).click();
     await see("The backlog is empty");
     await open("/p/TLK/board");
     await until(() => document.querySelectorAll(".lane .ticket").length === 4);
@@ -922,6 +941,16 @@ try {
     await page.fill("#prefix", "tlk");
     await button("Change prefix").click();
     await button("Prefix TLK. Change it").waitFor();
+  });
+  await step("search finds a ticket in any project, by its words or its id", async () => {
+    await open("/overview");
+    await page.waitForSelector(".lane");
+    await page.keyboard.press("/");
+    await page.fill('[aria-label="Search every ticket"]', "recording length");
+    await page.getByRole("option", { name: /Show the recording length/ }).waitFor();
+    await page.fill('[aria-label="Search every ticket"]', "tlk-1");
+    await page.getByRole("option", { name: /Voice notes on the phone/ }).click();
+    await until(() => window.location.hash === "#/t/TLK-1");
   });
   await step("at phone width the page does not scroll sideways", async () => {
     await page.setViewportSize({ width: 390, height: 800 });
