@@ -2,8 +2,12 @@
 // The board groups the same tickets four ways: by column, by feature, by
 // actor and by location. Dragging a ticket changes what the view groups by.
 import {
+  EmptyLine,
   Field,
+  type FilterChoice,
+  FilterMenu,
   FormDialog,
+  ListCard,
   InlineText,
   Link,
   RowMenu,
@@ -14,17 +18,11 @@ import {
   ViewToggle,
 } from "@jaetask/toolkit/suite";
 import { Button } from "@jaetask/toolkit/ui/button";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@jaetask/toolkit/ui/collapsible";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@jaetask/toolkit/ui/dialog";
 import { Input } from "@jaetask/toolkit/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@jaetask/toolkit/ui/popover";
 import {
   IconAdjustmentsHorizontal,
-  IconChevronDown,
   IconCircleCheck,
   IconMapPin,
   IconPlus,
@@ -32,7 +30,7 @@ import {
   IconStopwatch,
   IconUsers,
 } from "@tabler/icons-react";
-import { type DragEvent, type ReactNode, useEffect, useState } from "react";
+import { Children, type DragEvent, type ReactNode, useEffect, useState } from "react";
 import {
   type Board as BoardData,
   type Feature,
@@ -47,7 +45,8 @@ import { useApp, useRead } from "./app.js";
 import { ServiceIcon, service } from "@jaetask/toolkit/suite";
 import { ActorAvatar, Nothing, Picker, projectLook, NoActor, Tick, TICKET_DRAG } from "./local.js";
 export { Tick };
-import { LabelDot, PriorityIcon, StatusIcon } from "./pickers.js";
+import { LabelDot, PRIORITY_NAME, PriorityIcon, StatusIcon } from "./pickers.js";
+import { TicketLine } from "./ticket-line.js";
 import {
   ActorPicker,
   DueIcon,
@@ -159,125 +158,112 @@ export function narrowed(tickets: Ticket[], f: Filters): Ticket[] {
     );
 }
 
-/** The search box and pickers above a board or backlog. */
+/** The search box, the Filter button and the chips of the filters in use, above a board or a list. */
 export function FilterBar({
   filters,
   set,
   features,
-  lead,
+  projects,
   right,
 }: {
   filters: Filters;
   set: (patch: Partial<Filters>) => void;
   /** The features to choose from. Left out where projects are mixed, which have no features in common. */
   features?: Feature[];
-  /** A filter of the screen's own, shown after the actor filter. */
-  lead?: ReactNode;
+  /** The projects to choose from, where projects are mixed. */
+  projects?: Project[];
   right?: ReactNode;
 }) {
   const { catalog } = useApp();
-  const more = [
-    filters.feature,
-    filters.location,
-    filters.label,
-    filters.type,
-    filters.priority,
-    filters.due,
-  ].filter(Boolean).length;
-  const [open, setOpen] = useState(more > 0);
-  return (
-    <Collapsible open={open} onOpenChange={setOpen} className="grid gap-3 border-y py-3">
-      <div className="flex flex-wrap items-center gap-2">
-        <Input
-          aria-label="Search tickets"
-          placeholder="Search tickets…"
-          className="max-w-64"
-          value={filters.text}
-          onChange={(e) => set({ text: e.target.value })}
-        />
-        <Picker
-          label="Filter actor"
-          value={filters.actor}
-          onChange={(actor) => set({ actor })}
-          options={[
-            { id: "", name: "All actors" },
-            { id: "none", name: "Unassigned" },
-            ...catalog.actors.filter((a) => !a.archived).map((a) => ({ id: a.id, name: a.name })),
-          ]}
-        />
-        {lead}
-        <CollapsibleTrigger asChild>
-          <Button variant="outline">
-            <IconChevronDown size={16} aria-hidden className={open ? "rotate-180" : ""} />
-            {more > 0 ? `More filters (${more})` : "More filters"}
-          </Button>
-        </CollapsibleTrigger>
-        {right && <div className="ml-auto flex flex-wrap items-center gap-4">{right}</div>}
-      </div>
-      <CollapsibleContent className="flex flex-wrap items-center gap-2">
-        {features && (
-          <Picker
-            label="Filter feature"
-            value={filters.feature}
-            onChange={(feature) => set({ feature })}
-            options={[
-              { id: "", name: "All features" },
+  const one = (value: string) => (value ? [value] : []);
+  const choices: FilterChoice[] = [
+    ...(projects
+      ? [
+          {
+            id: "projects",
+            label: "Project",
+            many: true,
+            options: projects.map((p) => ({ id: p.id, name: p.name })),
+          },
+        ]
+      : []),
+    {
+      id: "actor",
+      label: "Actor",
+      options: [
+        { id: "none", name: "Unassigned" },
+        ...catalog.actors.filter((a) => !a.archived).map((a) => ({ id: a.id, name: a.name })),
+      ],
+    },
+    ...(features
+      ? [
+          {
+            id: "feature",
+            label: "Feature",
+            options: [
               { id: "none", name: "No feature" },
               ...features.map((f) => ({ id: f.id, name: f.name })),
-            ]}
-          />
-        )}
-        <Picker
-          label="Filter location"
-          value={filters.location}
-          onChange={(location) => set({ location })}
-          options={[
-            { id: "", name: "All locations" },
-            { id: "none", name: "No location" },
-            ...catalog.locations.map((l) => ({ id: l.id, name: l.name })),
-          ]}
-        />
-        <Picker
-          label="Filter label"
-          value={filters.label}
-          onChange={(label) => set({ label })}
-          options={[
-            { id: "", name: "All labels" },
-            ...catalog.labels.map((l) => ({ id: l.id, name: l.name })),
-          ]}
-        />
-        <Picker
-          label="Filter type"
-          value={filters.type}
-          onChange={(type) => set({ type })}
-          options={[
-            { id: "", name: "All types" },
-            ...TYPES.map((t) => ({ id: t, name: titleCase(t) })),
-          ]}
-        />
-        <Picker
-          label="Filter priority"
-          value={filters.priority}
-          onChange={(priority) => set({ priority })}
-          options={[
-            { id: "", name: "All priorities" },
-            ...PRIORITIES.map((p) => ({ id: p, name: titleCase(p) })),
-          ]}
-        />
-        <Picker
-          label="Filter due date"
-          value={filters.due}
-          onChange={(due) => set({ due })}
-          options={[
-            { id: "", name: "Any due date" },
-            { id: "overdue", name: "Overdue" },
-            { id: "upcoming", name: "Not overdue" },
-            { id: "any", name: "Has a due date" },
-            { id: "none", name: "No due date" },
-          ]}
-        />
-      </CollapsibleContent>
-    </Collapsible>
+            ],
+          },
+        ]
+      : []),
+    {
+      id: "location",
+      label: "Location",
+      options: [
+        { id: "none", name: "No location" },
+        ...catalog.locations.map((l) => ({ id: l.id, name: l.name })),
+      ],
+    },
+    {
+      id: "label",
+      label: "Label",
+      options: catalog.labels.map((l) => ({ id: l.id, name: l.name })),
+    },
+    { id: "type", label: "Type", options: TYPES.map((t) => ({ id: t, name: titleCase(t) })) },
+    {
+      id: "priority",
+      label: "Priority",
+      options: PRIORITIES.map((p) => ({ id: p, name: PRIORITY_NAME[p] })),
+    },
+    {
+      id: "due",
+      label: "Due date",
+      options: [
+        { id: "overdue", name: "Overdue" },
+        { id: "upcoming", name: "Not overdue" },
+        { id: "any", name: "Has a due date" },
+        { id: "none", name: "No due date" },
+      ],
+    },
+  ];
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <Input
+        aria-label="Search tickets"
+        placeholder="Search this page..."
+        className="h-8 max-w-56"
+        value={filters.text}
+        onChange={(e) => set({ text: e.target.value })}
+      />
+      <FilterMenu
+        filters={choices}
+        values={{
+          projects: filters.projects,
+          actor: one(filters.actor),
+          feature: one(filters.feature),
+          location: one(filters.location),
+          label: one(filters.label),
+          type: one(filters.type),
+          priority: one(filters.priority),
+          due: one(filters.due),
+        }}
+        onChange={(id, chosen) =>
+          set(id === "projects" ? { projects: chosen } : { [id]: chosen[0] ?? "" })
+        }
+      />
+      {right && <div className="ml-auto flex flex-wrap items-center gap-4">{right}</div>}
+    </div>
   );
 }
 
@@ -402,7 +388,7 @@ export function TicketCard({
             </span>
             <span className="flex items-center gap-2">
               {ticket.blocked && <span>Blocked</span>}
-              {has("priority") && (
+              {has("priority") && (ticket.priority !== "none" || hovered) && (
                 <PriorityPicker ticket={ticket} armed={hovered}>
                   <Chip className="gap-1 text-muted-foreground" aria-label="Priority">
                     <PriorityIcon priority={ticket.priority} />
@@ -531,6 +517,9 @@ export function TicketCard({
   );
 }
 
+const LANE_FIRST = 30;
+const LANE_MORE = 100;
+
 /** One column of a board: a name, a count and its cards. A card can be dropped on it. */
 export function Lane({
   id,
@@ -561,6 +550,8 @@ export function Lane({
   children?: ReactNode;
 }) {
   const [over, setOver] = useState(false);
+  // A long lane shows its first cards, and the rest when asked.
+  const [shown, setShown] = useState(LANE_FIRST);
   const dragging = (e: DragEvent) => onDrop !== undefined && e.dataTransfer.types.includes(DRAG);
   return (
     <section
@@ -616,7 +607,19 @@ export function Lane({
       </div>
       <div className="grid gap-3">
         {count > 0 ? (
-          children
+          <>
+            {Children.toArray(children).slice(0, shown)}
+            {count > shown && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs text-muted-foreground"
+                onClick={() => setShown(shown + LANE_MORE)}
+              >
+                {`Show ${Math.min(LANE_MORE, count - shown)} more of ${count - shown}`}
+              </Button>
+            )}
+          </>
         ) : (
           <p className="lane-empty rounded-lg border border-dashed p-5 text-center text-xs text-muted-foreground">
             No tickets here
@@ -1082,7 +1085,7 @@ export function BoardPage({ project }: { project: Project }) {
 const none = (title: string) => ({ id: null as string | null, title });
 
 export function BacklogPage({ project }: { project: Project }) {
-  const { act, path } = useApp();
+  const { path } = useApp();
   useNewTicketKey(true);
   const [filters, set] = useFilters(`tasks.backlog.${project.id}`);
   const features = useRead<Feature[]>("tickets.feature-find", { project: project.id }) ?? [];
@@ -1093,7 +1096,7 @@ export function BacklogPage({ project }: { project: Project }) {
       wide
       icon={titleIcon(project)}
       title={title(project, "Backlog")}
-      help="Tickets wait here until you put them on the board. Agents looking for work do not see them."
+      help="Tickets wait here until you put them on the board. Agents looking for work do not see them. To put one on the board, drag it onto Board in the sidebar, or right click it."
       action={
         <div className="flex flex-wrap items-center gap-2">
           <Display project={project} />
@@ -1105,34 +1108,19 @@ export function BacklogPage({ project }: { project: Project }) {
     >
       <FilterBar filters={filters} set={set} features={features} />
       {tickets.length > 0 ? (
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+        <ListCard>
           {tickets.map((t) => (
-            <TicketCard
-              key={t.id}
-              ticket={t}
-              action={
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    void act("tickets.ticket-board-send", { ticket: t.id });
-                  }}
-                >
-                  To the board
-                </Button>
-              }
-            />
+            <TicketLine key={t.id} ticket={t} status={false} />
           ))}
-        </div>
+        </ListCard>
       ) : (
-        <Nothing
-          text={
-            backlog && backlog.length > 0
+        <EmptyLine>
+          {!backlog
+            ? ""
+            : backlog.length > 0
               ? "No tickets match these filters."
-              : "The backlog is empty. A new ticket made here waits until you put it on the board."
-          }
-        />
+              : "The backlog is empty. A new ticket made here waits until you put it on the board."}
+        </EmptyLine>
       )}
       <TicketDialog />
     </WorkPage>

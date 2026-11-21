@@ -6,6 +6,7 @@ import { toast } from "@jaetask/toolkit/hooks";
 import { AppShell, CenteredPage, type LinkComponent, LinkProvider } from "@jaetask/toolkit/suite";
 import { Button } from "@jaetask/toolkit/ui/button";
 import { Input } from "@jaetask/toolkit/ui/input";
+import { ToastAction } from "@jaetask/toolkit/ui/toast";
 import { Toaster } from "@jaetask/toolkit/ui/toaster";
 import {
   IconArchive,
@@ -28,6 +29,7 @@ import { createRoot } from "react-dom/client";
 import {
   api,
   type Catalog,
+  type Change,
   type Connection,
   call,
   type InputRequest,
@@ -47,6 +49,7 @@ import { IntakePage } from "./inbox.js";
 import { ArchivePage, ChangesPage, ConnectionsPage, InputPage, RepliesPage } from "./pages.js";
 import { SECTIONS, type Section, SettingsPage } from "./settings.js";
 import { ProjectsNav } from "./projects-nav.js";
+import { SearchDialog, useSearchKey } from "./search.js";
 import { TicketPage } from "./ticket.js";
 
 // ---------- Routing on the hash ----------
@@ -189,6 +192,7 @@ function Page({ path, onSignOut }: { path: string; onSignOut: () => void }) {
 }
 
 function Shell({ path, onSignOut }: { path: string; onSignOut: () => void }) {
+  const [searching, setSearching] = useSearchKey();
   const awaiting = useRead<InputRequest[]>("input.input-list", { state: "awaiting" }) ?? [];
   const asking = (useRead<Connection[]>("connections.connection-list") ?? []).filter(
     (c) => c.state === "pairing",
@@ -249,9 +253,11 @@ function Shell({ path, onSignOut }: { path: string; onSignOut: () => void }) {
       bottom={bottom}
       side={(collapsed) => <ProjectsNav collapsed={collapsed} />}
       settingsHref="/settings"
+      onSearch={() => setSearching(true)}
     >
       <Page path={path} onSignOut={onSignOut} />
       <NewTicketDialog />
+      <SearchDialog open={searching} onOpenChange={setSearching} />
     </AppShell>
   );
 }
@@ -284,14 +290,32 @@ function Signed({ path, onSignOut }: { path: string; onSignOut: () => void }) {
       const outcome: Outcome = await call(action, input);
       const refused = refusal(outcome);
       if (refused !== null) toast({ variant: "destructive", description: refused, duration: 6000 });
-      else if (outcome.card?.html && outcome.changes?.some((c) => c.kind === "deleted")) {
-        // Only a deletion is announced; any other change shows where it was made, and a
-        // notification for each would bury the ones that matter.
-        // The Card arrives as HTML already escaped by the App's cardHtml.
-        toast({
-          // biome-ignore lint/security/noDangerouslySetInnerHtml: escaped by the App
-          description: <span dangerouslySetInnerHTML={{ __html: outcome.card.html }} />,
-          duration: 4000,
+      else if (outcome.changes?.some((c) => c.kind === "deleted")) {
+        // Only a deletion is announced, in the words of its change, with the way to undo it.
+        // Any other change shows where it was made, and a notification for each would bury
+        // the ones that matter.
+        void call("history.change-list", { limit: 1 }).then((listed) => {
+          const last = (listed.output as Change[] | undefined)?.[0];
+          if (!last) return;
+          const said = toast({
+            description: last.summary.charAt(0).toUpperCase() + last.summary.slice(1),
+            duration: 6000,
+            ...(last.undoable
+              ? {
+                  action: (
+                    <ToastAction
+                      altText="Undo"
+                      onClick={() => {
+                        said.dismiss();
+                        void call("history.change-undo", { change: last.id }).then(bump);
+                      }}
+                    >
+                      Undo
+                    </ToastAction>
+                  ),
+                }
+              : {}),
+          });
         });
       }
       bump();

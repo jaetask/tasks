@@ -2,24 +2,13 @@
 // status, with the same filters as a project's board.
 import { EmptyLine, ProjectIcon, ViewToggle, WorkPage } from "@jaetask/toolkit/suite";
 import { Button } from "@jaetask/toolkit/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "@jaetask/toolkit/ui/dropdown-menu";
-import {
-  IconChevronDown,
-  IconCircleCheck,
-  IconFolders,
-  IconMapPin,
-  IconUsers,
-} from "@tabler/icons-react";
+import { IconCircleCheck, IconFolders, IconMapPin, IconUsers } from "@tabler/icons-react";
 import { type ReactNode, useEffect, useState } from "react";
 import { KINDS, type Kind, type Overview, type Ticket } from "./api.js";
 import { useApp, useRead } from "./app.js";
 import {
   FilterBar,
+  KIND_TITLE,
   Lane,
   Lanes,
   narrowed,
@@ -69,7 +58,7 @@ function FirstProject() {
 export function OverviewPage() {
   const { catalog, act, query } = useApp();
   const projects = catalog.projects.filter((p) => !p.archived);
-  const [filters, set] = useFilters("tasks.overview", { view: "status" });
+  const [filters, set] = useFilters("tasks.overview", { view: "status", hideDone: true });
   useNewTicketKey(projects.length > 0);
   const overview = useRead<Overview>("tickets.overview-read", {});
   // The arrow beside a ticket's actor opens the Overview narrowed to that actor.
@@ -134,7 +123,7 @@ export function OverviewPage() {
       .filter((kind) => !filters.hideDone || kind !== "done")
       .map((kind) => ({
         id: kind,
-        title: KINDS[kind],
+        title: KIND_TITLE[kind],
         icon: <StatusIcon kind={kind} />,
         tickets: by((t) => t.column.kind, kind),
         drop: (ticket: string) => drop(ticket, kind),
@@ -152,32 +141,7 @@ export function OverviewPage() {
       <FilterBar
         filters={filters}
         set={set}
-        lead={
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" aria-label="Filter projects">
-                {chosen.length === 0 ? "All projects" : `Projects (${chosen.length})`}
-                <IconChevronDown size={16} aria-hidden />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start">
-              {projects.map((p) => (
-                <DropdownMenuCheckboxItem
-                  key={p.id}
-                  checked={chosen.includes(p.id)}
-                  onSelect={(e) => e.preventDefault()}
-                  onCheckedChange={(on) =>
-                    set({
-                      projects: on ? [...chosen, p.id] : chosen.filter((id) => id !== p.id),
-                    })
-                  }
-                >
-                  {p.name}
-                </DropdownMenuCheckboxItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        }
+        projects={projects}
         right={
           <>
             <span className="text-xs text-muted-foreground">{`${shown.length} of ${every.length} tickets`}</span>
