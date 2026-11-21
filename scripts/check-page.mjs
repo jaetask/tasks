@@ -767,27 +767,56 @@ try {
       await page.waitForSelector(".lane");
     },
   );
-  await step("in a ticket's dialog the editor's toolbar opens at the words selected", async () => {
-    await open("/p/TLK/board?ticket=TLK-1");
-    const words = page.locator(".description p").first();
-    await words.waitFor();
-    await words.dblclick();
-    await page.waitForSelector(".an-rich-md-bubble-toolbar");
-    const gap = await page.evaluate(() => {
-      const at = window.getSelection().getRangeAt(0).getBoundingClientRect();
-      const bar = document.querySelector(".an-rich-md-bubble-toolbar").getBoundingClientRect();
-      return {
-        up: Math.round(at.top - bar.bottom),
-        across: Math.round(Math.abs(at.left + at.width / 2 - (bar.left + bar.width / 2))),
-      };
-    });
-    if (gap.up < 0 || gap.up > 24 || gap.across > 24) {
-      throw new Error(`the toolbar is ${gap.up}px above and ${gap.across}px across from the words`);
-    }
-    await page.keyboard.press("Escape");
-    await open("/p/TLK/board");
-    await page.waitForSelector(".lane");
-  });
+  await step(
+    "in a ticket's dialog the toolbar opens at the words selected, and things have room",
+    async () => {
+      await open("/p/TLK/board?ticket=TLK-1");
+      const words = page.locator(".description p").first();
+      await words.waitFor();
+      await words.dblclick();
+      await page.waitForSelector(".an-rich-md-bubble-toolbar");
+      const gap = await page.evaluate(() => {
+        const at = window.getSelection().getRangeAt(0).getBoundingClientRect();
+        const bar = document.querySelector(".an-rich-md-bubble-toolbar").getBoundingClientRect();
+        return {
+          up: Math.round(at.top - bar.bottom),
+          across: Math.round(Math.abs(at.left + at.width / 2 - (bar.left + bar.width / 2))),
+        };
+      });
+      if (gap.up < 0 || gap.up > 24 || gap.across > 24) {
+        throw new Error(
+          `the toolbar is ${gap.up}px above and ${gap.across}px across from the words`,
+        );
+      }
+      const room = await page.evaluate(() => {
+        const dialog = document.querySelector('[role="dialog"]').getBoundingClientRect();
+        const text = document.querySelector(".description p").getBoundingClientRect();
+        const title = document.querySelector('[role="dialog"] [aria-label="Title"]');
+        return {
+          text: Math.round(text.left - dialog.left),
+          title: Number.parseFloat(getComputedStyle(title).paddingLeft),
+        };
+      });
+      if (room.text < 32) throw new Error(`ticket text is ${room.text}px from the dialog's edge`);
+      if (room.title < 12) throw new Error(`the title box has ${room.title}px of padding inside`);
+      await page.keyboard.press("Escape");
+      await open("/p/TLK/board");
+      await page.waitForSelector(".lane");
+      const bands = await page.evaluate(() => {
+        const box = (selector) => document.querySelector(selector).getBoundingClientRect();
+        const [head, controls, lane] = [box(".tk-work-head"), box(".tk-controls"), box(".lane")];
+        return {
+          toControls: Math.round(controls.top - head.bottom),
+          toContent: Math.round(lane.top - controls.bottom),
+        };
+      });
+      if (bands.toControls < 20 || bands.toContent <= bands.toControls) {
+        throw new Error(
+          `the gaps are ${bands.toControls}px to the controls and ${bands.toContent}px to the content`,
+        );
+      }
+    },
+  );
   await step(
     "the sidebar's edge drags between a least and a most width, and is remembered",
     async () => {
