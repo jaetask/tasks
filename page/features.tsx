@@ -2,6 +2,7 @@ import {
   EmptyLine,
   Field,
   FormDialog,
+  IconAction,
   InlineText,
   Link,
   ListCard,
@@ -11,7 +12,7 @@ import {
 import { Button } from "@jaetask/toolkit/ui/button";
 import { Input } from "@jaetask/toolkit/ui/input";
 import { Textarea } from "@jaetask/toolkit/ui/textarea";
-import { IconStar, IconStarFilled } from "@tabler/icons-react";
+import { IconList, IconPlus, IconStar, IconStarFilled } from "@tabler/icons-react";
 import { useRef, useState } from "react";
 import type { Feature, Project, Ticket } from "./api.js";
 import { useApp, useRead } from "./app.js";
@@ -109,9 +110,12 @@ export function FeaturesPage({ project }: { project: Project }) {
       title={`${project.name} · Features`}
       help="A feature is one part of the project. It groups the tickets for that part. A starred feature shows in the sidebar."
       action={
-        <Button size="sm" onClick={() => setAdding(true)}>
-          New feature
-        </Button>
+        <IconAction
+          primary
+          label="New feature"
+          icon={<IconPlus aria-hidden />}
+          onClick={() => setAdding(true)}
+        />
       }
     >
       <Tick label="Show archived" checked={archived} onChange={setArchived} />
@@ -233,12 +237,13 @@ export function FeaturePage({ project, id }: { project: Project; id: string }) {
       title={`${project.name} · Features`}
       action={
         <>
-          <Button asChild variant="outline" size="sm">
-            <Link href={list}>All features</Link>
-          </Button>
-          <Button asChild size="sm">
-            <Link href={newTicketAt(path, `feature=${feature.id}`)}>New ticket</Link>
-          </Button>
+          <IconAction label="All features" icon={<IconList aria-hidden />} href={list} />
+          <IconAction
+            primary
+            label="New ticket"
+            icon={<IconPlus aria-hidden />}
+            href={newTicketAt(path, `feature=${feature.id}`)}
+          />
         </>
       }
     >

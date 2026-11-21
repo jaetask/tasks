@@ -2,6 +2,7 @@ import {
   EmptyLine,
   Field,
   FormDialog,
+  IconAction,
   ListCard,
   PageLink,
   RowMenu,
@@ -12,7 +13,7 @@ import { Button } from "@jaetask/toolkit/ui/button";
 import { Card } from "@jaetask/toolkit/ui/card";
 import { Checkbox } from "@jaetask/toolkit/ui/checkbox";
 import { Input } from "@jaetask/toolkit/ui/input";
-import { IconCheck, IconCopy } from "@tabler/icons-react";
+import { IconCheck, IconCopy, IconPlugConnected } from "@tabler/icons-react";
 import { useState } from "react";
 import {
   type Actor,
@@ -603,9 +604,11 @@ export function ConnectionsPage() {
       title="Connections"
       help="An agent connects once, with your OK. You choose what it may do and which actor it is. A request you do not approve expires after 10 minutes."
       action={
-        <Button variant="outline" size="sm" onClick={() => setHow(true)}>
-          How an agent connects
-        </Button>
+        <IconAction
+          label="How an agent connects"
+          icon={<IconPlugConnected aria-hidden />}
+          onClick={() => setHow(true)}
+        />
       }
     >
       {waiting.length > 0 && (

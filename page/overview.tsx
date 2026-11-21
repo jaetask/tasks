@@ -5,7 +5,9 @@ import { type ReactNode, useEffect, useState } from "react";
 import { KINDS, type Kind, type Overview, type Ticket } from "./api.js";
 import { useApp, useRead } from "./app.js";
 import {
+  Display,
   FilterBar,
+  GroupList,
   KIND_TITLE,
   Lane,
   Lanes,
@@ -65,6 +67,7 @@ export function OverviewPage() {
   }, [asked]);
   if (projects.length === 0) return <FirstProject />;
   const view = VIEWS.some((v) => v.id === filters.view) ? filters.view : "status";
+  const layout = filters.layout || "board";
   const every = (overview?.kinds ?? []).flatMap((k) => k.tickets);
   const chosen = filters.projects.filter((id) => projects.some((p) => p.id === id));
   const all = narrowed(
@@ -130,7 +133,12 @@ export function OverviewPage() {
       wide
       title="Overview"
       help="Every project's open tickets on one board. Drag a ticket to change what the view groups by."
-      action={<ViewToggle views={VIEWS} value={view} onChange={(v) => set({ view: v })} />}
+      action={
+        <div className="flex flex-wrap items-center gap-2">
+          <ViewToggle views={VIEWS} value={view} onChange={(v) => set({ view: v })} />
+          <Display layout={layout} onLayout={(l) => set({ layout: l })} />
+        </div>
+      }
     >
       <FilterBar
         filters={filters}
@@ -155,7 +163,9 @@ export function OverviewPage() {
       {groups.length > 0 && (
         <h2 className="m-0 text-sm font-semibold">{VIEWS.find((v) => v.id === view)?.heading}</h2>
       )}
-      {groups.length > 0 ? (
+      {groups.length > 0 && layout === "list" ? (
+        <GroupList groups={groups} across />
+      ) : groups.length > 0 ? (
         <Lanes label={`Every project's tickets, by ${view}`}>
           {groups.map((g) => (
             <Lane

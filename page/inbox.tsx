@@ -8,7 +8,7 @@ import { useRef, useState } from "react";
 import { type Item, type Project, type Run, type Step, when } from "./api.js";
 import { useApp, useRead } from "./app.js";
 import { Pill, TabBar } from "./local.js";
-import { titleIcon } from "./board.js";
+import { Display, Lane, Lanes, titleIcon, useFilters } from "./board.js";
 import { projectTitle } from "./pages.js";
 
 export const CONDITIONS: Record<string, string> = {
@@ -263,6 +263,8 @@ export function IntakePage({ project }: { project: Project }) {
   const [state, setState] = useState<Item["state"]>("received");
   const [open, setOpen] = useState<string | null>(null);
   const [text, setText] = useState("");
+  const [display, setDisplay] = useFilters(`tasks.intake.${project.id}`);
+  const layout = display.layout || "list";
   const all = useRead<Item[]>("inbox.inbox-read", { project: project.id });
   const steps = useRead<Step[]>("inbox.pipeline-read") ?? [];
   const items = (all ?? []).filter((i) => i.state === state);
@@ -276,6 +278,7 @@ export function IntakePage({ project }: { project: Project }) {
       icon={titleIcon(project)}
       title={projectTitle(project, "Intake")}
       help="New ideas and requests for this project, before they become tickets. Your intake steps look at each new item before it lands here."
+      action={<Display layout={layout} onLayout={(l) => setDisplay({ layout: l })} />}
     >
       <form
         className="flex items-center gap-2 rounded-xl border bg-card py-1.5 pr-2 pl-4"
@@ -298,37 +301,79 @@ export function IntakePage({ project }: { project: Project }) {
           Capture
         </Button>
       </form>
-      <TabBar
-        label="Which items"
-        value={state}
-        options={tabs.map((s) => ({ id: s.id, name: `${s.name} ${s.count}` }))}
-        onChange={setState}
-      />
-      {items.length > 0 ? (
-        <ListCard>
-          {items.map((i) => (
-            <li key={i.id} className="item tk-list-row p-0!">
-              <Button
-                variant="ghost"
-                className="h-auto w-full min-w-0 justify-start gap-3 rounded-none px-5 py-2.5 text-left font-normal"
-                onClick={() => setOpen(i.id)}
+      {layout === "board" ? (
+        <Lanes label={`The intake of ${project.name}, by state`}>
+          {STATES.map((tab) => {
+            const inside = (all ?? []).filter((i) => i.state === tab.id);
+            return (
+              <Lane
+                key={tab.id}
+                id={`state-${tab.id}`}
+                title={tab.name}
+                count={inside.length}
+                empty="Nothing here"
               >
-                <span className="min-w-0 flex-1 truncate font-medium">{i.title}</span>
-                {i.tags.map((t) => (
-                  <Pill key={t}>{t}</Pill>
+                {inside.map((i) => (
+                  <Button
+                    key={i.id}
+                    variant="ghost"
+                    className="item h-auto w-full flex-col items-start gap-2 whitespace-normal rounded-xl border bg-card p-3 text-left font-normal shadow-sm hover:bg-card hover:shadow-md"
+                    onClick={() => setOpen(i.id)}
+                  >
+                    <span className="font-medium">{i.title}</span>
+                    {(i.tags.length > 0 || i.category) && (
+                      <span className="flex flex-wrap gap-1">
+                        {i.tags.map((t) => (
+                          <Pill key={t}>{t}</Pill>
+                        ))}
+                        {i.category && <Pill>{i.category}</Pill>}
+                      </span>
+                    )}
+                    <span className="text-xs text-muted-foreground">
+                      {`${i.ticket ? `${i.ticket} · ` : ""}${i.source} · `}
+                      <TimeAgo at={i.at} />
+                    </span>
+                  </Button>
                 ))}
-                {i.category && <Pill>{i.category}</Pill>}
-                {i.ticket && <span className="text-xs text-muted-foreground">{i.ticket}</span>}
-                <span className="shrink-0 text-xs text-muted-foreground">
-                  {`${i.source} · `}
-                  <TimeAgo at={i.at} />
-                </span>
-              </Button>
-            </li>
-          ))}
-        </ListCard>
+              </Lane>
+            );
+          })}
+        </Lanes>
       ) : (
-        <EmptyLine>{all ? `Nothing is ${state}.` : ""}</EmptyLine>
+        <>
+          <TabBar
+            label="Which items"
+            value={state}
+            options={tabs.map((s) => ({ id: s.id, name: `${s.name} ${s.count}` }))}
+            onChange={setState}
+          />
+          {items.length > 0 ? (
+            <ListCard>
+              {items.map((i) => (
+                <li key={i.id} className="item tk-list-row p-0!">
+                  <Button
+                    variant="ghost"
+                    className="h-auto w-full min-w-0 justify-start gap-3 rounded-none px-5 py-2.5 text-left font-normal"
+                    onClick={() => setOpen(i.id)}
+                  >
+                    <span className="min-w-0 flex-1 truncate font-medium">{i.title}</span>
+                    {i.tags.map((t) => (
+                      <Pill key={t}>{t}</Pill>
+                    ))}
+                    {i.category && <Pill>{i.category}</Pill>}
+                    {i.ticket && <span className="text-xs text-muted-foreground">{i.ticket}</span>}
+                    <span className="shrink-0 text-xs text-muted-foreground">
+                      {`${i.source} · `}
+                      <TimeAgo at={i.at} />
+                    </span>
+                  </Button>
+                </li>
+              ))}
+            </ListCard>
+          ) : (
+            <EmptyLine>{all ? `Nothing is ${state}.` : ""}</EmptyLine>
+          )}
+        </>
       )}
       <p className="m-0 text-xs text-muted-foreground">
         {steps.length === 0

@@ -1,5 +1,6 @@
 import {
   EmptyLine,
+  IconAction,
   Field,
   type FilterChoice,
   FilterMenu,
@@ -18,9 +19,12 @@ import { Button } from "@jaetask/toolkit/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@jaetask/toolkit/ui/dialog";
 import { Input } from "@jaetask/toolkit/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@jaetask/toolkit/ui/popover";
+import { ToggleGroup, ToggleGroupItem } from "@jaetask/toolkit/ui/toggle-group";
 import {
   IconAdjustmentsHorizontal,
   IconCircleCheck,
+  IconLayoutKanban,
+  IconList,
   IconMapPin,
   IconPlus,
   IconStack2,
@@ -83,7 +87,9 @@ type Filters = {
   hideDone: boolean;
   hideEmpty: boolean;
   projects: string[];
+  layout: Layout | "";
 };
+export type Layout = "list" | "board";
 export type { Filters, View, ViewChoice };
 const ALL: Filters = {
   view: "status",
@@ -98,6 +104,7 @@ const ALL: Filters = {
   hideDone: false,
   hideEmpty: false,
   projects: [],
+  layout: "",
 };
 
 export function useFilters(
@@ -503,11 +510,13 @@ export function Lane({
   count,
   addTo,
   menu,
+  empty = "No tickets here",
   rename,
   onDrop,
   children,
 }: {
   menu?: ReactNode;
+  empty?: string;
   rename?: {
     editing: boolean;
     onEditing: (editing: boolean) => void;
@@ -593,7 +602,7 @@ export function Lane({
           </>
         ) : (
           <p className="lane-empty rounded-lg border border-dashed p-5 text-center text-xs text-muted-foreground">
-            No tickets here
+            {empty}
           </p>
         )}
       </div>
@@ -657,50 +666,131 @@ const CARD_PROPERTIES: [string, string][] = [
   ["updated", "Updated"],
 ];
 
-function Display({ project }: { project: Project }) {
+export function LayoutChoice({
+  value,
+  onChange,
+}: {
+  value: Layout;
+  onChange: (layout: Layout) => void;
+}) {
+  return (
+    <ToggleGroup
+      type="single"
+      variant="outline"
+      aria-label="Show as"
+      className="grid grid-cols-2 gap-2"
+      value={value}
+      onValueChange={(v) => {
+        if (v) onChange(v as Layout);
+      }}
+    >
+      <ToggleGroupItem value="list" className="gap-2">
+        <IconList size={16} aria-hidden />
+        List
+      </ToggleGroupItem>
+      <ToggleGroupItem value="board" className="gap-2">
+        <IconLayoutKanban size={16} aria-hidden />
+        Board
+      </ToggleGroupItem>
+    </ToggleGroup>
+  );
+}
+
+export function Display({
+  project,
+  layout,
+  onLayout,
+}: {
+  project?: Project;
+  layout: Layout;
+  onLayout: (layout: Layout) => void;
+}) {
   const { act } = useApp();
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="sm">
-          <IconAdjustmentsHorizontal size={16} aria-hidden />
-          Display
+        <Button
+          variant="outline"
+          size="icon-sm"
+          aria-label="Display"
+          title="Display"
+          className="text-muted-foreground [&_svg]:size-4"
+        >
+          <IconAdjustmentsHorizontal aria-hidden />
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="grid w-80 gap-3">
-        <p className="m-0 text-xs font-medium text-muted-foreground">Display properties</p>
-        <PropertyPills
-          label="Display properties"
-          options={CARD_PROPERTIES}
-          value={project.card}
-          onChange={(show) => void act("catalog.project-card-set", { project: project.id, show })}
-        />
-        <div className="flex items-center justify-between gap-3 border-t pt-3">
-          <span className="text-xs font-medium text-muted-foreground">Ordering</span>
-          <Picker
-            label="Ordering"
-            value={project.ordering}
-            options={ORDERINGS}
-            className="h-8 w-36"
-            onChange={(ordering) =>
-              void act("catalog.project-ordering-set", { project: project.id, ordering })
-            }
-          />
-        </div>
-        <div className="flex justify-end">
-          <Button
-            variant="link"
-            size="sm"
-            className="h-auto p-0"
-            onClick={() =>
-              void act("catalog.project-card-set", { project: project.id, show: null })
-            }
-          >
-            Reset
-          </Button>
-        </div>
+        <LayoutChoice value={layout} onChange={onLayout} />
+        {project && (
+          <>
+            <p className="m-0 border-t pt-3 text-xs font-medium text-muted-foreground">
+              Display properties
+            </p>
+            <PropertyPills
+              label="Display properties"
+              options={CARD_PROPERTIES}
+              value={project.card}
+              onChange={(show) =>
+                void act("catalog.project-card-set", { project: project.id, show })
+              }
+            />
+            <div className="flex items-center justify-between gap-3 border-t pt-3">
+              <span className="text-xs font-medium text-muted-foreground">Ordering</span>
+              <Picker
+                label="Ordering"
+                value={project.ordering}
+                options={ORDERINGS}
+                className="h-8 w-36"
+                onChange={(ordering) =>
+                  void act("catalog.project-ordering-set", { project: project.id, ordering })
+                }
+              />
+            </div>
+            <div className="flex justify-end">
+              <Button
+                variant="link"
+                size="sm"
+                className="h-auto p-0"
+                onClick={() =>
+                  void act("catalog.project-card-set", { project: project.id, show: null })
+                }
+              >
+                Reset
+              </Button>
+            </div>
+          </>
+        )}
       </PopoverContent>
     </Popover>
+  );
+}
+
+export function GroupList({
+  groups,
+  across,
+}: {
+  groups: { id: string; title: string; icon?: ReactNode; tickets: Ticket[] }[];
+  across?: boolean;
+}) {
+  return (
+    <div className="grid gap-4">
+      {groups.map((g) => (
+        <section key={g.id} aria-label={g.title} className="group-list grid gap-1">
+          <h2 className="m-0 flex items-center gap-2 text-xs font-medium text-muted-foreground">
+            {g.icon}
+            {g.title}
+            <span className="font-normal">{g.tickets.length}</span>
+          </h2>
+          {g.tickets.length > 0 && (
+            <ListCard>
+              {g.tickets.map((t) => (
+                <TicketLine key={t.id} ticket={t} status={across ?? false} />
+              ))}
+            </ListCard>
+          )}
+        </section>
+      ))}
+    </div>
   );
 }
 
@@ -866,6 +956,7 @@ export function BoardPage({ project }: { project: Project }) {
   const features = useRead<Feature[]>("tickets.feature-find", { project: project.id }) ?? [];
   const board = useRead<BoardData>("tickets.board-read", { project: project.id });
   const view = filters.view;
+  const layout = filters.layout || "board";
   const { query } = useApp();
   const asked = query.get("feature");
   const where = query.get("location");
@@ -958,10 +1049,13 @@ export function BoardPage({ project }: { project: Project }) {
       action={
         <div className="flex flex-wrap items-center gap-2">
           <ViewToggle views={VIEWS} value={view} onChange={(v) => set({ view: v })} />
-          <Display project={project} />
-          <Button asChild size="sm">
-            <Link href={newTicketAt(path)}>New ticket</Link>
-          </Button>
+          <Display project={project} layout={layout} onLayout={(l) => set({ layout: l })} />
+          <IconAction
+            primary
+            label="New ticket"
+            icon={<IconPlus aria-hidden />}
+            href={newTicketAt(path)}
+          />
         </div>
       }
     >
@@ -990,7 +1084,14 @@ export function BoardPage({ project }: { project: Project }) {
       {groups.length > 0 && (
         <h2 className="m-0 text-sm font-semibold">{VIEWS.find((v) => v.id === view)?.heading}</h2>
       )}
-      {groups.length > 0 ? (
+      {groups.length > 0 && layout === "list" ? (
+        <GroupList
+          groups={groups.map((g) => ({
+            ...g,
+            ...(g.kind ? { icon: <StatusIcon kind={g.kind} /> } : {}),
+          }))}
+        />
+      ) : groups.length > 0 ? (
         <Lanes
           label={`The board of ${project.name}, by ${view}`}
           {...(view === "status" ? { after: <AddColumn project={project} /> } : {})}
@@ -1047,6 +1148,7 @@ export function BacklogPage({ project }: { project: Project }) {
   const features = useRead<Feature[]>("tickets.feature-find", { project: project.id }) ?? [];
   const backlog = useRead<Ticket[]>("tickets.backlog-read", { project: project.id });
   const tickets = ordered(narrowed(backlog ?? [], filters), project.ordering);
+  const layout = filters.layout || "list";
   return (
     <WorkPage
       wide
@@ -1055,15 +1157,24 @@ export function BacklogPage({ project }: { project: Project }) {
       help="Tickets wait here until you put them on the board. Agents looking for work do not see them. To put one on the board, drag it onto Board in the sidebar, or right click it."
       action={
         <div className="flex flex-wrap items-center gap-2">
-          <Display project={project} />
-          <Button asChild size="sm">
-            <Link href={newTicketAt(path, "backlog=1")}>New ticket</Link>
-          </Button>
+          <Display project={project} layout={layout} onLayout={(l) => set({ layout: l })} />
+          <IconAction
+            primary
+            label="New ticket"
+            icon={<IconPlus aria-hidden />}
+            href={newTicketAt(path, "backlog=1")}
+          />
         </div>
       }
     >
       <FilterBar filters={filters} set={set} features={features} />
-      {tickets.length > 0 ? (
+      {tickets.length > 0 && layout === "board" ? (
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+          {tickets.map((t) => (
+            <TicketCard key={t.id} ticket={t} />
+          ))}
+        </div>
+      ) : tickets.length > 0 ? (
         <ListCard>
           {tickets.map((t) => (
             <TicketLine key={t.id} ticket={t} status={false} />
