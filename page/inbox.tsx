@@ -97,7 +97,7 @@ function ItemDialog({ item, onClose }: { item: Item; onClose: () => void }) {
             key={`title ${item.title}`}
             aria-label="Item title"
             disabled={!live}
-            className="h-auto border-transparent px-0 text-lg font-semibold shadow-none hover:border-input disabled:opacity-100 md:text-lg"
+            className="-mx-3 h-auto w-[calc(100%+1.5rem)] border-transparent px-3 py-1.5 text-lg font-semibold shadow-none hover:border-input disabled:opacity-100 md:text-lg"
             defaultValue={item.title}
             maxLength={200}
             onKeyDown={(e) => {

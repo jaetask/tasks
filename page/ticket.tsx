@@ -350,7 +350,7 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
         <section id="ticket" className="grid gap-3">
           <Input
             aria-label="Title"
-            className="h-auto border-transparent px-0 text-lg font-semibold shadow-none hover:border-input focus-visible:border-input md:text-lg"
+            className="-mx-3 h-auto w-[calc(100%+1.5rem)] border-transparent px-3 py-1.5 text-lg font-semibold shadow-none hover:border-input focus-visible:border-input md:text-lg"
             disabled={!open}
             value={title ?? ticket.title}
             maxLength={200}
