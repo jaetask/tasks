@@ -1,12 +1,19 @@
 {
   "version": 2,
   "skills": {
+    "delete-comment": {
+      "source": "jaetask/skills",
+      "commit": "bdab5ae8bc4ccd0ae1131617a332e52c3908585a",
+      "sourceType": "github",
+      "skillPath": "skills/delete-comment/SKILL.md",
+      "computedHash": "0788874c01106e5ebf407843cbc5881438d3af75a15f45827c10d0afdba18ce3"
+    },
     "guardrails": {
       "source": "jaetask/skills",
-      "commit": "b6c4633f2e1515a9493d7a88347e08d6cc10e127",
+      "commit": "bdab5ae8bc4ccd0ae1131617a332e52c3908585a",
       "sourceType": "github",
       "skillPath": "skills/guardrails/SKILL.md",
-      "computedHash": "e93abc1bcda3f27cacc8c5dee98d3e13b64094e780d61f2f5187dcf200eff4cf"
+      "computedHash": "cf9fcde1adbdd22688ea40ff07db206691e6c3e6b635c86c3638654028165bae"
     },
     "pave": {
       "source": "jaetask/skills",
@@ -14,6 +21,13 @@
       "sourceType": "github",
       "skillPath": "skills/pave/SKILL.md",
       "computedHash": "9b3a4a88da0a1f5eba940e1c9b81271cc324ca90d6f7a6c32c336aa4ba70cd80"
+    },
+    "remove-the-human": {
+      "source": "jaetask/skills",
+      "commit": "bdab5ae8bc4ccd0ae1131617a332e52c3908585a",
+      "sourceType": "github",
+      "skillPath": "skills/remove-the-human/SKILL.md",
+      "computedHash": "d19cbd1e6c7de6e98255ecfd74a1c6363ac69727a35c49d793b541fa42aa7a6c"
     },
     "trail": {
       "source": "jaetask/skills",

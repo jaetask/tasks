@@ -44,6 +44,7 @@ CHECKS = {
     "lint": ("static analysis", "The linter is configured and passes."),
     "format": ("static analysis", "A formatter checks every commit (pre-commit hook) and the code is formatted."),
     "ast-grep": ("static analysis", "ast-grep YAML rules pass scan and their own tests."),
+    "no-comments": ("static analysis", "Code comments are banned: lint runs a ratchet whose counts only go down."),
     "yaml": ("static analysis", "All YAML parses."),
     "verify": ("verification", "A verify command (approved output, snapshot or end-to-end tests) runs before push and passes."),
     "agents-md": ("prose", "AGENTS.md exists and is short."),
@@ -229,6 +230,18 @@ def c_ast_grep(repo, cfg):
         if code:
             return False, f"ast-grep {sub.split()[0]} fails: {out.splitlines()[-1][:160] if out else code}"
     return True, "ast-grep scan and test pass"
+
+
+def c_no_comments(repo, cfg):
+    script, base = f"{HOME}/check-comments.mjs", f"{HOME}/comments.json"
+    if not Path(repo, script).exists() or not Path(repo, base).exists():
+        return False, f"no {script} with comments.json: run the delete-comment skill"
+    lint = cfg["commands"].get("lint", "")
+    wired = "check-comments" in lint or any("check-comments" in Path(repo, f).read_text(errors="replace") for f in ("package.json", "pyproject.toml", "Makefile") if Path(repo, f).exists())
+    if not wired:
+        return False, f"the lint command does not run node {script}"
+    code, out = sh(repo, f"node {script}")
+    return code == 0, out.splitlines()[-1][:160] if out else f"node {script} exits {code}"
 
 
 def c_gitignore(repo, cfg):
