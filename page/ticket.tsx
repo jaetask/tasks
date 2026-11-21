@@ -281,6 +281,7 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
   const [_tab, _setTab] = useState<"comments" | "activity">("comments");
   const [handoff, setHandoff] = useState("");
   const [adding, setAdding] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [title, setTitle] = useState<string | null>(null);
   // What the description editor holds, until it is saved on leaving it.
   const draft = useRef<string | null>(null);
@@ -718,10 +719,15 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
           </div>
           {!open && (
             <div className="mt-2 flex flex-wrap gap-2">
+              <Button variant="outline" size="sm" onClick={() => setDeleting(true)}>
+                Delete forever
+              </Button>
               <DeleteForGood
                 name={ticket.id}
                 what="This ticket, with its comments and images"
                 label="Delete forever"
+                open={deleting}
+                onOpenChange={setDeleting}
                 onConfirm={() => {
                   void act("tickets.ticket-delete", { ticket: id }).then(gone);
                 }}

@@ -24,6 +24,8 @@ export type ChangeEntry = {
   undoneBy: string | null;
   /** False for a change that cannot be undone, such as deleting forever. */
   undoable: boolean;
+  /** True for a change made by bringing data in from another app. */
+  imported: boolean;
 };
 
 /** Reads and writes rows by id, remembering each write for the change being made. */
@@ -47,7 +49,16 @@ export type Journal = {
     /** True for a change that cannot be undone. */
     final?: boolean;
   }): string;
-  list(filter?: { ticket?: string | undefined; limit?: number | undefined }): ChangeEntry[];
+  list(filter?: {
+    ticket?: string | undefined;
+    limit?: number | undefined;
+    /** Only changes made by this actor. */
+    actor?: string | undefined;
+    /** Only changes to tickets of this project. */
+    project?: string | undefined;
+    /** False leaves out changes made by bringing data in. All if left out. */
+    imported?: boolean | undefined;
+  }): ChangeEntry[];
   /** Puts back what a change changed. Refused if those rows have changed since. */
   undo(id: string, actor: string): ChangeEntry;
   /** Forgets the rows of every change about a ticket: they can no longer be undone. */
@@ -84,6 +95,7 @@ type Stored = {
   final: number;
   undoes: number | null;
   undone_by: number | null;
+  imported: number;
 };
 
 const ref = (seq: number | null) => (seq === null ? null : `h${seq}`);
@@ -97,6 +109,7 @@ const entry = (s: Stored): ChangeEntry => ({
   undoes: ref(s.undoes),
   undoneBy: ref(s.undone_by),
   undoable: s.final === 0 && s.undone_by === null,
+  imported: s.imported === 1,
 });
 
 export function openJournal(db: DatabaseSync, now: () => number): Journal {
@@ -171,13 +184,26 @@ export function openJournal(db: DatabaseSync, now: () => number): Journal {
     pending: () => touched.length,
     record,
     list: (filter = {}) => {
-      const found = (
-        filter.ticket === undefined
-          ? db.prepare("SELECT * FROM changes ORDER BY seq DESC LIMIT ?").all(filter.limit ?? 100)
-          : db
-              .prepare("SELECT * FROM changes WHERE ticket = ? ORDER BY seq DESC LIMIT ?")
-              .all(filter.ticket, filter.limit ?? 100)
-      ) as Stored[];
+      const where: string[] = [];
+      const values: (string | number)[] = [];
+      if (filter.ticket !== undefined) {
+        where.push("ticket = ?");
+        values.push(filter.ticket);
+      }
+      if (filter.actor !== undefined) {
+        where.push("actor = ?");
+        values.push(filter.actor);
+      }
+      if (filter.project !== undefined) {
+        where.push("ticket LIKE ? ESCAPE '\\'");
+        values.push(`${filter.project.replace(/[%_\\]/g, "\\$&")}-%`);
+      }
+      if (filter.imported === false) where.push("imported = 0");
+      const found = db
+        .prepare(
+          `SELECT * FROM changes ${where.length ? `WHERE ${where.join(" AND ")}` : ""} ORDER BY seq DESC LIMIT ?`,
+        )
+        .all(...values, filter.limit ?? 100) as Stored[];
       return found.reverse().map(entry);
     },
     undo: (id, actor) => {

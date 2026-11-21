@@ -62,10 +62,13 @@
 | inbox.item-accept | write |
 | inbox.item-capture | write |
 | inbox.item-dismiss | write |
+| inbox.item-edit | write |
 | inbox.item-promote | write |
 | inbox.item-read | read |
 | inbox.item-reject | write |
 | inbox.item-run | write |
+| inbox.item-tag | write |
+| inbox.item-untag | write |
 | inbox.pipeline-read | read |
 | inbox.step-add | write |
 | inbox.step-edit | write |

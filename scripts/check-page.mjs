@@ -416,17 +416,22 @@ try {
     await page.getByRole("checkbox", { name: "Record with the phone locked" }).click();
     await see("Steps · 1 of 1");
   });
-  await step("an agent asks to connect; approve it as Coder on an edit page", async () => {
+  await step("an agent asks to connect; approve it as Coder in a dialog", async () => {
     const asked = await (
       await post("/pair", { host: "Coding agent", effects: ["read", "write"] })
     ).json();
     await open("/connections");
-    await page.getByRole("link", { name: /Coding agent/ }).waitFor();
+    await page.locator(".tk-list-row", { hasText: "Coding agent" }).waitFor();
     await shot("connections");
-    await page.getByRole("link", { name: /Coding agent/ }).click();
-    await see("Approve Coding agent");
     await button("Approve").click();
-    await button("Revoke").waitFor();
+    await see("Approve Coding agent");
+    await page.getByRole("dialog").getByRole("button", { name: "Approve", exact: true }).click();
+    await button("Connection Coding agent").waitFor();
+    // The addresses an agent uses are behind a button, each with a way to copy it.
+    await button("How an agent connects").click();
+    await see("/pair");
+    await button("Copy then calls").waitFor();
+    await page.keyboard.press("Escape");
     key = (await (await post(`/pair/${asked.id}/claim`, { claim: asked.claim })).json()).token;
   });
   await step("the agent's work shows on the board as it happens", async () => {
@@ -546,11 +551,11 @@ try {
     await see("Sam answered Coder");
     await see("Sam replied to Coder");
     await shot("agent-inbox");
-    const before = await count("#replies .tk-list-row");
+    const before = await count(".tk-list-row");
     await button("Acknowledge").click();
-    await until((n) => document.querySelectorAll("#replies .tk-list-row").length === n - 1, before);
+    await until((n) => document.querySelectorAll(".tk-list-row").length === n - 1, before);
     await page.getByRole("tab", { name: "Acknowledged" }).click();
-    await until(() => document.querySelectorAll("#replies .tk-list-row").length === 1);
+    await until(() => document.querySelectorAll(".tk-list-row").length === 1);
   });
   await step("features: add one, put a ticket in it, and narrow the board to it", async () => {
     await open("/p/TLK/features");
@@ -817,19 +822,36 @@ try {
     await page.press('[aria-label="A new idea or request"]', "Enter");
     await page.locator(".item .pill", { hasText: "bug" }).waitFor();
     if ((await count(".item")) !== 2) throw new Error("the spam is in the inbox");
-    await page.locator(".item").nth(1).getByRole("button", { name: "What the steps did" }).click();
-    await see("not spam; a bug");
     await shot("inbox");
-    await page.getByRole("tab", { name: "Rejected" }).click();
+    // An item opens in a dialog: what the steps did, its text and its tags.
+    await page.locator(".item").nth(1).getByRole("button").click();
+    await button("What the steps did").click();
+    await see("not spam; a bug");
+    await page.fill('[aria-label="Add a tag"]', "board");
+    await page.press('[aria-label="Add a tag"]', "Enter");
+    await page.getByRole("dialog").locator(".pill", { hasText: "board" }).waitFor();
+    await page.fill('[aria-label="Item title"]', "The board crashes on drag");
+    await page.press('[aria-label="Item title"]', "Enter");
+    await page.keyboard.press("Escape");
+    await page.locator(".item", { hasText: "The board crashes on drag" }).waitFor();
+    // Each state shows how many items it holds; one with none is left out.
+    await page.getByRole("tab", { name: "Rejected 1" }).click();
+    await page.locator(".item").first().getByRole("button").click();
     await see("Reason: looks like spam");
+    await page.getByRole("dialog").getByRole("button", { name: "Close" }).click();
+    await until(() => !document.querySelector('[role="dialog"]'));
+    if ((await page.getByRole("tab", { name: /Dismissed/ }).count()) !== 0) {
+      throw new Error("a state with no items is shown");
+    }
   });
   await step("intake: turn an item into a ticket in the backlog", async () => {
-    await page.getByRole("tab", { name: "Received" }).click();
+    await page.getByRole("tab", { name: /^Received/ }).click();
     await page.waitForSelector(".item");
-    await button("Add to the backlog").click();
+    await page.locator(".item").first().getByRole("button").click();
+    await button("Turn into a ticket").click();
     await until(() => document.querySelectorAll(".item").length === 1);
-    await page.getByRole("tab", { name: "Promoted" }).click();
-    await link("Open TLK-5").waitFor();
+    await page.getByRole("tab", { name: /^Promoted/ }).click();
+    await page.locator(".item", { hasText: "TLK-5" }).waitFor();
   });
   await step("archive a ticket from its Actions, then restore it from the Archive", async () => {
     await open("/t/TLK-3");
@@ -838,6 +860,12 @@ try {
     await page.locator("#place").getByText("archived").waitFor();
     await link("Archive").click();
     await see("Show the recording length");
+    // The archive can be searched; a ticked ticket is restored with the others ticked.
+    await page.fill('[aria-label="Search the archive"]', "nothing like this");
+    await see("Nothing here.");
+    await page.fill('[aria-label="Search the archive"]', "recording");
+    await page.getByRole("checkbox", { name: "Tick TLK-3" }).click();
+    await see("1 ticket ticked");
     await button("Restore").click();
     await see("Nothing here.");
   });
@@ -845,13 +873,23 @@ try {
     await link("Changes").click();
     await see("restored TLK-3");
     await page.locator("#changes b", { hasText: "Coder" }).first().waitFor();
+    // Changes are under a heading for their day, and can be narrowed to one actor.
+    await page.getByRole("heading", { name: "Today" }).waitFor();
+    await pick('[aria-label="Actor"]', "Coder");
+    await until(() =>
+      [...document.querySelectorAll("#changes b")].every((b) => b.textContent === "Coder"),
+    );
+    await pick('[aria-label="Actor"]', "Everyone");
   });
   await step("revoke the agent; it is cut off", async () => {
     await page
       .getByRole("link", { name: /^Connections/ })
       .first()
       .click();
-    await button("Revoke").click();
+    await button("Connection Coding agent").click();
+    await page.getByRole("menuitem", { name: "Revoke", exact: true }).click();
+    await see("Nothing is connected.");
+    await page.getByRole("checkbox", { name: "Show revoked" }).click();
     await page.locator(".pill", { hasText: "revoked" }).waitFor();
     const cut = await agent("tickets__work-find", {}).then(
       () => false,

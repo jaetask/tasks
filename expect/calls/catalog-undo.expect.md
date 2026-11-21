@@ -36,7 +36,8 @@
     "ticket": null,
     "undoes": "h8",
     "undoneBy": null,
-    "undoable": true
+    "undoable": true,
+    "imported": false
   },
   {
     "id": "h10",
@@ -47,7 +48,8 @@
     "ticket": null,
     "undoes": null,
     "undoneBy": null,
-    "undoable": true
+    "undoable": true,
+    "imported": false
   },
   {
     "id": "h11",
@@ -58,7 +60,8 @@
     "ticket": null,
     "undoes": null,
     "undoneBy": null,
-    "undoable": true
+    "undoable": true,
+    "imported": false
   }
 ]
 ```

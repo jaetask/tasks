@@ -121,7 +121,7 @@
 | input__input-withdraw |  | Take back an input request that no longer needs an answer. Whoever asked or the owner can. |
 | replies__reply-list | yes | Read your agent inbox, oldest first: replies to your comments, comments on tickets assigned to you, and the owner's answers to your questions. The owner can read any agent's, or everyone's. |
 | replies__reply-acknowledge |  | Mark a reply in your agent inbox as read and dealt with. |
-| history__change-list | yes | List recorded changes, oldest first: all of them, or those about one ticket. |
+| history__change-list | yes | List recorded changes, oldest first: all of them, or those about one ticket, about one project's tickets, or made by one actor. |
 
 
 ### Change events the page saw

@@ -51,7 +51,8 @@
     "ticket": null,
     "undoes": null,
     "undoneBy": null,
-    "undoable": true
+    "undoable": true,
+    "imported": false
   }
 ]
 ```

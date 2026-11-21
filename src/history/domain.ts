@@ -14,6 +14,7 @@ export const ChangeEntry = z.object({
   undoes: z.string().nullable(),
   undoneBy: z.string().nullable(),
   undoable: z.boolean(),
+  imported: z.boolean().describe("True for a change made by bringing data in from another app."),
 });
 
 export const changeList = defineCard({
@@ -48,9 +49,16 @@ export const changeUndone = defineCard({
 
 const list = readAction({
   name: "change-list",
-  description: "List recorded changes, oldest first: all of them, or those about one ticket.",
+  description:
+    "List recorded changes, oldest first: all of them, or those about one ticket, about one project's tickets, or made by one actor.",
   input: z.object({
     ticket: z.string().optional(),
+    project: z.string().optional().describe("Only changes to tickets of this project."),
+    actor: z.string().optional().describe("Only changes made by this actor."),
+    imported: z
+      .boolean()
+      .optional()
+      .describe("False to leave out changes made by bringing data in from another app."),
     limit: z
       .number()
       .int()
@@ -61,7 +69,7 @@ const list = readAction({
   }),
   output: z.array(ChangeEntry),
   card: changeList,
-  run: ({ ticket, limit }, { journal }: Base) => journal.list({ ticket, limit }),
+  run: (filter, { journal }: Base) => journal.list(filter),
 });
 
 const undo = writeAction<z.ZodObject<{ change: z.ZodString }>, typeof ChangeEntry, Base>(

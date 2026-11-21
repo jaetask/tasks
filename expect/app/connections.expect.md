@@ -145,7 +145,8 @@
     "ticket": "TLK-1",
     "undoes": null,
     "undoneBy": null,
-    "undoable": true
+    "undoable": true,
+    "imported": false
   },
   {
     "id": "h8",
@@ -156,7 +157,8 @@
     "ticket": "TLK-1",
     "undoes": null,
     "undoneBy": null,
-    "undoable": true
+    "undoable": true,
+    "imported": false
   },
   {
     "id": "h9",
@@ -167,7 +169,8 @@
     "ticket": "TLK-1",
     "undoes": null,
     "undoneBy": null,
-    "undoable": true
+    "undoable": true,
+    "imported": false
   },
   {
     "id": "h10",
@@ -178,7 +181,8 @@
     "ticket": "TLK-1",
     "undoes": null,
     "undoneBy": null,
-    "undoable": true
+    "undoable": true,
+    "imported": false
   },
   {
     "id": "h11",
@@ -189,7 +193,8 @@
     "ticket": "TLK-1",
     "undoes": null,
     "undoneBy": null,
-    "undoable": true
+    "undoable": true,
+    "imported": false
   },
   {
     "id": "h12",
@@ -200,7 +205,8 @@
     "ticket": "TLK-1",
     "undoes": null,
     "undoneBy": null,
-    "undoable": true
+    "undoable": true,
+    "imported": false
   }
 ]
 ```

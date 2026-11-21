@@ -1,11 +1,15 @@
-// A project's Intake: its inbox items, and the steps that look at each new one.
-import { Link, PageLink, Panel, WorkPage } from "@jaetask/toolkit/suite";
+// A project's Intake: what was sent to it, before it becomes tickets. An item opens in a dialog,
+// where its text and tags can be changed and it is accepted, rejected or turned into a ticket.
+import { EmptyLine, Link, ListCard, TimeAgo, WorkPage } from "@jaetask/toolkit/suite";
 import { Button } from "@jaetask/toolkit/ui/button";
-import { Card } from "@jaetask/toolkit/ui/card";
-import { useState } from "react";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@jaetask/toolkit/ui/dialog";
+import { Input } from "@jaetask/toolkit/ui/input";
+import { Textarea } from "@jaetask/toolkit/ui/textarea";
+import { IconX } from "@tabler/icons-react";
+import { useRef, useState } from "react";
 import { type Item, type Project, type Run, type Step, when } from "./api.js";
 import { useApp, useRead } from "./app.js";
-import { Nothing, Pill, Say, TabBar } from "./local.js";
+import { Pill, TabBar } from "./local.js";
 import { titleIcon } from "./board.js";
 import { projectTitle } from "./pages.js";
 
@@ -50,87 +54,6 @@ function Runs({ item }: { item: string }) {
   );
 }
 
-function ItemCard({ item }: { item: Item }) {
-  const { act } = useApp();
-  const [open, setOpen] = useState(false);
-  const live = item.state === "received" || item.state === "accepted";
-  const why = (verb: string, action: string) => (
-    <Button
-      variant="secondary"
-      onClick={() => {
-        const reason = window.prompt(`Why ${verb.toLowerCase()} it?`);
-        if (reason?.trim()) void act(action, { item: item.id, reason: reason.trim() });
-      }}
-    >
-      {verb}
-    </Button>
-  );
-  return (
-    <Card className="item grid gap-2 p-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <b>{item.title}</b>
-        <span className="tk-muted mono">{`${item.id} · from ${item.source} · ${when(item.at)}`}</span>
-        {item.tags.map((t) => (
-          <Pill key={t}>{t}</Pill>
-        ))}
-        {item.category && <Pill>{item.category}</Pill>}
-      </div>
-      {item.text !== item.title && <p className="text">{item.text}</p>}
-      {(item.original.title !== item.title || item.original.text !== item.text) && (
-        <p className="tk-muted">{`As captured: ${item.original.text}`}</p>
-      )}
-      {Object.keys(item.fields).length > 0 && (
-        <p className="tk-muted mono">
-          {Object.entries(item.fields)
-            .map(([k, v]) => `${k}: ${v}`)
-            .join(" · ")}
-        </p>
-      )}
-      {item.reason && <p className="tk-muted">{`Reason: ${item.reason}`}</p>}
-      <div className="flex flex-wrap items-center gap-2">
-        {item.ticket && (
-          <PageLink to={`/t/${item.ticket}`} surface="white">{`Open ${item.ticket}`}</PageLink>
-        )}
-        {live && item.state !== "accepted" && (
-          <Button
-            variant="secondary"
-            onClick={() => void act("inbox.item-accept", { item: item.id })}
-          >
-            Accept
-          </Button>
-        )}
-        {live && (
-          <Button
-            variant="secondary"
-            onClick={() => void act("inbox.item-promote", { item: item.id })}
-          >
-            Add to the backlog
-          </Button>
-        )}
-        {live && (
-          <Button
-            variant="secondary"
-            onClick={() => void act("inbox.item-promote", { item: item.id, backlog: false })}
-          >
-            Put on the board
-          </Button>
-        )}
-        {live && why("Reject", "inbox.item-reject")}
-        {live && why("Dismiss", "inbox.item-dismiss")}
-        {live && (
-          <Button variant="secondary" onClick={() => void act("inbox.item-run", { item: item.id })}>
-            Run the steps again
-          </Button>
-        )}
-        <Button variant="secondary" aria-expanded={open} onClick={() => setOpen(!open)}>
-          What the steps did
-        </Button>
-      </div>
-      {open && <Runs item={item.id} />}
-    </Card>
-  );
-}
-
 const STATES: { id: Item["state"]; name: string }[] = [
   { id: "received", name: "Received" },
   { id: "accepted", name: "Accepted" },
@@ -140,30 +63,278 @@ const STATES: { id: Item["state"]; name: string }[] = [
   { id: "dismissed", name: "Dismissed" },
 ];
 
+/** One item, opened: its text and tags can be changed, and what happens to it decided. */
+function ItemDialog({ item, onClose }: { item: Item; onClose: () => void }) {
+  const { act, go } = useApp();
+  const [reason, setReason] = useState("");
+  const [tag, setTag] = useState("");
+  const [runs, setRuns] = useState(false);
+  const why = useRef<HTMLInputElement>(null);
+  const live = item.state === "received" || item.state === "accepted";
+  const then = (done: unknown) => {
+    if (done) onClose();
+  };
+  // Rejecting and dismissing say why: the reason is kept with the item.
+  const refuse = (action: string) => {
+    if (!reason.trim()) {
+      why.current?.focus();
+      return;
+    }
+    void act(action, { item: item.id, reason: reason.trim() }).then(then);
+  };
+  return (
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-h-[90vh] w-[min(44rem,95vw)] max-w-none content-start overflow-y-auto">
+        <DialogTitle className="sr-only">{item.title}</DialogTitle>
+        <DialogDescription className="sr-only">An intake item.</DialogDescription>
+        <div className="grid min-w-0 gap-4 text-sm">
+          <p className="m-0 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+            <span>{item.id}</span>
+            <span>{`from ${item.source}`}</span>
+            <TimeAgo at={item.at} />
+            <Pill>{item.state}</Pill>
+            {item.ticket && (
+              <Link href={`/t/${item.ticket}`} className="underline">{`Open ${item.ticket}`}</Link>
+            )}
+          </p>
+          <Input
+            key={`title ${item.title}`}
+            aria-label="Item title"
+            disabled={!live}
+            className="h-auto border-transparent px-0 text-lg font-semibold shadow-none hover:border-input disabled:opacity-100 md:text-lg"
+            defaultValue={item.title}
+            maxLength={200}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") e.currentTarget.blur();
+            }}
+            onBlur={(e) => {
+              const wanted = e.currentTarget.value.trim();
+              if (wanted && wanted !== item.title) {
+                void act("inbox.item-edit", { item: item.id, title: wanted });
+              }
+            }}
+          />
+          <Textarea
+            key={`text ${item.text}`}
+            aria-label="Item text"
+            disabled={!live}
+            className="min-h-28 disabled:opacity-100"
+            defaultValue={item.text}
+            onBlur={(e) => {
+              const wanted = e.currentTarget.value.trim();
+              if (wanted && wanted !== item.text) {
+                void act("inbox.item-edit", { item: item.id, text: wanted });
+              }
+            }}
+          />
+          {(item.original.title !== item.title || item.original.text !== item.text) && (
+            <p className="m-0 text-xs text-muted-foreground">{`As captured: ${item.original.text}`}</p>
+          )}
+          <div className="flex flex-wrap items-center gap-1.5">
+            {item.tags.map((t) => (
+              <span
+                key={t}
+                className="pill flex items-center gap-1 rounded-full border py-0.5 pr-1 pl-2 text-xs"
+              >
+                {t}
+                {live && (
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    className="size-4 text-muted-foreground"
+                    aria-label={`Remove the tag ${t}`}
+                    onClick={() => void act("inbox.item-untag", { item: item.id, tags: [t] })}
+                  >
+                    <IconX aria-hidden />
+                  </Button>
+                )}
+              </span>
+            ))}
+            {item.category && <Pill>{item.category}</Pill>}
+            {live && (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const wanted = tag.trim();
+                  if (!wanted) return;
+                  setTag("");
+                  void act("inbox.item-tag", { item: item.id, tags: [wanted] });
+                }}
+              >
+                <Input
+                  aria-label="Add a tag"
+                  placeholder="Add a tag"
+                  className="h-7 w-32 border-transparent text-xs shadow-none hover:border-input"
+                  value={tag}
+                  maxLength={40}
+                  onChange={(e) => setTag(e.target.value)}
+                />
+              </form>
+            )}
+          </div>
+          {Object.keys(item.fields).length > 0 && (
+            <p className="m-0 text-xs text-muted-foreground">
+              {Object.entries(item.fields)
+                .map(([k, v]) => `${k}: ${v}`)
+                .join(" · ")}
+            </p>
+          )}
+          {item.reason && <p className="m-0 text-muted-foreground">{`Reason: ${item.reason}`}</p>}
+          {live && (
+            <div className="grid gap-2 border-t pt-4">
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  size="sm"
+                  onClick={() => void act("inbox.item-promote", { item: item.id }).then(then)}
+                >
+                  Turn into a ticket
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() =>
+                    void act<{ ticket: string | null }>("inbox.item-promote", {
+                      item: item.id,
+                      backlog: false,
+                    }).then(then)
+                  }
+                >
+                  Put on the board
+                </Button>
+                {item.state !== "accepted" && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => void act("inbox.item-accept", { item: item.id }).then(then)}
+                  >
+                    Accept
+                  </Button>
+                )}
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => void act("inbox.item-run", { item: item.id })}
+                >
+                  Run the steps again
+                </Button>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <Input
+                  ref={why}
+                  aria-label="Why it is rejected or dismissed"
+                  placeholder="Why, to reject or dismiss it"
+                  className="h-8 max-w-72"
+                  value={reason}
+                  maxLength={500}
+                  onChange={(e) => setReason(e.target.value)}
+                />
+                <Button size="sm" variant="outline" onClick={() => refuse("inbox.item-reject")}>
+                  Reject
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => refuse("inbox.item-dismiss")}>
+                  Dismiss
+                </Button>
+              </div>
+            </div>
+          )}
+          <div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-auto p-0 text-xs text-muted-foreground hover:bg-transparent"
+              aria-expanded={runs}
+              onClick={() => setRuns(!runs)}
+            >
+              What the steps did
+            </Button>
+            {runs && <Runs item={item.id} />}
+          </div>
+          {item.ticket && (
+            <div>
+              <Button size="sm" variant="outline" onClick={() => go(`/t/${item.ticket}`)}>
+                {`Open ${item.ticket}`}
+              </Button>
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export function IntakePage({ project }: { project: Project }) {
   const { act } = useApp();
   const [state, setState] = useState<Item["state"]>("received");
-  const items = useRead<Item[]>("inbox.inbox-read", { project: project.id, state });
+  const [open, setOpen] = useState<string | null>(null);
+  const [text, setText] = useState("");
+  const all = useRead<Item[]>("inbox.inbox-read", { project: project.id });
   const steps = useRead<Step[]>("inbox.pipeline-read") ?? [];
+  const items = (all ?? []).filter((i) => i.state === state);
+  const shown = (all ?? []).find((i) => i.id === open);
+  // A state with nothing in it is left out, but for the one being looked at.
+  const tabs = STATES.map((s) => ({
+    ...s,
+    count: (all ?? []).filter((i) => i.state === s.id).length,
+  })).filter((s) => s.count > 0 || s.id === state);
   return (
     <WorkPage
       icon={titleIcon(project)}
       title={projectTitle(project, "Intake")}
-      help="New ideas and requests for this project, before they become tickets."
+      help="New ideas and requests for this project, before they become tickets. Your intake steps look at each new item before it lands here."
     >
-      <Panel id="items" title="Inbox" line="Your steps look at each new item before it lands here.">
-        <Say
-          label="A new idea or request"
-          button="Capture"
-          onSubmit={(text) => act("inbox.item-capture", { project: project.id, text })}
+      <form
+        className="flex items-center gap-2 rounded-xl border bg-card py-1.5 pr-2 pl-4"
+        onSubmit={(e) => {
+          e.preventDefault();
+          const wanted = text.trim();
+          if (!wanted) return;
+          setText("");
+          void act("inbox.item-capture", { project: project.id, text: wanted });
+        }}
+      >
+        <Input
+          aria-label="A new idea or request"
+          placeholder="A new idea or request..."
+          className="border-0 px-0 shadow-none"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
         />
-        <TabBar label="Which items" value={state} options={STATES} onChange={setState} />
-        {items && items.length > 0 ? (
-          items.map((i) => <ItemCard key={i.id} item={i} />)
-        ) : (
-          <Nothing text={`Nothing is ${state}.`} />
-        )}
-      </Panel>
+        <Button type="submit" size="sm" variant="ghost" disabled={!text.trim()}>
+          Capture
+        </Button>
+      </form>
+      <TabBar
+        label="Which items"
+        value={state}
+        options={tabs.map((s) => ({ id: s.id, name: `${s.name} ${s.count}` }))}
+        onChange={setState}
+      />
+      {items.length > 0 ? (
+        <ListCard>
+          {items.map((i) => (
+            <li key={i.id} className="item tk-list-row p-0!">
+              <Button
+                variant="ghost"
+                className="h-auto w-full min-w-0 justify-start gap-3 rounded-none px-5 py-2.5 text-left font-normal"
+                onClick={() => setOpen(i.id)}
+              >
+                <span className="min-w-0 flex-1 truncate font-medium">{i.title}</span>
+                {i.tags.map((t) => (
+                  <Pill key={t}>{t}</Pill>
+                ))}
+                {i.category && <Pill>{i.category}</Pill>}
+                {i.ticket && <span className="text-xs text-muted-foreground">{i.ticket}</span>}
+                <span className="shrink-0 text-xs text-muted-foreground">
+                  {`${i.source} · `}
+                  <TimeAgo at={i.at} />
+                </span>
+              </Button>
+            </li>
+          ))}
+        </ListCard>
+      ) : (
+        <EmptyLine>{all ? `Nothing is ${state}.` : ""}</EmptyLine>
+      )}
       <p className="m-0 text-xs text-muted-foreground">
         {steps.length === 0
           ? "No steps look at new items: they go straight to the inbox. "
@@ -172,6 +343,7 @@ export function IntakePage({ project }: { project: Project }) {
           Intake steps
         </Link>
       </p>
+      {shown && <ItemDialog key={shown.id} item={shown} onClose={() => setOpen(null)} />}
     </WorkPage>
   );
 }
