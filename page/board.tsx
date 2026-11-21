@@ -43,7 +43,7 @@ import {
 } from "./api.js";
 import { useApp, useRead } from "./app.js";
 import { ServiceIcon, service } from "@jaetask/toolkit/suite";
-import { ActorAvatar, Nothing, Picker, projectLook, NoActor, Tick, TICKET_DRAG } from "./local.js";
+import { ActorAvatar, Picker, projectLook, NoActor, Tick, TICKET_DRAG } from "./local.js";
 export { Tick };
 import { LabelDot, PRIORITY_NAME, PriorityIcon, StatusIcon } from "./pickers.js";
 import { TicketLine } from "./ticket-line.js";
@@ -1075,7 +1075,7 @@ export function BoardPage({ project }: { project: Project }) {
           ))}
         </Lanes>
       ) : (
-        <Nothing text="No tickets match. Untick Hide empty columns to show every column." />
+        <EmptyLine>No tickets match. Untick Hide empty columns to show every column.</EmptyLine>
       )}
       <TicketDialog />
     </WorkPage>

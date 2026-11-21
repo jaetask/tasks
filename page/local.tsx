@@ -14,7 +14,6 @@ import {
   AlertDialogTitle,
 } from "@jaetask/toolkit/ui/alert-dialog";
 import { Badge } from "@jaetask/toolkit/ui/badge";
-import { Empty, EmptyContent, EmptyDescription, EmptyHeader } from "@jaetask/toolkit/ui/empty";
 import { Checkbox } from "@jaetask/toolkit/ui/checkbox";
 import { Input } from "@jaetask/toolkit/ui/input";
 import { Label } from "@jaetask/toolkit/ui/label";
@@ -169,18 +168,6 @@ export function Tick({
       <Checkbox checked={checked} onCheckedChange={(v) => onChange(v === true)} />
       {label}
     </Label>
-  );
-}
-
-/** What a list shows when it has nothing. */
-export function Nothing({ text, action }: { text: string; action?: ReactNode }) {
-  return (
-    <Empty className="border border-dashed p-6">
-      <EmptyHeader>
-        <EmptyDescription>{text}</EmptyDescription>
-      </EmptyHeader>
-      {action && <EmptyContent>{action}</EmptyContent>}
-    </Empty>
   );
 }
 

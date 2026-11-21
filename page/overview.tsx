@@ -18,7 +18,7 @@ import {
   useFilters,
   type ViewChoice,
 } from "./board.js";
-import { Nothing, projectLook } from "./local.js";
+import { projectLook } from "./local.js";
 import { newTicketAt, useNewTicketKey } from "./new-ticket.js";
 import { StatusIcon } from "./pickers.js";
 import { NewProjectDialog } from "./settings.js";
@@ -180,7 +180,7 @@ export function OverviewPage() {
           ))}
         </Lanes>
       ) : (
-        <Nothing text="No tickets match. Untick Hide empty columns to show every column." />
+        <EmptyLine>No tickets match. Untick Hide empty columns to show every column.</EmptyLine>
       )}
       <TicketDialog />
     </WorkPage>
