@@ -519,6 +519,7 @@ function LabelsSection({ usage }: { usage: Usage | undefined }) {
               .filter((o) => o.id !== l.id)
               .map((o) => ({
                 label: o.name,
+                icon: <LabelDot colour={o.colour} />,
                 onSelect: () => void act("tickets.label-merge", { label: l.id, into: o.id }),
               }));
             return (

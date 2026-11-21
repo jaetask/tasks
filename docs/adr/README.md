@@ -25,3 +25,4 @@ Decisions about the code live here, since comments are not kept in the code.
 - [21. The page build splits chunks and defines import.meta.env](0021-the-page-build-splits-chunks-and-defines-import-meta-env.md)
 - [22. Branches merge through auto-pr, and the job deletes the branch](0022-branches-merge-through-auto-pr.md)
 - [23. A backlog ticket goes on the board before it moves to a column](0023-a-backlog-ticket-goes-on-the-board-before-it-moves.md)
+- [24. A label is always shown with its colour](0024-a-label-is-always-shown-with-its-colour.md)

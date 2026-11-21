@@ -3,7 +3,7 @@ import { DueDatePicker } from "@jaetask/toolkit/suite";
 import { type Feature, OWNER, PRIORITIES, type Ticket, TYPES } from "./api.js";
 import { useApp, useRead } from "./app.js";
 import { Face, NoActor } from "./local.js";
-import { LabelDot, PRIORITY_NAME, PriorityIcon, PropertyPicker, StatusIcon } from "./pickers.js";
+import { labelChoice, PRIORITY_NAME, PriorityIcon, PropertyPicker, StatusIcon } from "./pickers.js";
 
 type Shared = {
   ticket: Ticket;
@@ -195,11 +195,7 @@ export function LabelsPicker({
       many
       disabled={!open(ticket)}
       chosen={ticket.labels.map((l) => l.id)}
-      choices={catalog.labels.map((l) => ({
-        id: l.id,
-        name: l.name,
-        icon: <LabelDot colour={l.colour} />,
-      }))}
+      choices={catalog.labels.map(labelChoice)}
       onPick={(label) =>
         void act(
           ticket.labels.some((l) => l.id === label)

@@ -572,6 +572,15 @@ try {
     await until(() => document.querySelectorAll(".lane .ticket").length === 1);
     await page.locator('[data-filter="feature"]', { hasText: "Voice" }).waitFor();
     await button("Remove the feature filter").click();
+    await button("Filter").click();
+    await page.getByRole("menuitem", { name: "Label" }).click();
+    const choice = page.getByRole("menuitemcheckbox", { name: "bug" });
+    if ((await choice.locator('span[style*="background-color"]').count()) !== 1) {
+      throw new Error("a label in the filter menu has no colour dot");
+    }
+    await choice.click();
+    await page.locator('[data-filter="label"] span[style*="background-color"]').waitFor();
+    await button("Remove the label filter").click();
     await until(() => document.querySelectorAll(".lane .ticket").length === 3);
   });
   await step("the board groups its tickets by feature, by actor and by location", async () => {

@@ -13,6 +13,7 @@ Tasks: task management for AI agents, an App on [@jaetask/open-agent-kit](https:
 - **Public docs state decisions only**: open questions and undecided items never go in `docs/` or README.md; they belong in issues or the conversation. `npm run check:docs` (part of `lint`) enforces it.
 - **Public docs describe what Tasks has and does**: they do not mention things removed or left out, and do not compare Tasks with other projects beyond a credit.
 - **Plain, literal language**: no slogans, hype or dramatic phrasing. `check:docs` bans known phrases from `scripts/docs-phrases.json`; when someone flags a new one, add it there with the pave skill.
+- **Labels show their colour**: wherever the page names a label it uses `labelChoice`, `LabelName` or `LabelDot` from `page/pickers.tsx`. `check-labels` (part of `lint`) fails a label named without them.
 - **No code comments**: code is law. Say it in the code, a name or a test; a decision goes in `docs/adr`. `check-comments` (part of `lint`) fails any new comment; the delete-comment skill removes them.
 - Log friction and decisions with the trail skill.
 - When corrected, or when the same friction repeats, use the pave skill.
