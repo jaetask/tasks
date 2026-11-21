@@ -49,7 +49,8 @@
         "actor": "owner",
         "actorName": "Sam",
         "summary": "created TLK-1 in To do: Voice notes on the phone",
-        "undoable": true
+        "undoable": true,
+        "undone": false
       }
     },
     {
@@ -60,7 +61,8 @@
         "actor": "owner",
         "actorName": "Sam",
         "summary": "assigned TLK-1 to Coder",
-        "undoable": true
+        "undoable": true,
+        "undone": false
       }
     },
     {
@@ -88,7 +90,8 @@
         "actor": "a1",
         "actorName": "Coder",
         "summary": "assigned TLK-1 to Reviewer",
-        "undoable": true
+        "undoable": true,
+        "undone": false
       }
     },
     {

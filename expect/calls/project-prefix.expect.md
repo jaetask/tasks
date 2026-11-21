@@ -128,7 +128,8 @@
         "actor": "owner",
         "actorName": "owner",
         "summary": "created TLK-1 in To do: Record a note",
-        "undoable": false
+        "undoable": false,
+        "undone": false
       }
     },
     {
@@ -156,7 +157,8 @@
         "actor": "owner",
         "actorName": "owner",
         "summary": "added the step \"Try it on the phone\" to TLK-1",
-        "undoable": false
+        "undoable": false,
+        "undone": false
       }
     }
   ]

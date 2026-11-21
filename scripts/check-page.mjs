@@ -381,13 +381,22 @@ try {
     await page.locator("#evidence").getByText("Unit tests, and a recording on a phone.").waitFor();
   });
   await step(
-    "mark it blocked in its properties, then undo that from its line in the activity",
+    "mark it blocked from its menu, then undo that from its line in the activity",
     async () => {
-      await page.fill('[aria-label="Blocked"]', "waiting on the API key");
-      await page.press('[aria-label="Blocked"]', "Enter");
-      await see("marked TLK-1 blocked");
+      // Not blocked, a ticket shows nothing about it.
+      if ((await count('[data-property="blocked"]')) !== 0) throw new Error("a blocked row shows");
+      await button("Ticket TLK-1").click();
+      await page.getByRole("menuitem", { name: "Mark as" }).click();
+      await page.getByRole("menuitem", { name: "Blocked..." }).click();
+      await page.fill('[aria-label="Mark as blocked"]', "waiting on the API key");
+      await page.keyboard.press("Enter");
+      await page
+        .locator('[data-property="blocked"]', { hasText: "waiting on the API key" })
+        .waitFor();
+      // Inside the ticket a change reads "this ticket", not its id again.
+      await see("marked this ticket blocked");
       await page.locator("#conversation").getByRole("button", { name: "Undo" }).last().click();
-      await until(() => document.querySelector('[aria-label="Blocked"]').value === "");
+      await until(() => !document.querySelector('[data-property="blocked"]'));
     },
   );
   await step("give it a location in its properties, and a step", async () => {
@@ -414,7 +423,7 @@ try {
     );
     await page.keyboard.press("Enter");
     await page.getByRole("checkbox", { name: "Record with the phone locked" }).click();
-    await see("Steps · 1 of 1");
+    await page.locator("#steps", { hasText: "1 of 1" }).waitFor();
   });
   await step("an agent asks to connect; approve it as Coder in a dialog", async () => {
     const asked = await (
@@ -469,7 +478,7 @@ try {
   );
   await step("the ticket shows the agent's comment and its changes; reply to it", async () => {
     await open("/t/TLK-1");
-    await see("Coder claimed TLK-1 and moved it to Doing");
+    await see("Coder claimed this ticket and moved it to Doing");
     const thread = page.locator(".thread", { hasText: "Recording works in the app" });
     await thread
       .locator('[aria-label="Leave a reply"]')
@@ -853,9 +862,9 @@ try {
     await page.getByRole("tab", { name: /^Promoted/ }).click();
     await page.locator(".item", { hasText: "TLK-5" }).waitFor();
   });
-  await step("archive a ticket from its Actions, then restore it from the Archive", async () => {
+  await step("archive a ticket from its menu, then restore it from the Archive", async () => {
     await open("/t/TLK-3");
-    await button("Actions").click();
+    await button("Ticket TLK-3").click();
     await page.getByRole("menuitem", { name: "Archive", exact: true }).click();
     await page.locator("#place").getByText("archived").waitFor();
     await link("Archive").click();

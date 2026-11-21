@@ -135,7 +135,8 @@
         "actor": "owner",
         "actorName": "Sam",
         "summary": "created TLK-1 in To do: Voice notes on the phone",
-        "undoable": true
+        "undoable": true,
+        "undone": false
       }
     },
     {
@@ -146,7 +147,8 @@
         "actor": "a1",
         "actorName": "Coder",
         "summary": "claimed TLK-1 and moved it to Doing",
-        "undoable": true
+        "undoable": true,
+        "undone": false
       }
     },
     {
@@ -157,7 +159,8 @@
         "actor": "a1",
         "actorName": "Coder",
         "summary": "asked the owner on TLK-1: Should recordings be kept after they are sent?",
-        "undoable": true
+        "undoable": true,
+        "undone": false
       }
     },
     {
@@ -168,7 +171,8 @@
         "actor": "a1",
         "actorName": "Coder",
         "summary": "asked the owner on TLK-1: Which file format?",
-        "undoable": true
+        "undoable": true,
+        "undone": false
       }
     },
     {
@@ -179,7 +183,8 @@
         "actor": "a1",
         "actorName": "Coder",
         "summary": "took back the question q2 on TLK-1",
-        "undoable": true
+        "undoable": true,
+        "undone": false
       }
     },
     {
@@ -190,7 +195,8 @@
         "actor": "owner",
         "actorName": "Sam",
         "summary": "answered q1 on TLK-1: Keep them for 30 days.",
-        "undoable": true
+        "undoable": true,
+        "undone": false
       }
     },
     {
@@ -201,7 +207,8 @@
         "actor": "a1",
         "actorName": "Coder",
         "summary": "archived TLK-1",
-        "undoable": true
+        "undoable": true,
+        "undone": false
       }
     }
   ]

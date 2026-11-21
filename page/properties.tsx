@@ -82,9 +82,11 @@ export function ActorPicker({
   ticket,
   children,
   armed,
-  note,
-  onAssigned,
-}: Shared & { note?: string; onAssigned?: () => void }) {
+  onPick,
+}: Shared & {
+  /** Given where picking an actor asks for a handoff note before it assigns. */
+  onPick?: (actor: string) => void;
+}) {
   const { catalog, act } = useApp();
   return (
     <PropertyPicker
@@ -106,13 +108,8 @@ export function ActorPicker({
           })),
       ]}
       onPick={(picked) => {
-        const handoff = (note ?? "").trim();
-        onAssigned?.();
-        void act("tickets.ticket-assign", {
-          ticket: ticket.id,
-          actor: picked || null,
-          ...(handoff && picked ? { note: handoff } : {}),
-        });
+        if (picked && picked !== ticket.assignee && onPick) return onPick(picked);
+        void act("tickets.ticket-assign", { ticket: ticket.id, actor: picked || null });
       }}
     >
       {children}

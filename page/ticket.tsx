@@ -1,21 +1,18 @@
 // A ticket's page: what it is, where it is, its images, the questions on it
 // and its conversation, all from toolkit parts.
 
-import { Thumbs, MarkdownText } from "@jaetask/toolkit/suite";
+import {
+  FormDialog,
+  InlineText,
+  MarkdownText,
+  PageSection,
+  RowMenu,
+  Thumbs,
+  TimeAgo,
+} from "@jaetask/toolkit/suite";
+import { Textarea } from "@jaetask/toolkit/ui/textarea";
 import { Button } from "@jaetask/toolkit/ui/button";
 import { Checkbox } from "@jaetask/toolkit/ui/checkbox";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@jaetask/toolkit/ui/collapsible";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@jaetask/toolkit/ui/dropdown-menu";
 import { Input } from "@jaetask/toolkit/ui/input";
 import {
   Tooltip,
@@ -26,9 +23,8 @@ import {
 import {
   IconArrowDown,
   IconArrowUp,
-  IconChevronDown,
   IconChevronRight,
-  IconDots,
+  IconHandStop,
   IconMapPin,
   IconPlus,
   IconStack2,
@@ -47,11 +43,10 @@ import {
   type Kind,
   type Ticket,
   type TicketStep,
-  when,
 } from "./api.js";
 import { useApp, useRead } from "./app.js";
 import { Editor } from "./editor.js";
-import { addLink, DeleteForGood, Face, LINK_LINE, Nothing, NoActor } from "./local.js";
+import { addLink, Face, LINK_LINE, Nothing, NoActor } from "./local.js";
 import { AddLinkDialog } from "@jaetask/toolkit/suite";
 import { EvidenceSection } from "./evidence.js";
 import { FilesSection } from "./files.js";
@@ -70,7 +65,7 @@ import {
   StatusPicker,
   TypePicker,
 } from "./properties.js";
-import { TicketMenu } from "./ticket-menu.js";
+import { TicketActions, TicketMenu } from "./ticket-menu.js";
 
 /** The images of a ticket with their data, read one by one as they are needed. */
 function useThumbs(images: Image[] | undefined) {
@@ -147,12 +142,11 @@ function Steps({ ticket, open }: { ticket: string; open: boolean }) {
     void act("steps.ticket-step-add", { ticket, title: wanted });
   };
   return (
-    <section id="steps" aria-label="Ticket steps" className="grid gap-1">
-      <h3 className="text-xs font-medium text-muted-foreground">
-        {steps.length > 0
-          ? `Steps · ${steps.filter((s) => s.done).length} of ${steps.length}`
-          : "Steps"}
-      </h3>
+    <PageSection
+      id="steps"
+      title="Steps"
+      count={steps.length > 0 ? `${steps.filter((s) => s.done).length} of ${steps.length}` : ""}
+    >
       {steps.map((step, index) => (
         <div key={step.id} className="step group rounded-md px-1 hover:bg-muted/40">
           <div className="flex items-center gap-2 py-1">
@@ -259,7 +253,54 @@ function Steps({ ticket, open }: { ticket: string; open: boolean }) {
           />
         </form>
       )}
-    </section>
+    </PageSection>
+  );
+}
+
+/** Asked when a ticket is given to an actor: what the next actor needs to know. It can be left empty. */
+function HandoffDialog({
+  ticket,
+  to,
+  onClose,
+}: {
+  ticket: Ticket;
+  to: string;
+  onClose: () => void;
+}) {
+  const { catalog, act } = useApp();
+  const [note, setNote] = useState("");
+  const name = catalog.actors.find((a) => a.id === to)?.name ?? to;
+  return (
+    <FormDialog
+      open
+      onOpenChange={(next) => !next && onClose()}
+      title={`Hand ${ticket.id} to ${name}`}
+      line="A note for the next actor: what is done, and what comes next. It is left on the ticket as a comment. Leave it empty for none."
+      saveLabel="Assign"
+      onSave={async () =>
+        (await act("tickets.ticket-assign", {
+          ticket: ticket.id,
+          actor: to,
+          ...(note.trim() ? { note: note.trim() } : {}),
+        })) !== null
+      }
+    >
+      <Textarea
+        autoFocus
+        aria-label="Handoff note"
+        placeholder="Handoff note (optional)"
+        value={note}
+        maxLength={5000}
+        onChange={(e) => setNote(e.target.value)}
+        onKeyDown={(e) => {
+          // Enter assigns; Shift+Enter starts a new line.
+          if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            e.currentTarget.form?.requestSubmit();
+          }
+        }}
+      />
+    </FormDialog>
   );
 }
 
@@ -279,13 +320,12 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
   const thumbs = useThumbs(images);
   const [replyTo, _setReplyTo] = useState<string | null>(null);
   const [_tab, _setTab] = useState<"comments" | "activity">("comments");
-  const [handoff, setHandoff] = useState("");
+  const [handTo, setHandTo] = useState<string | null>(null);
+  const [renaming, setRenaming] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
-  const [deleting, setDeleting] = useState(false);
   const [title, setTitle] = useState<string | null>(null);
   // What the description editor holds, until it is saved on leaving it.
   const draft = useRef<string | null>(null);
-  const [blocked, setBlocked] = useState<string | null>(null);
   // The labels list opens beside this heading, which does not move as labels come and go.
   const labelsAt = useRef<HTMLHeadingElement>(null);
   const pictures = usePictures(id);
@@ -307,15 +347,21 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
     | { comment: Comment }
     | undefined;
   const gone = () => (onGone ? onGone() : go("/archive"));
-  const quiet = "h-8 w-full border-transparent bg-transparent px-2 shadow-none hover:bg-muted/60";
   return (
     <div className="grid gap-6 text-sm lg:grid-cols-[minmax(0,1fr)_17rem]">
       <div className="grid min-w-0 content-start gap-5">
-        <p className="m-0 text-xs text-muted-foreground">
-          {[ticket.id, project?.name ?? ticket.project, ticket.featureName]
-            .filter(Boolean)
-            .join(" / ")}
-        </p>
+        <div className="flex items-center justify-between gap-2">
+          <p className="m-0 text-xs text-muted-foreground">
+            {[ticket.id, project?.name ?? ticket.project, ticket.featureName]
+              .filter(Boolean)
+              .join(" / ")}
+            {!open && ` · ${titleCase(ticket.state)}`}
+          </p>
+          {/* Leaves room for the dialog's own close button, which sits in this corner. */}
+          <span>
+            <TicketActions ticket={ticket} onGone={gone} />
+          </span>
+        </div>
 
         <section id="ticket" className="grid gap-3">
           <Input
@@ -379,100 +425,82 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
         </section>
 
         {(ticket.links.length > 0 || open) && (
-          <Collapsible asChild defaultOpen>
-            <section id="links" aria-label="Resources" className="grid gap-1">
-              <div className="flex items-center justify-between">
-                <CollapsibleTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="group/resources h-auto justify-start gap-1 p-0 text-xs font-medium text-muted-foreground hover:bg-transparent"
+          <PageSection
+            id="links"
+            title="Resources"
+            count={ticket.links.length || ""}
+            {...(open ? { onAdd: () => setAdding(true), addLabel: "Add a link" } : {})}
+          >
+            {ticket.links.map((l) => (
+              <div
+                key={l.id}
+                className="resource group flex items-center gap-2 rounded-md bg-muted/40 px-2 py-1.5 text-sm"
+              >
+                <ServiceIcon url={l.url} className="shrink-0" />
+                {renaming === l.id ? (
+                  <InlineText
+                    value={l.title || linkHost(l.url)}
+                    label="Link title"
+                    className="font-medium"
+                    maxLength={200}
+                    editing
+                    onEditingChange={(on) => setRenaming(on ? l.id : null)}
+                    onSave={(next) =>
+                      void act("tickets.ticket-link-describe", {
+                        link: l.id,
+                        title: next,
+                        description: l.description,
+                      })
+                    }
+                  />
+                ) : (
+                  <a
+                    href={l.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    title={l.url}
+                    className={`hover:underline ${l.title ? "max-w-[50%] shrink-0 truncate font-medium" : "min-w-0 truncate"}`}
                   >
-                    <IconChevronRight
-                      size={14}
-                      aria-hidden
-                      className="transition-transform group-data-[state=open]/resources:rotate-90"
-                    />
-                    Resources
-                  </Button>
-                </CollapsibleTrigger>
+                    {l.title || l.url.replace(/^https?:\/\/(www\.)?/, "")}
+                  </a>
+                )}
+                <span
+                  className="min-w-0 flex-1 truncate text-muted-foreground"
+                  title={l.description}
+                >
+                  {l.title ? l.description || linkHost(l.url) : ""}
+                </span>
                 {open && (
-                  <Button
-                    variant="outline"
-                    size="icon-xs"
-                    aria-label="Add a link"
-                    className="rounded-full"
-                    onClick={() => setAdding(true)}
-                  >
-                    <IconPlus aria-hidden />
-                  </Button>
+                  <RowMenu
+                    quiet
+                    label={`Link ${l.title || l.url}`}
+                    items={[
+                      { label: "Rename", onSelect: () => setRenaming(l.id) },
+                      {
+                        label: "Copy link",
+                        onSelect: () => void navigator.clipboard?.writeText(l.url),
+                      },
+                      {
+                        label: "Remove",
+                        onSelect: () =>
+                          void act("tickets.ticket-link-remove", { ticket: id, link: l.id }),
+                      },
+                    ]}
+                  />
                 )}
               </div>
-              <CollapsibleContent className="grid gap-1">
-                {ticket.links.map((l) => (
-                  <div
-                    key={l.id}
-                    className="resource group flex items-center gap-2 rounded-md bg-muted/40 px-2 py-1.5 text-sm"
-                  >
-                    <ServiceIcon url={l.url} className="shrink-0" />
-                    <a
-                      href={l.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      title={l.url}
-                      className={`hover:underline ${l.title ? "max-w-[50%] shrink-0 truncate font-medium" : "min-w-0 truncate"}`}
-                    >
-                      {l.title || l.url.replace(/^https?:\/\/(www\.)?/, "")}
-                    </a>
-                    <span
-                      className="min-w-0 flex-1 truncate text-muted-foreground"
-                      title={l.description}
-                    >
-                      {l.title ? l.description || linkHost(l.url) : ""}
-                    </span>
-                    {open && (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon-xs"
-                            aria-label={`Link ${l.title || l.url}`}
-                            className="opacity-0 focus-visible:opacity-100 group-hover:opacity-100 data-[state=open]:opacity-100"
-                          >
-                            <IconDots aria-hidden />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onSelect={() => void navigator.clipboard?.writeText(l.url)}
-                          >
-                            Copy link
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onSelect={() =>
-                              void act("tickets.ticket-link-remove", { ticket: id, link: l.id })
-                            }
-                          >
-                            Remove
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    )}
-                  </div>
-                ))}
-                {ticket.links.length === 0 && (
-                  <p className="m-0 text-xs text-muted-foreground">No links yet.</p>
-                )}
-              </CollapsibleContent>
-              <AddLinkDialog
-                to={id}
-                line={LINK_LINE}
-                open={adding}
-                onOpenChange={setAdding}
-                onAdd={addLink(act, id)}
-              />
-            </section>
-          </Collapsible>
+            ))}
+            {ticket.links.length === 0 && (
+              <p className="m-0 text-xs text-muted-foreground">No links yet.</p>
+            )}
+            <AddLinkDialog
+              to={id}
+              line={LINK_LINE}
+              open={adding}
+              onOpenChange={setAdding}
+              onAdd={addLink(act, id)}
+            />
+          </PageSection>
         )}
 
         <Steps ticket={id} open={open} />
@@ -492,76 +520,27 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
         <Activity ticket={id} conversation={conversation} canWrite={open} />
 
         {requests && requests.length > 0 && (
-          <Collapsible defaultOpen={awaiting.length > 0}>
-            <section id="questions" className="grid gap-2">
-              <CollapsibleTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="h-auto justify-start gap-2 p-0 hover:bg-transparent"
-                >
-                  <IconChevronRight size={14} aria-hidden />
-                  {awaiting.length > 0
-                    ? `Human input · ${awaiting.length} awaiting your answer`
-                    : `Human input · none awaiting, ${requests.length} earlier`}
-                </Button>
-              </CollapsibleTrigger>
-              <CollapsibleContent className="grid gap-2">
-                {requests.map((r) => (
-                  <RequestCard key={r.id} request={r} />
-                ))}
-              </CollapsibleContent>
-            </section>
-          </Collapsible>
+          <PageSection
+            id="questions"
+            title="Human input"
+            count={
+              awaiting.length > 0
+                ? `${awaiting.length} awaiting your answer`
+                : `${requests.length} answered`
+            }
+            defaultOpen={awaiting.length > 0}
+          >
+            <div className="grid gap-2">
+              {requests.map((r) => (
+                <RequestCard key={r.id} request={r} />
+              ))}
+            </div>
+          </PageSection>
         )}
       </div>
 
-      <TicketMenu ticket={ticket}>
+      <TicketMenu ticket={ticket} onGone={gone}>
         <aside id="place" aria-label="Properties" className="grid min-w-0 content-start gap-2">
-          <div className="mb-1 flex justify-start px-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm">
-                  Actions
-                  <IconChevronDown size={14} aria-hidden />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                {open ? (
-                  <>
-                    <DropdownMenuItem
-                      onSelect={() =>
-                        void act(
-                          ticket.backlog
-                            ? "tickets.ticket-board-send"
-                            : "tickets.ticket-backlog-send",
-                          { ticket: id },
-                        )
-                      }
-                    >
-                      {ticket.backlog ? "Put on the board" : "Send to the backlog"}
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onSelect={() => void act("tickets.ticket-archive", { ticket: id })}
-                    >
-                      Archive
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onSelect={() => void act("tickets.ticket-cancel", { ticket: id })}
-                    >
-                      Cancel ticket
-                    </DropdownMenuItem>
-                  </>
-                ) : (
-                  <DropdownMenuItem
-                    onSelect={() => void act("tickets.ticket-restore", { ticket: id })}
-                  >
-                    Restore
-                  </DropdownMenuItem>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
           <h3 className="m-0 px-2 text-xs font-medium text-muted-foreground">Properties</h3>
           <StatusPicker ticket={ticket}>
             <RailRow
@@ -581,7 +560,7 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
             </RailRow>
           </PriorityPicker>
           <div className="group/row flex min-w-0 items-center">
-            <ActorPicker ticket={ticket} note={handoff} onAssigned={() => setHandoff("")}>
+            <ActorPicker ticket={ticket} onPick={(picked) => setHandTo(picked)}>
               <RailRow
                 data-property="actor"
                 muted={!actor}
@@ -603,15 +582,6 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
               />
             )}
           </div>
-          {open && (
-            <Input
-              aria-label="Handoff note"
-              placeholder="Handoff note for the next actor"
-              className={quiet}
-              value={handoff}
-              onChange={(e) => setHandoff(e.target.value)}
-            />
-          )}
           {(catalog.locations.length > 0 || ticket.location) && (
             <div className="group/row flex items-center gap-1">
               <LocationPicker ticket={ticket}>
@@ -669,31 +639,30 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
               {titleCase(ticket.type)}
             </RailRow>
           </TypePicker>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              const text = (blocked ?? "").trim();
-              setBlocked(null);
-              void act(text ? "tickets.ticket-block" : "tickets.ticket-unblock", {
-                ticket: id,
-                ...(text ? { note: text } : {}),
-              });
-            }}
-          >
-            <Input
-              aria-label="Blocked"
-              placeholder="Not blocked"
-              className={quiet}
-              disabled={!open}
-              value={blocked ?? ticket.blocked ?? ""}
-              onChange={(e) => setBlocked(e.target.value)}
-              onBlur={(e) => {
-                if (blocked !== null && blocked.trim() !== (ticket.blocked ?? "")) {
-                  e.currentTarget.form?.requestSubmit();
-                } else setBlocked(null);
-              }}
-            />
-          </form>
+          {ticket.blocked !== null && (
+            <div
+              data-property="blocked"
+              className="group flex min-w-0 items-start gap-2 rounded-md bg-muted/50 px-2 py-1.5"
+            >
+              <IconHandStop size={16} aria-hidden className="mt-0.5 shrink-0 text-orange-500" />
+              <span className="min-w-0 flex-1 break-words">
+                <span className="font-medium">Blocked</span>
+                {ticket.blocked ? ` · ${ticket.blocked}` : ""}
+              </span>
+              {open && (
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  aria-label="Not blocked"
+                  title="Not blocked"
+                  className="shrink-0 text-muted-foreground"
+                  onClick={() => void act("tickets.ticket-unblock", { ticket: id })}
+                >
+                  <IconX aria-hidden />
+                </Button>
+              )}
+            </div>
+          )}
           <h3 ref={labelsAt} className="m-0 mt-3 px-2 text-xs font-medium text-muted-foreground">
             Labels
           </h3>
@@ -717,27 +686,13 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
               </Button>
             </LabelsPicker>
           </div>
-          {!open && (
-            <div className="mt-2 flex flex-wrap gap-2">
-              <Button variant="outline" size="sm" onClick={() => setDeleting(true)}>
-                Delete forever
-              </Button>
-              <DeleteForGood
-                name={ticket.id}
-                what="This ticket, with its comments and images"
-                label="Delete forever"
-                open={deleting}
-                onOpenChange={setDeleting}
-                onConfirm={() => {
-                  void act("tickets.ticket-delete", { ticket: id }).then(gone);
-                }}
-              />
-            </div>
-          )}
           <div className="mt-3 grid gap-1 border-t pt-3 text-xs text-muted-foreground">
-            <span>{`Updated ${when(ticket.updatedAt)}`}</span>
-            <span>{`Created ${when(ticket.createdAt)}`}</span>
+            <TimeAgo at={ticket.updatedAt} prefix="Updated" />
+            <TimeAgo at={ticket.createdAt} prefix="Created" />
           </div>
+          {handTo !== null && (
+            <HandoffDialog ticket={ticket} to={handTo} onClose={() => setHandTo(null)} />
+          )}
         </aside>
       </TicketMenu>
     </div>

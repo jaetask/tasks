@@ -25,6 +25,7 @@ const Line = z.object({
   actorName: z.string(),
   summary: z.string(),
   undoable: z.boolean().describe("False once it was undone, or when it cannot be."),
+  undone: z.boolean().describe("True once it was undone."),
 });
 
 const Conversation = z.object({
@@ -95,10 +96,18 @@ const conversationRead = readAction({
       .list({ ticket, limit: 500 })
       // Comments are shown as themselves, and a reaction is not an event.
       .filter((c) => !c.action.startsWith("comments.") && !c.action.includes("reaction"))
-      .map(({ id, at, actor, summary, undoable }) => ({
+      .map(({ id, at, actor, summary, undoable, undoneBy }) => ({
         type: "change" as const,
         at,
-        change: { id, at, actor, actorName: nameOf(actor), summary, undoable },
+        change: {
+          id,
+          at,
+          actor,
+          actorName: nameOf(actor),
+          summary,
+          undoable,
+          undone: undoneBy !== null,
+        },
       }));
     const entries = [...done, ...said]
       .sort((a, b) => a.at.localeCompare(b.at))

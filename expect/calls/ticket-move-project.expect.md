@@ -79,7 +79,8 @@
         "actor": "owner",
         "actorName": "owner",
         "summary": "created TLK-1 in To do: Count the cost",
-        "undoable": false
+        "undoable": false,
+        "undone": false
       }
     },
     {
@@ -90,7 +91,8 @@
         "actor": "a1",
         "actorName": "Coder",
         "summary": "claimed TLK-1 and moved it to Doing",
-        "undoable": false
+        "undoable": false,
+        "undone": false
       }
     },
     {
@@ -118,7 +120,8 @@
         "actor": "a1",
         "actorName": "Coder",
         "summary": "moved TLK-1 to project MNY: it is now MNY-2",
-        "undoable": false
+        "undoable": false,
+        "undone": false
       }
     }
   ]
