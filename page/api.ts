@@ -101,6 +101,7 @@ export type Line = {
   actorName: string;
   summary: string;
   undoable: boolean;
+  undone: boolean;
 };
 export type Conversation = {
   entries: ({ type: "comment"; comment: Comment } | { type: "change"; change: Line })[];

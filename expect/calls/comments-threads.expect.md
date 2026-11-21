@@ -40,7 +40,8 @@
         "actor": "owner",
         "actorName": "Sam",
         "summary": "created TLK-1 in To do: Voice notes on the phone",
-        "undoable": true
+        "undoable": true,
+        "undone": false
       }
     },
     {

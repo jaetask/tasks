@@ -51,6 +51,17 @@ export function ago(at: string): string {
   return `${Math.round(minutes / (60 * 24))}d ago`;
 }
 
+/**
+ * A change as it reads inside its own ticket: "created this ticket", not the ticket's id and
+ * title again. The full words stay on the Changes page.
+ */
+export function inTicket(summary: string, ticket: string): string {
+  const id = ticket.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return summary
+    .replace(new RegExp(`^created ${id} in ([^:]+): [\\s\\S]*$`), "created this ticket in $1")
+    .replace(new RegExp(`\\b${id}\\b`, "g"), "this ticket");
+}
+
 function Who({ id, name }: { id: string; name: string }) {
   return <ActorAvatar id={id} name={name} />;
 }
@@ -470,7 +481,7 @@ export function Activity({
           >
             <Who id={entry.change.actor} name={entry.change.actorName} />
             <span className="min-w-0">
-              {`${entry.change.actorName} ${entry.change.summary}${entry.change.undoable ? "" : " (undone)"} · `}
+              {`${entry.change.actorName} ${inTicket(entry.change.summary, ticket)}${entry.change.undone ? " (undone)" : ""} · `}
               <span title={when(entry.change.at)}>{ago(entry.change.at)}</span>
             </span>
             {entry.change.undoable && (
