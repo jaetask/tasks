@@ -36,10 +36,7 @@ const page = await browser.newPage({
 page.setDefaultTimeout(8000);
 const problems = [];
 page.on("console", (m) => {
-  // The Kit's page header refuses the inline styles the toolkit's menus add until Kit 0.2.1.
-  if (m.type() === "error" && !m.text().includes("directive 'style-src")) {
-    problems.push(`console: ${m.text()}`);
-  }
+  if (m.type() === "error") problems.push(`console: ${m.text()}`);
 });
 page.on("pageerror", (e) => problems.push(`page error: ${e.message}`));
 page.on("dialog", (d) => d.accept("looks like spam"));
