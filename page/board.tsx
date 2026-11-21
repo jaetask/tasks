@@ -640,7 +640,10 @@ export function TicketDialog() {
   if (!id) return null;
   return (
     <Dialog open onOpenChange={(open) => !open && go(path)}>
-      <DialogContent className="h-[90vh] w-[min(64rem,95vw)] max-w-none content-start overflow-y-auto">
+      <DialogContent
+        motion="instant"
+        className="inset-0 m-auto h-[90vh] w-[min(64rem,95vw)] max-w-none translate-none content-start overflow-y-auto"
+      >
         <TicketTitle id={id} />
         <DialogDescription className="sr-only">The ticket and its conversation.</DialogDescription>
         <TicketView key={id} id={id} onGone={() => go(path)} />
