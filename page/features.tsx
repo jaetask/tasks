@@ -6,6 +6,8 @@ import {
   InlineText,
   Link,
   ListCard,
+  PageControls,
+  PageGroup,
   RowMenu,
   WorkPage,
 } from "@jaetask/toolkit/suite";
@@ -118,7 +120,9 @@ export function FeaturesPage({ project }: { project: Project }) {
         />
       }
     >
-      <Tick label="Show archived" checked={archived} onChange={setArchived} />
+      <PageControls>
+        <Tick label="Show archived" checked={archived} onChange={setArchived} />
+      </PageControls>
       {features && features.length > 0 ? (
         <ListCard>
           {features.map((f) => (
@@ -247,7 +251,7 @@ export function FeaturePage({ project, id }: { project: Project; id: string }) {
         </>
       }
     >
-      <div className="grid max-w-4xl gap-5">
+      <div className="grid max-w-4xl gap-7">
         <div className="flex items-center gap-2">
           <Star feature={feature} />
           <InlineText
@@ -295,33 +299,32 @@ export function FeaturePage({ project, id }: { project: Project; id: string }) {
           const inside = board.filter((t) => t.column.id === column.id);
           if (inside.length === 0) return null;
           return (
-            <section key={column.id} aria-label={column.name} className="grid gap-1">
-              <h2 className="m-0 flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                <StatusIcon kind={column.kind} />
-                {column.name}
-                <span className="font-normal">{inside.length}</span>
-              </h2>
+            <PageGroup
+              key={column.id}
+              title={column.name}
+              icon={<StatusIcon kind={column.kind} />}
+              count={inside.length}
+            >
               <ListCard>
                 {inside.map((t) => (
                   <TicketLine key={t.id} ticket={t} status={false} feature={false} />
                 ))}
               </ListCard>
-            </section>
+            </PageGroup>
           );
         })}
         {waiting.length > 0 && (
-          <section aria-label="Backlog" className="grid gap-1">
-            <h2 className="m-0 flex items-center gap-2 text-xs font-medium text-muted-foreground">
-              <StatusIcon kind="todo" backlog />
-              Backlog
-              <span className="font-normal">{waiting.length}</span>
-            </h2>
+          <PageGroup
+            title="Backlog"
+            icon={<StatusIcon kind="todo" backlog />}
+            count={waiting.length}
+          >
             <ListCard>
               {waiting.map((t) => (
                 <TicketLine key={t.id} ticket={t} status={false} feature={false} />
               ))}
             </ListCard>
-          </section>
+          </PageGroup>
         )}
         {tickets && tickets.length === 0 && (
           <EmptyLine>No open ticket is in this feature.</EmptyLine>
