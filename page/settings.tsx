@@ -4,6 +4,7 @@ import {
   EmptyLine,
   Field,
   FormDialog,
+  IconAction,
   IconAvatar,
   InlineText,
   ListCard,
@@ -17,7 +18,7 @@ import {
 import { Button } from "@jaetask/toolkit/ui/button";
 import { Input } from "@jaetask/toolkit/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@jaetask/toolkit/ui/popover";
-import { IconGripVertical } from "@tabler/icons-react";
+import { IconGripVertical, IconPlus } from "@tabler/icons-react";
 import { type ReactNode, useState } from "react";
 import {
   type Actor,
@@ -133,7 +134,14 @@ function ActorsSection({ usage }: { usage: Usage | undefined }) {
     <WorkPage
       title="Actors"
       help="An actor is the name an agent's work shows under. A Connection acts as an actor."
-      action={<Button onClick={() => setAdding(true)}>New actor</Button>}
+      action={
+        <IconAction
+          primary
+          label="New actor"
+          icon={<IconPlus aria-hidden />}
+          onClick={() => setAdding(true)}
+        />
+      }
     >
       <Tick label="Show archived" checked={archived} onChange={setArchived} />
       {actors.length > 0 ? (
@@ -325,7 +333,14 @@ function ProjectsSection({ usage }: { usage: Usage | undefined }) {
     <WorkPage
       title="Projects"
       help="Each project has its own board, backlog, features and intake. Drag a row to reorder the list; the sidebar follows."
-      action={<Button onClick={() => setAdding(true)}>New project</Button>}
+      action={
+        <IconAction
+          primary
+          label="New project"
+          icon={<IconPlus aria-hidden />}
+          onClick={() => setAdding(true)}
+        />
+      }
     >
       <Tick label="Show archived" checked={archived} onChange={setArchived} />
       {projects.length > 0 ? (
@@ -483,7 +498,14 @@ function LabelsSection({ usage }: { usage: Usage | undefined }) {
     <WorkPage
       title="Labels"
       help="Coloured tags for tickets, shared by every project."
-      action={<Button onClick={() => setAdding(true)}>New label</Button>}
+      action={
+        <IconAction
+          primary
+          label="New label"
+          icon={<IconPlus aria-hidden />}
+          onClick={() => setAdding(true)}
+        />
+      }
     >
       {catalog.labels.length > 0 ? (
         <ListCard>
@@ -594,7 +616,14 @@ function LocationsSection({ usage }: { usage: Usage | undefined }) {
     <WorkPage
       title="Locations"
       help="A place where a ticket's work is done, such as a machine. A ticket has one or none."
-      action={<Button onClick={() => setAdding(true)}>New location</Button>}
+      action={
+        <IconAction
+          primary
+          label="New location"
+          icon={<IconPlus aria-hidden />}
+          onClick={() => setAdding(true)}
+        />
+      }
     >
       <Tick label="Show archived" checked={archived} onChange={setArchived} />
       {locations.length > 0 ? (
@@ -677,7 +706,14 @@ function StepsSection() {
     <WorkPage
       title="Intake steps"
       help="Steps look at each new intake item, one after another, before it lands in a project's inbox. They are the same for every project; a step can be set to run on one project's items only."
-      action={<Button onClick={() => setOpen("new")}>New step</Button>}
+      action={
+        <IconAction
+          primary
+          label="New step"
+          icon={<IconPlus aria-hidden />}
+          onClick={() => setOpen("new")}
+        />
+      }
     >
       {steps.length > 0 ? (
         <ListCard>

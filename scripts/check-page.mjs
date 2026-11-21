@@ -729,6 +729,35 @@ try {
     await open("/p/TLK/board");
     await until(() => document.querySelectorAll(".lane .ticket").length === 4);
   });
+  await step(
+    "Display switches a page between a list and a board, and the page remembers",
+    async () => {
+      await open("/p/TLK/board");
+      await page.waitForSelector(".lane");
+      await button("Display").click();
+      await page.getByRole("radio", { name: "List" }).click();
+      await page.keyboard.press("Escape");
+      await page.waitForSelector(".group-list .ticket-line");
+      if ((await count(".lane")) !== 0) throw new Error("the lanes still show in the list");
+      await page.reload();
+      await page.waitForSelector(".group-list .ticket-line");
+      await button("Display").click();
+      await page.getByRole("radio", { name: "Board" }).click();
+      await page.keyboard.press("Escape");
+      await page.waitForSelector(".lane .ticket");
+      await open("/p/TLK/intake");
+      await button("Display").click();
+      await page.getByRole("radio", { name: "Board" }).click();
+      await page.keyboard.press("Escape");
+      await until(() => document.querySelectorAll(".lane").length === 6);
+      await button("Display").click();
+      await page.getByRole("radio", { name: "List" }).click();
+      await page.keyboard.press("Escape");
+      await page.getByRole("tab", { name: /^Received/ }).waitFor();
+      await open("/p/TLK/board");
+      await page.waitForSelector(".lane");
+    },
+  );
   await step("drag a ticket to another column", async () => {
     const from = await page
       .locator(".ticket", { hasText: "Show the recording length" })
