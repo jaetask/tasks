@@ -758,6 +758,27 @@ try {
       await page.waitForSelector(".lane");
     },
   );
+  await step("in a ticket's dialog the editor's toolbar opens at the words selected", async () => {
+    await open("/p/TLK/board?ticket=TLK-1");
+    const words = page.locator(".description p").first();
+    await words.waitFor();
+    await words.dblclick();
+    await page.waitForSelector(".an-rich-md-bubble-toolbar");
+    const gap = await page.evaluate(() => {
+      const at = window.getSelection().getRangeAt(0).getBoundingClientRect();
+      const bar = document.querySelector(".an-rich-md-bubble-toolbar").getBoundingClientRect();
+      return {
+        up: Math.round(at.top - bar.bottom),
+        across: Math.round(Math.abs(at.left + at.width / 2 - (bar.left + bar.width / 2))),
+      };
+    });
+    if (gap.up < 0 || gap.up > 24 || gap.across > 24) {
+      throw new Error(`the toolbar is ${gap.up}px above and ${gap.across}px across from the words`);
+    }
+    await page.keyboard.press("Escape");
+    await open("/p/TLK/board");
+    await page.waitForSelector(".lane");
+  });
   await step("drag a ticket to another column", async () => {
     const from = await page
       .locator(".ticket", { hasText: "Show the recording length" })

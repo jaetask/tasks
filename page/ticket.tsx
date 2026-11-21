@@ -334,7 +334,7 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
   const gone = () => (onGone ? onGone() : go("/archive"));
   return (
     <div className="grid gap-6 text-sm lg:grid-cols-[minmax(0,1fr)_17rem]">
-      <div className="grid min-w-0 content-start gap-5">
+      <div className="grid min-w-0 content-start gap-5 pl-3">
         <div className="flex items-center justify-between gap-2">
           <p className="m-0 text-xs text-muted-foreground">
             {[ticket.id, project?.name ?? ticket.project, ticket.featureName]
