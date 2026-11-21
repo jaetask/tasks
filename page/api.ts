@@ -165,6 +165,8 @@ export type Change = {
   at: string;
   actor: string;
   summary: string;
+  ticket: string | null;
+  imported: boolean;
   undoneBy: string | null;
   undoable: boolean;
 };

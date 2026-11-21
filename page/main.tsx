@@ -41,7 +41,6 @@ import {
 import { type App, AppContext, useApp, useRead } from "./app.js";
 import { OverviewPage } from "./overview.js";
 import { BacklogPage, BoardPage } from "./board.js";
-import { ConnectionApprove } from "./edits.js";
 import { FeaturePage, FeaturesPage } from "./features.js";
 import { NewTicketDialog } from "./new-ticket.js";
 import { IntakePage } from "./inbox.js";
@@ -177,7 +176,6 @@ function Page({ path, onSignOut }: { path: string; onSignOut: () => void }) {
   if (a === "t" && b) {
     return <TicketPage key={b} id={b} />;
   }
-  if (a === "connections" && b) return <ConnectionApprove id={b} />;
   if (a === "settings") {
     const section = SECTIONS.find(([id]) => id === b)?.[0] ?? "you";
     return <SettingsPage section={section as Section} onSignOut={onSignOut} />;

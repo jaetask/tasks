@@ -195,7 +195,8 @@
     "ticket": "TALK-3",
     "undoes": null,
     "undoneBy": "h14",
-    "undoable": false
+    "undoable": false,
+    "imported": false
   },
   {
     "id": "h13",
@@ -206,7 +207,8 @@
     "ticket": "TALK-1",
     "undoes": null,
     "undoneBy": null,
-    "undoable": true
+    "undoable": true,
+    "imported": false
   },
   {
     "id": "h14",
@@ -217,7 +219,8 @@
     "ticket": "TALK-3",
     "undoes": "h12",
     "undoneBy": null,
-    "undoable": true
+    "undoable": true,
+    "imported": false
   }
 ]
 ```

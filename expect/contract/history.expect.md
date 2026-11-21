@@ -16,7 +16,7 @@
 
 | action | effect | card | description |
 | --- | --- | --- | --- |
-| history.change-list | read | changes | List recorded changes, oldest first: all of them, or those about one ticket. |
+| history.change-list | read | changes | List recorded changes, oldest first: all of them, or those about one ticket, about one project's tickets, or made by one actor. |
 | history.change-undo | write | change-undone | Undo a recorded change. Refused if what it changed has changed again since. An undo can itself be undone. |
 
 ### Cards
@@ -77,7 +77,7 @@
 ```text
 history: Every change, with who made it. The owner can undo a change.
 Tools:
-- history__change-list (reads): List recorded changes, oldest first: all of them, or those about one ticket.
+- history__change-list (reads): List recorded changes, oldest first: all of them, or those about one ticket, about one project's tickets, or made by one actor.
 - history__change-undo (changes): Undo a recorded change. Refused if what it changed has changed again since. An undo can itself be undone.
 A tool that changes something after the person says yes waits for them; tell them what you asked for.
 ```
@@ -93,6 +93,18 @@ A tool that changes something after the person says yes waits for them; tell the
   "properties": {
     "ticket": {
       "type": "string"
+    },
+    "project": {
+      "description": "Only changes to tickets of this project.",
+      "type": "string"
+    },
+    "actor": {
+      "description": "Only changes made by this actor.",
+      "type": "string"
+    },
+    "imported": {
+      "description": "False to leave out changes made by bringing data in from another app.",
+      "type": "boolean"
     },
     "limit": {
       "description": "The newest this many. 100 if left out.",

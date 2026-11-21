@@ -12,7 +12,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@jaetask/toolkit/ui/alert-dialog";
 import { Badge } from "@jaetask/toolkit/ui/badge";
 import { Button } from "@jaetask/toolkit/ui/button";
@@ -223,24 +222,31 @@ export function Face({
   return <IconAvatar name={name} icon={emoji ?? ""} colour={colour ?? ""} size={size} />;
 }
 
-/** Delete for good, confirmed by typing the name. */
+/** Delete for good, confirmed by typing the name. Opened from a menu or a quiet button. */
 export function DeleteForGood({
   name,
   what,
   label,
+  open,
+  onOpenChange,
   onConfirm,
 }: {
   name: string;
   what: string;
   label: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
 }) {
   const [typed, setTyped] = useState("");
   return (
-    <AlertDialog onOpenChange={() => setTyped("")}>
-      <AlertDialogTrigger asChild>
-        <Button variant="destructive">{label}</Button>
-      </AlertDialogTrigger>
+    <AlertDialog
+      open={open}
+      onOpenChange={(next) => {
+        setTyped("");
+        onOpenChange(next);
+      }}
+    >
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{`Delete ${name} for good?`}</AlertDialogTitle>
@@ -249,6 +255,7 @@ export function DeleteForGood({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <Input
+          autoFocus
           aria-label={`Type ${name} to confirm`}
           value={typed}
           onChange={(e) => setTyped(e.target.value)}
