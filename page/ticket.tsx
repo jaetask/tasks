@@ -10,6 +10,7 @@ import {
   Thumbs,
   TimeAgo,
 } from "@jaetask/toolkit/suite";
+import { EmptyLine } from "@jaetask/toolkit/suite";
 import { Textarea } from "@jaetask/toolkit/ui/textarea";
 import { Button } from "@jaetask/toolkit/ui/button";
 import { Checkbox } from "@jaetask/toolkit/ui/checkbox";
@@ -46,7 +47,7 @@ import {
 } from "./api.js";
 import { useApp, useRead } from "./app.js";
 import { Editor } from "./editor.js";
-import { addLink, Face, LINK_LINE, Nothing, NoActor } from "./local.js";
+import { addLink, Face, LINK_LINE, NoActor } from "./local.js";
 import { AddLinkDialog } from "@jaetask/toolkit/suite";
 import { EvidenceSection } from "./evidence.js";
 import { FilesSection } from "./files.js";
@@ -329,7 +330,7 @@ export function TicketView({ id, onGone }: { id: string; onGone?: () => void }) 
   // The labels list opens beside this heading, which does not move as labels come and go.
   const labelsAt = useRef<HTMLHeadingElement>(null);
   const pictures = usePictures(id);
-  if (!ticket) return <Nothing text={`No ticket has the id ${id}.`} />;
+  if (!ticket) return <EmptyLine>{`No ticket has the id ${id}.`}</EmptyLine>;
   const open = ticket.state === "open";
   const project = catalog.projects.find((p) => p.id === ticket.project);
   const actor = catalog.actors.find((a) => a.id === ticket.assignee);
