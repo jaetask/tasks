@@ -1,10 +1,9 @@
 services:
   tasks:
     build: .
-    ports: ["8081:8081"]
+    ports: ["127.0.0.1:8081:8081"]
     volumes: [tasks-data:/data] # all your data
     environment:
-      KIT_SETUP_SECRET: ${KIT_SETUP_SECRET:-}
       KIT_CONNECT: ${KIT_CONNECT:-}
     restart: unless-stopped
 volumes:

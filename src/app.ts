@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import { mkdtempSync } from "node:fs";
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
@@ -15,7 +16,6 @@ import { VERSION } from "./version.js";
 
 export type TasksOptions = {
   file: string;
-  setupSecret?: string | undefined;
   connect?: string[];
   plugins?: RemoteOptions[];
   page?: string;
@@ -30,6 +30,43 @@ export type TasksOptions = {
 };
 
 const APPROVE = /^\/api\/connections\/[^/]+\/approve$/;
+const LOCAL_HOSTS = new Set(["127.0.0.1", "localhost", "[::1]"]);
+const PAGE_ROUTES = /^\/(api\/|events$)/;
+
+async function ownerCookie(
+  fetch: (request: Request) => Promise<Response>,
+  secret: string,
+): Promise<string> {
+  const signIn = async (cookie = "") => {
+    const answer = await fetch(
+      new Request("http://127.0.0.1/api/session", {
+        method: "POST",
+        headers: { "content-type": "application/json", "x-kit-request": "1", cookie },
+        body: JSON.stringify({ secret }),
+      }),
+    );
+    return (answer.headers.get("set-cookie") ?? "").split(";")[0] ?? "";
+  };
+  const old = await signIn();
+  await fetch(
+    new Request("http://127.0.0.1/api/sessions", {
+      method: "DELETE",
+      headers: { "x-kit-request": "1", cookie: old },
+    }),
+  );
+  return signIn();
+}
+
+const isLocal = (request: Request) => {
+  const host = request.headers.get("host");
+  return !host || LOCAL_HOSTS.has(new URL(`http://${host}`).hostname);
+};
+
+const withCookie = (request: Request, cookie: string) => {
+  const headers = new Headers(request.headers);
+  headers.set("cookie", cookie);
+  return new Request(request, { headers });
+};
 
 export type Tasks = App & { pipeline: Pipeline };
 
@@ -40,6 +77,7 @@ export async function createTasks(options: TasksOptions): Promise<Tasks> {
     (options.file === ":memory:"
       ? mkdtempSync(join(tmpdir(), "tasks-files-"))
       : join(dirname(options.file), "files"));
+  const setupSecret = randomBytes(24).toString("base64url");
   const app = await createApp({
     name: "tasks",
     version: VERSION,
@@ -47,7 +85,7 @@ export async function createTasks(options: TasksOptions): Promise<Tasks> {
     domains: domains(now, { dir: filesDir }),
     owner: { id: OWNER },
     now,
-    ...(options.setupSecret ? { setupSecret: options.setupSecret } : {}),
+    setupSecret,
     ...(options.connect ? { connect: options.connect } : {}),
     ...(options.plugins ? { plugins: options.plugins } : {}),
     ...(options.page ? { page: options.page } : {}),
@@ -63,14 +101,23 @@ export async function createTasks(options: TasksOptions): Promise<Tasks> {
     dir: filesDir,
     stagedDir: join(filesDir, "staged"),
   });
+  const cookie = await ownerCookie(app.fetch, setupSecret);
   const fetch = async (request: Request) => {
-    if (request.method === "POST" && APPROVE.test(new URL(request.url).pathname)) {
+    const { pathname } = new URL(request.url);
+    if (!isLocal(request)) {
+      return new Response("Tasks answers on this computer only.", { status: 403 });
+    }
+    if (pathname === "/api/session" || pathname === "/api/sessions") {
+      return Response.json({ error: "Not found." }, { status: 404 });
+    }
+    if (request.method === "POST" && APPROVE.test(pathname)) {
       return Response.json(
         { error: "Approve a Connection with the Action connections.connection-approve." },
         { status: 404 },
       );
     }
-    return (await files(request)) ?? app.fetch(request);
+    const asOwner = PAGE_ROUTES.test(pathname) ? withCookie(request, cookie) : request;
+    return (await files(asOwner)) ?? app.fetch(asOwner);
   };
 
   const pipeline = createPipeline({

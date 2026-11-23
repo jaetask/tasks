@@ -224,11 +224,6 @@ export const KINDS: Record<Kind, string> = {
 };
 export const COLOURS: Colour[] = ["blue", "teal", "green", "amber", "purple", "pink"];
 
-let onSignedOut = () => {};
-export const whenSignedOut = (handler: () => void) => {
-  onSignedOut = handler;
-};
-
 export async function api<T>(
   path: string,
   init: { method?: string; body?: unknown } = {},
@@ -239,7 +234,6 @@ export async function api<T>(
     headers: { "x-kit-request": "1", "content-type": "application/json" },
     ...(init.body === undefined ? {} : { body: JSON.stringify(init.body) }),
   });
-  if (response.status === 401 && path !== "/api/session") onSignedOut();
   return response.json() as Promise<T>;
 }
 

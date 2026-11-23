@@ -1,6 +1,5 @@
 {
   "steps": [
-    { "sign_in": "expect-setup-secret" },
     { "page": { "call": "catalog.actor-create", "input": { "name": "Coder" } } },
     { "pair": { "name": "Coding agent", "effects": ["read", "write"] } },
     {

@@ -14,16 +14,12 @@
 4. GET /index.html → HTTP 200: text/html; charset=utf-8; not empty; scripts from this App only
 5. GET /../package.json → HTTP 404: Not found
 6. GET /nothing.js → HTTP 404: Not found
-7. GET /api/session (not signed in) → HTTP 200: {"signedIn":false}
-8. the page calls tickets.board-read {"project":"TLK"} → HTTP 401: {"error":"Sign in first."}
-9. GET /events (not signed in) → HTTP 401: Sign in first.
-10. the owner signs in on the page → HTTP 200
-11. GET /api/session (signed in) → HTTP 200: {"signedIn":true}
-12. the page calls catalog.actor-rename {"actor":"owner","name":"Sam"} → succeeded; updated actor owner
-13. the page calls catalog.project-create {"name":"Talk","prefix":"TLK"} → succeeded; created project TLK
-14. the page calls tickets.ticket-create {"project":"TLK","title":"Voice notes on the phone"} → succeeded; created ticket TLK-1
-15. the page calls comments.comment-add {"ticket":"TLK-1","text":"First."} → succeeded; created comment m1
-16. the page calls tickets.board-read {"project":"TLK"} → succeeded:
+7. the page calls tickets.board-read {"project":"TLK"} → rejected: unknown-project: No project has id TLK.
+8. the page calls catalog.actor-rename {"actor":"owner","name":"Sam"} → succeeded; updated actor owner
+9. the page calls catalog.project-create {"name":"Talk","prefix":"TLK"} → succeeded; created project TLK
+10. the page calls tickets.ticket-create {"project":"TLK","title":"Voice notes on the phone"} → succeeded; created ticket TLK-1
+11. the page calls comments.comment-add {"ticket":"TLK-1","text":"First."} → succeeded; created comment m1
+12. the page calls tickets.board-read {"project":"TLK"} → succeeded:
 
 ```json
 {
@@ -66,10 +62,10 @@
           "comments": 1,
           "images": 0,
           "awaiting": 0,
-          "createdAt": "2026-01-01T09:14:00.000Z",
+          "createdAt": "2026-01-01T09:10:00.000Z",
           "createdBy": "owner",
-          "updatedAt": "2026-01-01T09:15:00.000Z",
-          "columnSince": "2026-01-01T09:14:00.000Z"
+          "updatedAt": "2026-01-01T09:11:00.000Z",
+          "columnSince": "2026-01-01T09:10:00.000Z"
         }
       ]
     },
@@ -163,7 +159,7 @@ None.
 
 | id | at | actor | action | summary | ticket | undone by |
 | --- | --- | --- | --- | --- | --- | --- |
-| h1 | 09:12 | owner | catalog.actor-rename | named the owner Sam |  |  |
-| h2 | 09:13 | owner | catalog.project-create | created project Talk (TLK) |  |  |
-| h3 | 09:14 | owner | tickets.ticket-create | created TLK-1 in To do: Voice notes on the phone | TLK-1 |  |
-| h4 | 09:15 | owner | comments.comment-add | commented on TLK-1 | TLK-1 |  |
+| h1 | 09:08 | owner | catalog.actor-rename | named the owner Sam |  |  |
+| h2 | 09:09 | owner | catalog.project-create | created project Talk (TLK) |  |  |
+| h3 | 09:10 | owner | tickets.ticket-create | created TLK-1 in To do: Voice notes on the phone | TLK-1 |  |
+| h4 | 09:11 | owner | comments.comment-add | commented on TLK-1 | TLK-1 |  |

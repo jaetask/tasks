@@ -10,7 +10,6 @@ import {
   ListCard,
   type MenuEntry,
   PageControls,
-  Panel,
   ProjectIcon,
   ProjectIconPicker,
   RowMenu,
@@ -45,7 +44,6 @@ export const SECTIONS = [
   ["labels", "Labels"],
   ["locations", "Locations"],
   ["steps", "Intake steps"],
-  ["browser", "This browser"],
 ] as const;
 export type Section = (typeof SECTIONS)[number][0];
 
@@ -790,23 +788,12 @@ function StepsSection() {
   );
 }
 
-export function SettingsPage({ section, onSignOut }: { section: Section; onSignOut: () => void }) {
+export function SettingsPage({ section }: { section: Section }) {
   const usage = useRead<Usage>("tickets.usage-read");
   if (section === "actors") return <ActorsSection usage={usage} />;
   if (section === "projects") return <ProjectsSection usage={usage} />;
   if (section === "labels") return <LabelsSection usage={usage} />;
   if (section === "locations") return <LocationsSection usage={usage} />;
   if (section === "steps") return <StepsSection />;
-  if (section === "browser") {
-    return (
-      <WorkPage title="This browser">
-        <Panel id="session" title="This browser" line="Signing out ends this session only.">
-          <Button variant="secondary" onClick={onSignOut}>
-            Sign out
-          </Button>
-        </Panel>
-      </WorkPage>
-    );
-  }
   return <YouSection />;
 }

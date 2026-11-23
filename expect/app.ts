@@ -11,14 +11,13 @@ import { createTasks } from "../src/app.js";
 import { renderData, said } from "./calls.js";
 
 type Step =
-  | { sign_in: string }
   | { page: { call: string; input?: unknown; id?: string } }
   | { pair: { name: string; effects: string[] } }
   | { claim: string }
   | { tools: string }
   | { contracts: string }
   | { mcp: { as: string; tool: string; arguments?: unknown; id?: string } }
-  | { raw: { method: string; path: string; body?: unknown; session?: boolean } }
+  | { raw: { method: string; path: string; body?: unknown } }
   | { get: string }
   | { restart: true };
 
@@ -31,7 +30,6 @@ export async function runApp(input: string): Promise<string> {
   let clock = START;
   let app!: App;
   let url = "";
-  let cookie = "";
   const events: string[] = [];
   let stopEvents = () => {};
   const pairings = new Map<string, { id: string; claim: string; token?: string }>();
@@ -53,13 +51,12 @@ export async function runApp(input: string): Promise<string> {
   const page = (path: string, init: { method?: string; body?: unknown } = {}) =>
     fetch(`${url}${path}`, {
       method: init.method ?? "GET",
-      headers: { cookie, "x-kit-request": "1", "content-type": "application/json" },
+      headers: { "x-kit-request": "1", "content-type": "application/json" },
       ...(init.body === undefined ? {} : { body: JSON.stringify(init.body) }),
     });
 
   const listen = async () => {
-    if (!cookie) return;
-    const response = await fetch(`${url}/events`, { headers: { cookie } });
+    const response = await fetch(`${url}/events`);
     const reader = (response.body as ReadableStream<Uint8Array>).getReader();
     const decoder = new TextDecoder();
     let buffer = "";
@@ -95,7 +92,6 @@ export async function runApp(input: string): Promise<string> {
     app = await createTasks({
       file: join(dir, "app.db"),
       now: () => clock,
-      setupSecret: "expect-setup-secret",
       stepsDir: fileURLToPath(new URL("./inbox/steps", import.meta.url)),
       page: fileURLToPath(new URL("../public", import.meta.url)),
       log: () => {},
@@ -130,17 +126,7 @@ export async function runApp(input: string): Promise<string> {
     for (const [i, step] of steps.entries()) {
       clock = START + (i + 1) * 60_000;
       const n = `${i + 1}.`;
-      if ("sign_in" in step) {
-        const response = await page("/api/session", {
-          method: "POST",
-          body: { secret: step.sign_in },
-        });
-        if (response.ok) {
-          cookie = (response.headers.get("set-cookie") ?? "").split(";")[0] as string;
-          await listen();
-        }
-        out.push(`${n} the owner signs in on the page → HTTP ${response.status}`);
-      } else if ("page" in step) {
+      if ("page" in step) {
         const { call, id } = step.page;
         const response = await page("/api/calls", {
           method: "POST",
@@ -234,12 +220,12 @@ export async function runApp(input: string): Promise<string> {
           method: r.method,
           headers: {
             "content-type": "application/json",
-            ...(r.session ? { cookie, "x-kit-request": "1" } : {}),
+            "x-kit-request": "1",
           },
           ...(r.body === undefined ? {} : { body: JSON.stringify(r.body) }),
         });
         out.push(
-          `${n} ${r.method} ${r.path} (${r.session ? "signed in" : "not signed in"}) → HTTP ${response.status}: ${named(await response.text())}`,
+          `${n} ${r.method} ${r.path} → HTTP ${response.status}: ${named(await response.text())}`,
         );
       } else {
         stopEvents();

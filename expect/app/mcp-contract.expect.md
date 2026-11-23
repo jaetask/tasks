@@ -8,12 +8,11 @@
 
 ### Steps
 
-1. the owner signs in on the page → HTTP 200
-2. the page calls catalog.actor-create {"name":"Coder"} → succeeded; created actor a1
-3. Coding agent asks to connect, to read and write → HTTP 200
-4. the page calls connections.connection-approve {"connection":"$Coding agent","actor":"a1","change":true} → succeeded; updated connection <Coding agent>
-5. Coding agent asks for its key → HTTP 200: its key
-6. Coding agent lists the Contracts over MCP
+1. the page calls catalog.actor-create {"name":"Coder"} → succeeded; created actor a1
+2. Coding agent asks to connect, to read and write → HTTP 200
+3. the page calls connections.connection-approve {"connection":"$Coding agent","actor":"a1","change":true} → succeeded; updated connection <Coding agent>
+4. Coding agent asks for its key → HTTP 200: its key
+5. Coding agent lists the Contracts over MCP
 
 | uri | name |
 | --- | --- |
@@ -29,7 +28,7 @@
 | open-agent-kit://contract/connections | connections Contract |
 | open-agent-kit://contract/history | history Contract |
 
-7. Coding agent lists its tools over MCP
+6. Coding agent lists its tools over MCP
 
 | tool | reads only | description |
 | --- | --- | --- |
@@ -186,5 +185,5 @@ None.
 
 | id | at | actor | action | summary | ticket | undone by |
 | --- | --- | --- | --- | --- | --- | --- |
-| h1 | 09:02 | owner | catalog.actor-create | added actor Coder |  |  |
-| h2 | 09:04 | owner | connections.connection-approve | approved the connection Coding agent as Coder, to read and change |  |  |
+| h1 | 09:01 | owner | catalog.actor-create | added actor Coder |  |  |
+| h2 | 09:03 | owner | connections.connection-approve | approved the connection Coding agent as Coder, to read and change |  |  |

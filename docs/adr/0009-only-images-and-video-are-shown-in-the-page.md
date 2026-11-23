@@ -2,7 +2,7 @@
 
 ## Context
 
-A file attached to a ticket is served from the same origin as the page. A file a browser could run, such as HTML or SVG, would run with the signed-in owner's session.
+A file attached to a ticket is served from the same origin as the page. A file a browser could run, such as HTML or SVG, would run with the owner's access to the page.
 
 ## Decision
 
