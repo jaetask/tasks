@@ -26,3 +26,4 @@ Decisions about the code live here, since comments are not kept in the code.
 - [22. Branches merge through auto-pr, and the job deletes the branch](0022-branches-merge-through-auto-pr.md)
 - [23. A backlog ticket goes on the board before it moves to a column](0023-a-backlog-ticket-goes-on-the-board-before-it-moves.md)
 - [24. A label is always shown with its colour](0024-a-label-is-always-shown-with-its-colour.md)
+- [25. The page has no sign-in, and Tasks answers this computer only](0025-the-page-has-no-sign-in-and-tasks-answers-this-computer-only.md)

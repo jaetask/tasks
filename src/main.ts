@@ -10,7 +10,6 @@ mkdirSync(dataDir, { recursive: true });
 
 const app = await createTasks({
   file: join(dataDir, "app.db"),
-  setupSecret: env.KIT_SETUP_SECRET,
   connect: (env.KIT_CONNECT ?? "").split(",").filter(Boolean),
   page: fileURLToPath(new URL("../public", import.meta.url)),
   stepsDir: join(dataDir, "steps"),

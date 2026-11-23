@@ -18,21 +18,12 @@ const SHOWN = new Set<string>([
 const json = (body: unknown, status = 200) => Response.json(body, { status });
 
 export function filesRoutes(options: {
-  app: Pick<App, "fetch" | "calls">;
+  app: Pick<App, "calls">;
   db: DatabaseSync;
   dir: string;
   stagedDir: string;
 }) {
   const { app, db, dir, stagedDir } = options;
-
-  const signedIn = async (request: Request) => {
-    const asked = await app.fetch(
-      new Request(new URL("/api/session", request.url), {
-        headers: { cookie: request.headers.get("cookie") ?? "" },
-      }),
-    );
-    return asked.ok && ((await asked.json()) as { signedIn?: boolean }).signedIn === true;
-  };
 
   const upload = async (request: Request): Promise<Response> => {
     if (request.headers.get("x-kit-request") !== "1") {
@@ -129,7 +120,6 @@ export function filesRoutes(options: {
   return async (request: Request): Promise<Response | null> => {
     const { pathname } = new URL(request.url);
     if (pathname !== "/api/files" && !pathname.startsWith("/api/files/")) return null;
-    if (!(await signedIn(request))) return json({ error: "Sign in first." }, 401);
     if (pathname === "/api/files" && request.method === "POST") return upload(request);
     const id = decodeURIComponent(pathname.slice("/api/files/".length));
     if (/^fl\d+$/.test(id) && (request.method === "GET" || request.method === "HEAD")) {

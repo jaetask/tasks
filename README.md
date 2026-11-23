@@ -53,7 +53,7 @@ npm run build
 npm start
 ```
 
-Tasks runs at http://127.0.0.1:8081 and keeps its data in `data/`. At first start it prints a setup secret once: enter it on the page to sign in. Set `PORT`, `HOST`, `DATA_DIR` and `KIT_SETUP_SECRET` to change the defaults.
+Tasks runs at http://127.0.0.1:8081 and keeps its data in `data/`. The page opens straight to your tasks with no sign-in, and Tasks answers only requests from this computer. Set `PORT`, `HOST` and `DATA_DIR` to change the defaults.
 
 Files attached to tickets are kept in `data/files/`; back that folder up with `data/app.db`. A file can be up to 25 MB, and an mp4, webm or mov video up to 200 MB. An agent on this machine attaches a file by its path, from any folder Tasks can read. One setting is off until you set it: `LINK_TITLES=1` makes Tasks read the title of the page each new link points to.
 

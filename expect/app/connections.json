@@ -1,8 +1,6 @@
 {
   "steps": [
     { "page": { "call": "catalog.catalog-read" } },
-    { "sign_in": "wrong" },
-    { "sign_in": "expect-setup-secret" },
     { "page": { "call": "catalog.actor-rename", "input": { "actor": "owner", "name": "Sam" } } },
     { "page": { "call": "catalog.actor-create", "input": { "name": "Coder" } } },
     { "page": { "call": "catalog.actor-create", "input": { "name": "Watcher" } } },
@@ -19,7 +17,7 @@
     { "mcp": { "as": "Coding agent", "tool": "tickets__work-find" } },
     { "page": { "call": "connections.connection-list" } },
     {
-      "raw": { "method": "POST", "path": "/api/connections/$Coding agent/approve", "session": true }
+      "raw": { "method": "POST", "path": "/api/connections/$Coding agent/approve" }
     },
     {
       "page": {

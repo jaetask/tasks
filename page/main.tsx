@@ -7,7 +7,6 @@ import { Toaster } from "@jaetask/toolkit/ui/toaster";
 import {
   IconArchive,
   IconArrowLeft,
-  IconDeviceLaptop,
   IconFilter,
   IconFolder,
   IconHelpCircle,
@@ -20,10 +19,9 @@ import {
   IconUser,
   IconUsers,
 } from "@tabler/icons-react";
-import { type FormEvent, useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
-  api,
   type Catalog,
   type Change,
   type Connection,
@@ -34,7 +32,6 @@ import {
   OWNER,
   refusal,
   uploadFile,
-  whenSignedOut,
 } from "./api.js";
 import { type App, AppContext, useApp, useRead } from "./app.js";
 import { OverviewPage } from "./overview.js";
@@ -83,47 +80,7 @@ const SETTINGS_ICONS: Record<Section, React.ReactNode> = {
   labels: <IconTag size={16} aria-hidden />,
   locations: <IconMapPin size={16} aria-hidden />,
   steps: <IconFilter size={16} aria-hidden />,
-  browser: <IconDeviceLaptop size={16} aria-hidden />,
 };
-
-function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
-  const [secret, setSecret] = useState("");
-  const [error, setError] = useState("");
-  const submit = async (e: FormEvent) => {
-    e.preventDefault();
-    const answer = await api<{ signedIn?: boolean; error?: string }>("/api/session", {
-      method: "POST",
-      body: { secret },
-    });
-    setSecret("");
-    setError(answer.signedIn ? "" : (answer.error ?? "Could not sign in."));
-    if (answer.signedIn) onSignedIn();
-  };
-  return (
-    <CenteredPage
-      title="Sign in to Tasks"
-      line="Enter the setup secret Tasks printed when it first started."
-    >
-      <form className="flex gap-2" onSubmit={submit}>
-        <Input
-          type="password"
-          aria-label="Setup secret"
-          autoComplete="current-password"
-          placeholder="Setup secret"
-          value={secret}
-          onChange={(e) => setSecret(e.target.value)}
-          required
-        />
-        <Button type="submit">Sign in</Button>
-      </form>
-      {error && (
-        <p className="m-0 text-destructive" role="alert">
-          {error}
-        </p>
-      )}
-    </CenteredPage>
-  );
-}
 
 function Setup({ onNamed }: { onNamed: (name: string) => void }) {
   const [name, setName] = useState("");
@@ -153,7 +110,7 @@ function Setup({ onNamed }: { onNamed: (name: string) => void }) {
   );
 }
 
-function Page({ path, onSignOut }: { path: string; onSignOut: () => void }) {
+function Page({ path }: { path: string }) {
   const { catalog } = useApp();
   const parts = path.split("/").filter(Boolean);
   const [a, b, c, d] = parts;
@@ -171,7 +128,7 @@ function Page({ path, onSignOut }: { path: string; onSignOut: () => void }) {
   }
   if (a === "settings") {
     const section = SECTIONS.find(([id]) => id === b)?.[0] ?? "you";
-    return <SettingsPage section={section as Section} onSignOut={onSignOut} />;
+    return <SettingsPage section={section as Section} />;
   }
   if (a === "input") return <InputPage />;
   if (a === "replies") return <RepliesPage />;
@@ -181,7 +138,7 @@ function Page({ path, onSignOut }: { path: string; onSignOut: () => void }) {
   return <OverviewPage />;
 }
 
-function Shell({ path, onSignOut }: { path: string; onSignOut: () => void }) {
+function Shell({ path }: { path: string }) {
   const [searching, setSearching] = useSearchKey();
   const awaiting = useRead<InputRequest[]>("input.input-list", { state: "awaiting" }) ?? [];
   const asking = (useRead<Connection[]>("connections.connection-list") ?? []).filter(
@@ -231,7 +188,7 @@ function Shell({ path, onSignOut }: { path: string; onSignOut: () => void }) {
           })),
         ]}
       >
-        <Page path={path} onSignOut={onSignOut} />
+        <Page path={path} />
       </AppShell>
     );
   }
@@ -245,14 +202,14 @@ function Shell({ path, onSignOut }: { path: string; onSignOut: () => void }) {
       settingsHref="/settings"
       onSearch={() => setSearching(true)}
     >
-      <Page path={path} onSignOut={onSignOut} />
+      <Page path={path} />
       <NewTicketDialog />
       <SearchDialog open={searching} onOpenChange={setSearching} />
     </AppShell>
   );
 }
 
-function Signed({ path, onSignOut }: { path: string; onSignOut: () => void }) {
+function TasksApp({ path }: { path: string }) {
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [version, setVersion] = useState(0);
   const bump = useCallback(() => setVersion((v) => v + 1), []);
@@ -336,7 +293,7 @@ function Signed({ path, onSignOut }: { path: string; onSignOut: () => void }) {
   return (
     <AppContext.Provider value={app}>
       {named ? (
-        <Shell path={page} onSignOut={onSignOut} />
+        <Shell path={page} />
       ) : (
         <Setup onNamed={(name) => void act("catalog.actor-rename", { actor: OWNER, name })} />
       )}
@@ -347,22 +304,9 @@ function Signed({ path, onSignOut }: { path: string; onSignOut: () => void }) {
 
 function Root() {
   const path = useHashPath();
-  const [signedIn, setSignedIn] = useState<boolean | null>(null);
-  whenSignedOut(() => setSignedIn(false));
-  useEffect(() => {
-    void api<{ signedIn: boolean }>("/api/session").then((s) => setSignedIn(s.signedIn));
-  }, []);
-  const signOut = async () => {
-    await api("/api/session", { method: "DELETE" });
-    setSignedIn(false);
-  };
   return (
     <LinkProvider link={HashLink} location={path}>
-      {signedIn === null ? null : signedIn ? (
-        <Signed path={path} onSignOut={signOut} />
-      ) : (
-        <SignIn onSignedIn={() => setSignedIn(true)} />
-      )}
+      <TasksApp path={path} />
     </LinkProvider>
   );
 }

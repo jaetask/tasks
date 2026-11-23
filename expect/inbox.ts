@@ -105,7 +105,6 @@ export async function runInbox(input: string): Promise<string> {
   const tasks = await createTasks({
     file: ":memory:",
     now: () => clock,
-    setupSecret: "expect-setup-secret",
     log: () => {},
     sweepEvery: 0,
     syncEvery: 0,

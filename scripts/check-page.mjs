@@ -6,12 +6,11 @@ import { join } from "node:path";
 import { chromium } from "playwright-core";
 
 const PORT = process.env.CHECK_PORT ?? "18083";
-const SECRET = "check-page-secret";
 const base = `http://127.0.0.1:${PORT}`;
 const data = mkdtempSync(join(tmpdir(), "tasks-page-"));
 cpSync("expect/inbox/steps", join(data, "steps"), { recursive: true });
 const server = spawn("node", ["--import", "tsx", "src/main.ts"], {
-  env: { ...process.env, PORT, DATA_DIR: data, KIT_SETUP_SECRET: SECRET },
+  env: { ...process.env, PORT, DATA_DIR: data },
   stdio: "ignore",
 });
 for (let i = 0; i < 50; i++) {
@@ -89,9 +88,7 @@ async function agent(tool, args) {
 
 try {
   await page.goto(base);
-  await step("sign in with the setup secret", async () => {
-    await page.fill('[aria-label="Setup secret"]', SECRET);
-    await button("Sign in").click();
+  await step("the page opens with no sign-in and asks for a name", async () => {
     await see("What is your name?");
   });
   await step("name the owner; the shell opens on the Overview", async () => {
